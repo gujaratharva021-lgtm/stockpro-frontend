@@ -24,6 +24,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
   double _holdingQty = 0;
   double _avgBuyPrice = 0;
   String? _aboutText;
+  List<dynamic> _peers = [];
+  final Map<String, dynamic> _peerQuotes = {};
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     _loadHistory();
     _loadHolding();
     _loadAbout();
+    _loadPeers();
   }
 
   Map<String, double>? get _ohlc {
@@ -96,6 +99,23 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
           _holdingQty = (found['quantity'] as num).toDouble();
           _avgBuyPrice = (found['avg_price'] as num?)?.toDouble() ?? 0;
         });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadPeers() async {
+    try {
+      final allStocks = await ApiService.getStocks();
+      final sector = widget.stock['sector'];
+      final symbol = widget.stock['symbol'];
+      if (sector == null) return;
+      final sameSector = allStocks.where((s) => s['sector'] == sector && s['symbol'] != symbol).take(4).toList();
+      if (mounted) setState(() => _peers = sameSector);
+      for (final p in sameSector) {
+        try {
+          final q = await ApiService.getQuote(p['symbol']);
+          if (mounted) setState(() => _peerQuotes[p['symbol']] = q);
+        } catch (_) {}
       }
     } catch (_) {}
   }
@@ -757,6 +777,100 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                             const Text('About', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                             const SizedBox(height: 8),
                             Text(_aboutText!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.5), maxLines: 5, overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Peer Comparison
+                    if (_peers.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Peer Comparison', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                            const SizedBox(height: 10),
+                            ..._peers.map((p) {
+                              final q = _peerQuotes[p['symbol']];
+                              final price = q != null ? (q['price'] as num?)?.toDouble() : null;
+                              final changePct = q != null ? (q['change_percent'] as num?)?.toDouble() : null;
+                              final isUp = (changePct ?? 0) >= 0;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(p['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                          Text(p['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        ],
+                                      ),
+                                    ),
+                                    if (price != null) ...[
+                                      Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${isUp ? '+' : ''}${changePct?.toStringAsFixed(2) ?? '0.00'}%',
+                                        style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                    ] else
+                                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Peer Comparison
+                    if (_peers.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Peer Comparison', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                            const SizedBox(height: 10),
+                            ..._peers.map((p) {
+                              final q = _peerQuotes[p['symbol']];
+                              final price = q != null ? (q['price'] as num?)?.toDouble() : null;
+                              final changePct = q != null ? (q['change_percent'] as num?)?.toDouble() : null;
+                              final isUp = (changePct ?? 0) >= 0;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(p['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                          Text(p['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        ],
+                                      ),
+                                    ),
+                                    if (price != null) ...[
+                                      Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${isUp ? '+' : ''}${changePct?.toStringAsFixed(2) ?? '0.00'}%',
+                                        style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                    ] else
+                                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
+                                  ],
+                                ),
+                              );
+                            }),
                           ],
                         ),
                       ),
