@@ -452,6 +452,12 @@ class ApiService {
     });
   }
 
+  static Future<String> getAbout(String symbol) async {
+    final dio = await _authDio();
+    final res = await dio.get('/stocks/$symbol/about');
+    return res.data['about'] as String? ?? '';
+  }
+
   static Future<String> askAssistant(String message) async {
     try {
       final dio = await _authDio();

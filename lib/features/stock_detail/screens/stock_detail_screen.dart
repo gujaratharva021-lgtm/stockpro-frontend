@@ -102,10 +102,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
   Future<void> _loadAbout() async {
     try {
-      final dio = Dio();
-      final res = await dio.get('https://query1.finance.yahoo.com/v10/finance/quoteSummary/${widget.stock['symbol']}.NS?modules=assetProfile');
-      final profile = res.data['quoteSummary']['result'][0]['assetProfile'];
-      if (mounted) setState(() => _aboutText = profile['longBusinessSummary']);
+      final quote = await ApiService.getAbout(widget.stock['symbol']);
+      if (mounted) setState(() => _aboutText = quote);
     } catch (_) {}
   }
 
