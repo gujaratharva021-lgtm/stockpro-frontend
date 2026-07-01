@@ -4,6 +4,7 @@ import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -22,6 +23,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
   bool _watchlistLoading = false;
   double _holdingQty = 0;
   double _avgBuyPrice = 0;
+  String? _aboutText;
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     _checkWatchlist();
     _loadHistory();
     _loadHolding();
+    _loadAbout();
   }
 
   Map<String, double>? get _ohlc {
@@ -94,6 +97,15 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
           _avgBuyPrice = (found['avg_price'] as num?)?.toDouble() ?? 0;
         });
       }
+    } catch (_) {}
+  }
+
+  Future<void> _loadAbout() async {
+    try {
+      final dio = Dio();
+      final res = await dio.get('https://query1.finance.yahoo.com/v10/finance/quoteSummary/${widget.stock['symbol']}.NS?modules=assetProfile');
+      final profile = res.data['quoteSummary']['result'][0]['assetProfile'];
+      if (mounted) setState(() => _aboutText = profile['longBusinessSummary']);
     } catch (_) {}
   }
 
@@ -730,6 +742,23 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                 Text('${holdingPnl >= 0 ? '+' : ''}₹${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
                               ])),
                             ]),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // About section
+                    if (_aboutText != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('About', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                            const SizedBox(height: 8),
+                            Text(_aboutText!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.5), maxLines: 5, overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
