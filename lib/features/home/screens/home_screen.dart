@@ -420,9 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: _accent,
         child: const Icon(Icons.auto_awesome, color: Colors.white),
       ),
-      child: Scaffold(
-        backgroundColor: _bg,
-        body: SafeArea(
+      child: SafeArea(
           child: RefreshIndicator(
             color: _accent,
             backgroundColor: _card,
@@ -584,11 +582,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Row(
                             children: [
-                              _indexTab('NIFTY 50', _nifty, 0),
-                              const SizedBox(width: 18),
-                              _indexTab('SENSEX', _sensex, 1),
-                              const SizedBox(width: 18),
-                              _indexTab('BANK NIFTY', _bankNifty, 2),
+                              Expanded(child: _indexTab('NIFTY 50', _nifty, 0)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _indexTab('SENSEX', _sensex, 1)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _indexTab('BANK NIFTY', _bankNifty, 2)),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -810,7 +808,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -829,9 +826,9 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 2),
           Row(
             children: [
-              Text(data['value'] ?? '--', style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.bold)),
+              Flexible(child: Text(data['value'] ?? '--', style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
               const SizedBox(width: 4),
-              Text(data['percent'] ?? '--', style: TextStyle(color: isUp ? _green : _red, fontSize: 11, fontWeight: FontWeight.w600)),
+              Flexible(child: Text(data['percent'] ?? '--', style: TextStyle(color: isUp ? _green : _red, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
             ],
           ),
           if (selected) Container(margin: const EdgeInsets.only(top: 4), height: 2, width: 28, color: _accent),
