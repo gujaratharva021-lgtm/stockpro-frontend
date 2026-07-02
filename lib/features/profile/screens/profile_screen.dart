@@ -6,6 +6,7 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/services/biometric_service.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
+import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
@@ -585,6 +586,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _menuItem(Icons.account_balance_outlined, 'Bank Accounts'),
                 _menuItem(Icons.badge_outlined, 'KYC & Documents'),
                 _menuItem(Icons.receipt_long_outlined, 'Tax P&L Report', onTap: () => context.push('/tax-report')),
+                _menuItem(Icons.repeat, 'My SIPs', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SipScreen()))),
               ]),
               const SizedBox(height: 20),
               _menuSection('Preferences', [
