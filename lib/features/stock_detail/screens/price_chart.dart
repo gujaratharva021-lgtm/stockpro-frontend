@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
@@ -152,3 +152,4 @@ class _PriceChartState extends State<PriceChart> {
     );
   }
 }
+

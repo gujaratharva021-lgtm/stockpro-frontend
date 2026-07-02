@@ -15,6 +15,15 @@ import 'package:stock_app/features/fd/screens/fd_screen.dart';
 import 'package:stock_app/features/commodity/screens/commodity_screen.dart';
 import 'package:stock_app/features/markets/screens/markets_screen.dart';
 import 'package:dio/dio.dart';
+import 'package:stock_app/features/screener/screens/screener_screen.dart';
+import 'package:stock_app/features/heatmap/screens/heatmap_screen.dart';
+import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
+import 'package:stock_app/features/fiidii/screens/fiidii_screen.dart';
+import 'package:stock_app/features/compare/screens/compare_screen.dart';
+import 'package:stock_app/features/calculator/screens/brokerage_calculator_screen.dart';
+import 'package:stock_app/features/tax/screens/tax_report_screen.dart';
+import 'package:stock_app/features/assistant/screens/assistant_screen.dart';
+import 'package:stock_app/features/fno/screens/fno_screen.dart';
 
 const _bg = Color(0xFFF5F6FA);
 const _card = Color(0xFFFFFFFF);
@@ -260,6 +269,15 @@ class _HomeScreenState extends State<HomeScreen> {
       {'icon': Icons.campaign_outlined, 'label': 'IPO', 'color': const Color(0xFFD81B60), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IpoScreen()))},
       {'icon': Icons.compare_arrows, 'label': 'ETF', 'color': const Color(0xFF43A047), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EtfScreen()))},
       {'icon': Icons.percent, 'label': 'MTF', 'color': const Color(0xFF8E24AA), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MtfScreen()))},
+      {'icon': Icons.candlestick_chart, 'label': 'F&O', 'color': const Color(0xFF5E35B1), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FnOScreen()))},
+      {'icon': Icons.filter_alt_outlined, 'label': 'Screener', 'color': const Color(0xFF00897B), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ScreenerScreen()))},
+      {'icon': Icons.grid_view, 'label': 'Heatmap', 'color': const Color(0xFFF4511E), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HeatmapScreen()))},
+      {'icon': Icons.workspaces_outlined, 'label': 'Smallcase', 'color': const Color(0xFF3949AB), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SmallcaseScreen()))},
+      {'icon': Icons.public, 'label': 'FII/DII', 'color': const Color(0xFF00ACC1), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FiiDiiScreen()))},
+      {'icon': Icons.compare, 'label': 'Compare', 'color': const Color(0xFF7CB342), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CompareScreen()))},
+      {'icon': Icons.calculate_outlined, 'label': 'Calculator', 'color': const Color(0xFF6D4C41), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BrokerageCalculatorScreen()))},
+      {'icon': Icons.receipt_long, 'label': 'Tax Report', 'color': const Color(0xFFC0CA33), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TaxReportScreen()))},
+      {'icon': Icons.smart_toy_outlined, 'label': 'AI Assistant', 'color': const Color(0xFFD32F2F), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssistantScreen()))},
     ];
     final fixedIncome = [
       {'icon': Icons.savings, 'label': 'FD', 'color': const Color(0xFFFF7043), 'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FdScreen()))},
@@ -269,7 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final itemColor = item['color'] as Color;
       return InkWell(
         onTap: () {
-          Navigator.pop(dialogCtx);
           (item['onTap'] as VoidCallback)();
         },
         child: Column(

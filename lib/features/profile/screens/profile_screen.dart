@@ -391,7 +391,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final balance = _user?['balance'] != null ? (_user!['balance'] as num).toDouble() : 0.0;
 
     return MainShell(
-      currentIndex: 3,
+      currentIndex: 4,
       child: Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(

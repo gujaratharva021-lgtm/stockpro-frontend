@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
@@ -250,12 +250,11 @@ class _BasketScreenState extends State<BasketScreen> {
       ),
       floatingActionButton: baskets.isNotEmpty
           ? FloatingActionButton(
-        onPressed: _createBasket,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      )
+              onPressed: _createBasket,
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
           : null,
     );
   }
 }
-

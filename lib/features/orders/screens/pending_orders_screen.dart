@@ -3,6 +3,7 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
+import 'package:stock_app/features/orders/screens/basket_screen.dart';
 
 class PendingOrdersScreen extends StatefulWidget {
   const PendingOrdersScreen({super.key});
@@ -134,8 +135,10 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
                 child: Row(
                   children: [
                     _tabChip('Open Orders', _pendingOnly.length, 0),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 20),
                     _tabChip('Order History', null, 1),
+                    const SizedBox(width: 20),
+                    _tabChip('Baskets', null, 2),
                   ],
                 ),
               ),
@@ -149,7 +152,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
                   child: RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: _load,
-                    child: _tab == 0 ? _buildOpenOrders() : _buildHistory(),
+                    child: _tab == 0 ? _buildOpenOrders() : _tab == 1 ? _buildHistory() : const BasketScreen(),
                   ),
                 ),
             ],
