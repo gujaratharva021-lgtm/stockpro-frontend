@@ -27,6 +27,7 @@ import 'package:stock_app/features/fiidii/screens/fiidii_screen.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
 import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 
 void main() {
   runApp(
@@ -62,6 +63,7 @@ final _router = GoRouter(
     GoRoute(path: '/fii-dii', builder: (context, state) => const FiiDiiScreen()),
     GoRoute(path: '/smallcase', builder: (context, state) => const SmallcaseScreen()),
     GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
+    GoRoute(path: '/sip', builder: (context, state) => const SipScreen()),
   ],
 );
 

@@ -464,7 +464,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                         } catch (e) {
                           setSheetState(() {
                             submitting = false;
-                            errorMsg = e.toString().contains('insufficient') ? 'Insufficient balance' : 'Order failed: ' + (e is DioException ? (e.response?.data?.toString() ?? e.toString()) : e.toString());
+                            errorMsg = e.toString().contains('insufficient shares') ? 'You don\'t have enough shares to sell' : e.toString().contains('insufficient') ? 'Insufficient balance' : 'Order failed: ' + (e is DioException ? (e.response?.data?.toString() ?? e.toString()) : e.toString());
                           });
                         }
                       },

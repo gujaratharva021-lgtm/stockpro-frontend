@@ -452,6 +452,27 @@ class ApiService {
     });
   }
 
+  static Future<void> createSIP(String fundId, double amount, String frequency, String nextDate) async {
+    final dio = await _authDio();
+    await dio.post('/mutualfunds/sip', data: {
+      'fund_id': fundId,
+      'amount': amount,
+      'frequency': frequency,
+      'next_date': nextDate,
+    });
+  }
+
+  static Future<List<dynamic>> getSIPs() async {
+    final dio = await _authDio();
+    final res = await dio.get('/mutualfunds/sip');
+    return res.data['sips'] ?? [];
+  }
+
+  static Future<void> cancelSIP(String sipId) async {
+    final dio = await _authDio();
+    await dio.delete('/mutualfunds/sip/$sipId');
+  }
+
   static Future<String> getAbout(String symbol) async {
     final dio = await _authDio();
     final res = await dio.get('/stocks/$symbol/about');

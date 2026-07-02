@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 
 class FundDetailScreen extends StatefulWidget {
   final String fundId;
@@ -59,6 +60,108 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
     } finally {
       if (mounted) setState(() => _placingOrder = false);
     }
+  }
+
+  void _showSIPSetup() {
+    final amountController = TextEditingController();
+    String frequency = 'monthly';
+    DateTime nextDate = DateTime.now().add(const Duration(days: 30));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 16),
+              const Text('Start SIP', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 4),
+              Text(_fund?['name'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 16),
+              const Text('Monthly Amount', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+                child: TextField(
+                  controller: amountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                  decoration: const InputDecoration(prefixText: '₹ ', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('Frequency', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Row(
+                children: ['monthly', 'weekly', 'daily'].map((f) => Expanded(
+                  child: GestureDetector(
+                    onTap: () => setS(() => frequency = f),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: frequency == f ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: frequency == f ? AppColors.primary : AppColors.border),
+                      ),
+                      child: Center(child: Text(f[0].toUpperCase() + f.substring(1), style: TextStyle(color: frequency == f ? AppColors.primary : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600))),
+                    ),
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('First SIP Date', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(context: ctx, initialDate: nextDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
+                      if (picked != null) setS(() => nextDate = picked);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                      child: Text('${nextDate.day}/${nextDate.month}/${nextDate.year}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final amount = double.tryParse(amountController.text);
+                    if (amount == null || amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
+                      return;
+                    }
+                    try {
+                      await ApiService.createSIP(widget.fundId, amount, frequency, '${nextDate.year}-${nextDate.month.toString().padLeft(2, '0')}-${nextDate.day.toString().padLeft(2, '0')}');
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SIP started successfully!')));
+                    } catch (_) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start SIP')));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: const Text('Start SIP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -172,6 +275,28 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showSIPSetup(),
+                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        icon: const Icon(Icons.repeat, size: 18),
+                        label: const Text('Start SIP', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showSIPSetup(),
+                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        icon: const Icon(Icons.repeat, size: 18),
+                        label: const Text('Start SIP', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     Row(
                       children: [
