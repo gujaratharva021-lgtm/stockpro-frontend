@@ -33,10 +33,19 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   bool _loading = true;
   String? _error;
 
+  bool _firstLoad = true;
+
   @override
   void initState() {
     super.initState();
     _loadAll();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_firstLoad) _loadAll();
+    _firstLoad = false;
   }
 
   Future<void> _loadAll() async {
