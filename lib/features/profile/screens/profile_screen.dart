@@ -12,6 +12,9 @@ import 'package:stock_app/features/profile/screens/bank_accounts_screen.dart';
 import 'package:stock_app/features/profile/screens/kyc_documents_screen.dart';
 import 'package:stock_app/features/profile/screens/security_screen.dart';
 import 'package:stock_app/features/profile/screens/help_support_screen.dart';
+import 'package:stock_app/features/profile/screens/user_manual_screen.dart';
+import 'package:stock_app/features/profile/screens/invite_friends_screen.dart';
+import 'package:stock_app/core/services/privacy_mode_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
@@ -37,11 +40,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _onPaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _onPaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _onExternalWallet);
+    _privacyMode = PrivacyModeService.enabled.value;
+    PrivacyModeService.enabled.addListener(_onPrivacyModeChanged);
+  }
+
+  void _onPrivacyModeChanged() {
+    if (mounted) setState(() => _privacyMode = PrivacyModeService.enabled.value);
   }
 
   @override
   void dispose() {
     _razorpay.clear();
+    PrivacyModeService.enabled.removeListener(_onPrivacyModeChanged);
     super.dispose();
   }
 
@@ -266,6 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _uploadingAvatar = false;
   bool _biometricAvailable = false;
   bool _biometricEnabled = false;
+  bool _privacyMode = false;
 
   Future<void> _pickAndUploadAvatar() async {
     final picker = ImagePicker();
@@ -546,9 +557,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Wallet Balance', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                      Text(
-                        '₹${balance.toStringAsFixed(2)}',
-                        style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                      Row(
+                        children: [
+                          Text(
+                            _privacyMode ? '₹••••••' : '₹${balance.toStringAsFixed(2)}',
+                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => PrivacyModeService.enabled.value = !PrivacyModeService.enabled.value,
+                            child: Icon(_privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted, size: 18),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -608,10 +628,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       setState(() => _biometricEnabled = val);
                     },
                   ),
+                _menuItemWithToggle(
+                  Icons.remove_red_eye_outlined,
+                  'Privacy Mode',
+                  _privacyMode,
+                  (val) => PrivacyModeService.enabled.value = val,
+                ),
                 _menuItem(Icons.security_outlined, 'Security', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityScreen()))),
                 _menuItem(Icons.privacy_tip_outlined, 'Privacy Policy', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/stockpro-legal/privacy-policy.html')),
                 _menuItem(Icons.description_outlined, 'Terms of Service', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/stockpro-legal/terms-of-service.html')),
                 _menuItem(Icons.help_outline, 'Help & Support', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()))),
+              ]),
+              const SizedBox(height: 20),
+              _menuSection('More', [
+                _menuItem(Icons.menu_book_outlined, 'User Manual', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserManualScreen()))),
+                _menuItem(Icons.person_add_alt_outlined, 'Invite Friends', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InviteFriendsScreen()))),
+                _menuItem(Icons.description_outlined, 'Licenses', onTap: () => showLicensePage(context: context, applicationName: 'StockPro', applicationVersion: 'v1.0')),
               ]),
               const SizedBox(height: 24),
               Padding(
