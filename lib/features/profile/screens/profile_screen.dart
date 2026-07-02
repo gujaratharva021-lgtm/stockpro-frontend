@@ -16,6 +16,7 @@ import 'package:stock_app/features/profile/screens/user_manual_screen.dart';
 import 'package:stock_app/features/profile/screens/invite_friends_screen.dart';
 import 'package:stock_app/features/profile/screens/tradebook_screen.dart';
 import 'package:stock_app/features/profile/screens/downloads_screen.dart';
+import 'package:stock_app/features/profile/screens/connected_apps_screen.dart';
 import 'package:stock_app/core/services/privacy_mode_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -613,6 +614,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _menuItem(Icons.receipt_long_outlined, 'Tax P&L Report', onTap: () => context.push('/tax-report')),
                 _menuItem(Icons.list_alt_outlined, 'Tradebook', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TradebookScreen()))),
                 _menuItem(Icons.download_outlined, 'Downloads', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DownloadsScreen()))),
+                _menuItem(Icons.apps_outlined, 'Connected Apps', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ConnectedAppsScreen()))),
                 _menuItem(Icons.repeat, 'My SIPs', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SipScreen()))),
               ]),
               const SizedBox(height: 20),
