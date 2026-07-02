@@ -26,6 +26,7 @@ import 'package:stock_app/features/auth/screens/forgot_password_screen.dart';
 import 'package:stock_app/features/fiidii/screens/fiidii_screen.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
 import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(
@@ -72,7 +73,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'StockPro',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.light().copyWith(
+        textTheme: GoogleFonts.notoSansTextTheme(AppTheme.light().textTheme),
+      ),
       routerConfig: _router,
     );
   }
