@@ -19,6 +19,7 @@ import 'package:stock_app/features/profile/screens/downloads_screen.dart';
 import 'package:stock_app/features/profile/screens/connected_apps_screen.dart';
 import 'package:stock_app/features/profile/screens/family_screen.dart';
 import 'package:stock_app/features/profile/screens/gift_stocks_screen.dart';
+import 'package:stock_app/features/profile/screens/app_code_screen.dart';
 import 'package:stock_app/core/services/privacy_mode_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
