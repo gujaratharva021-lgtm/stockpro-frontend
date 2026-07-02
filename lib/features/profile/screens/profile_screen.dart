@@ -621,6 +621,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _menuItem(Icons.family_restroom_outlined, 'Family', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyScreen()))),
                 _menuItem(Icons.card_giftcard_outlined, 'Gift Stocks', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GiftStocksScreen()))),
                 _menuItem(Icons.repeat, 'My SIPs', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SipScreen()))),
+                _menuItem(Icons.lock_outline, 'App Code', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AppCodeScreen()))),
               ]),
               const SizedBox(height: 20),
               _menuSection('Preferences', [
