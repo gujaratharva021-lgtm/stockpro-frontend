@@ -8,6 +8,10 @@ import 'package:stock_app/core/services/biometric_service.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
 import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 import 'package:stock_app/features/profile/screens/personal_details_screen.dart';
+import 'package:stock_app/features/profile/screens/bank_accounts_screen.dart';
+import 'package:stock_app/features/profile/screens/kyc_documents_screen.dart';
+import 'package:stock_app/features/profile/screens/security_screen.dart';
+import 'package:stock_app/features/profile/screens/help_support_screen.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
@@ -584,8 +588,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
               _menuSection('Account', [
                 _menuItem(Icons.person_outline, 'Personal Details', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalDetailsScreen()))),
-                _menuItem(Icons.account_balance_outlined, 'Bank Accounts'),
-                _menuItem(Icons.badge_outlined, 'KYC & Documents'),
+                _menuItem(Icons.account_balance_outlined, 'Bank Accounts', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BankAccountsScreen()))),
+                _menuItem(Icons.badge_outlined, 'KYC & Documents', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KycDocumentsScreen()))),
                 _menuItem(Icons.receipt_long_outlined, 'Tax P&L Report', onTap: () => context.push('/tax-report')),
                 _menuItem(Icons.repeat, 'My SIPs', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SipScreen()))),
               ]),
@@ -606,10 +610,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       setState(() => _biometricEnabled = val);
                     },
                   ),
-                _menuItem(Icons.security_outlined, 'Security'),
+                _menuItem(Icons.security_outlined, 'Security', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityScreen()))),
                 _menuItem(Icons.privacy_tip_outlined, 'Privacy Policy', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/stockpro-legal/privacy-policy.html')),
                 _menuItem(Icons.description_outlined, 'Terms of Service', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/stockpro-legal/terms-of-service.html')),
-                _menuItem(Icons.help_outline, 'Help & Support'),
+                _menuItem(Icons.help_outline, 'Help & Support', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()))),
               ]),
               const SizedBox(height: 24),
               Padding(
