@@ -274,7 +274,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             pw.SizedBox(height: 30),
             pw.Text(
               'Note: This statement reflects average buy price and quantity currently held. Market value and unrealized P&L are not included as they fluctuate with live prices.',
-              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic),
+              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic),
             ),
           ],
         ),
@@ -474,7 +474,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             pw.SizedBox(height: 30),
             pw.Text(
               'Disclaimer: This is an estimate for informational purposes only, based on FIFO lot matching, and does not constitute professional tax advice. Please consult a tax advisor for filing purposes.',
-              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic),
+              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic),
             ),
           ],
         ),
