@@ -125,6 +125,12 @@ class ApiService {
     return res.data;
   }
 
+  static Future<Map<String, dynamic>> getPnLReport() async {
+    final dio = await _authDio();
+    final res = await dio.get('/portfolio/pnl-report');
+    return res.data;
+  }
+
   static Future<Map<String, dynamic>> getPerformance() async {
     final dio = await _authDio();
     final res = await dio.get('/portfolio/performance');
