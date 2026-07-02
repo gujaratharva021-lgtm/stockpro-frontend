@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
+import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
+import 'package:stock_app/features/news/screens/news_detail_screen.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -13,7 +15,7 @@ class StockDetailScreen extends StatefulWidget {
   State<StockDetailScreen> createState() => _StockDetailScreenState();
 }
 
-class _StockDetailScreenState extends State<StockDetailScreen> {
+class _StockDetailScreenState extends State<StockDetailScreen> with SingleTickerProviderStateMixin {
   Map<String, dynamic>? _quote;
   bool _loadingQuote = true;
   String? _quoteError;
@@ -26,16 +28,29 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
   String? _aboutText;
   List<dynamic> _peers = [];
   final Map<String, dynamic> _peerQuotes = {};
+  List<dynamic> _stockNews = [];
+  bool _loadingNews = true;
+
+  late TabController _tabController;
+  final List<String> _tabs = ['Overview', 'Technicals', 'F&O', 'News', 'Events'];
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
     _loadQuote();
     _checkWatchlist();
     _loadHistory();
     _loadHolding();
     _loadAbout();
     _loadPeers();
+    _loadStockNews();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Map<String, double>? get _ohlc {
@@ -109,7 +124,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
       final sector = widget.stock['sector'];
       final symbol = widget.stock['symbol'];
       if (sector == null) return;
-      final sameSector = allStocks.where((s) => s['sector'] == sector && s['symbol'] != symbol).take(4).toList();
+      final sameSector = allStocks.where((s) => s['sector'] == sector && s['symbol'] != symbol).take(6).toList();
       if (mounted) setState(() => _peers = sameSector);
       for (final p in sameSector) {
         try {
@@ -120,6 +135,27 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     } catch (_) {}
   }
 
+  Future<void> _loadStockNews() async {
+    setState(() => _loadingNews = true);
+    try {
+      final allNews = await ApiService.getNews();
+      final symbol = (widget.stock['symbol'] ?? '').toString().toLowerCase();
+      final companyName = (widget.stock['company_name'] ?? '').toString().toLowerCase();
+      final companyFirstWord = companyName.split(' ').first;
+      final filtered = allNews.where((n) {
+        final title = (n['title'] ?? '').toString().toLowerCase();
+        final content = (n['content'] ?? '').toString().toLowerCase();
+        final text = '$title $content';
+        if (symbol.isNotEmpty && text.contains(symbol.toLowerCase())) return true;
+        if (companyFirstWord.isNotEmpty && companyFirstWord.length > 2 && text.contains(companyFirstWord)) return true;
+        return false;
+      }).toList();
+      if (mounted) setState(() => _stockNews = filtered);
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loadingNews = false);
+    }
+  }
   Future<void> _loadAbout() async {
     try {
       final quote = await ApiService.getAbout(widget.stock['symbol']);
@@ -408,7 +444,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                       onPressed: submitting ? null : () async {
                         if (qty <= 0) { setSheetState(() => errorMsg = 'Enter a valid quantity'); return; }
                         if (price <= 0) { setSheetState(() => errorMsg = 'Enter a valid price'); return; }
-                        // holdings check skipped - backend validates
                         setSheetState(() { submitting = true; errorMsg = null; });
                         try {
                           String status;
@@ -422,11 +457,14 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           if (sheetContext.mounted) Navigator.pop(sheetContext);
                           _loadQuote();
                           _loadHolding();
-                          if (mounted) _showOrderConfirmation(buySell: buySell, qty: qty, orderType: orderType, status: status);
+                          if (mounted) {
+                            setState(() {});
+                            _showOrderConfirmation(buySell: buySell, qty: qty, orderType: orderType, status: status);
+                          }
                         } catch (e) {
                           setSheetState(() {
                             submitting = false;
-                            errorMsg = e.toString().contains('insufficient') ? 'Insufficient balance' : 'Order failed. Please try again';
+                            errorMsg = e.toString().contains('insufficient') ? 'Insufficient balance' : 'Order failed: ' + (e is DioException ? (e.response?.data?.toString() ?? e.toString()) : e.toString());
                           });
                         }
                       },
@@ -480,7 +518,10 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               width: double.infinity,
               height: 48,
               child: OutlinedButton(
-                onPressed: () => Navigator.pop(sheetContext),
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.pop(context);
+                },
                 style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text('Done', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
               ),
@@ -553,6 +594,32 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     );
   }
 
+  Color _avatarColor(String symbol) {
+    final colors = [
+      const Color(0xFF5E35B1), const Color(0xFF00897B), const Color(0xFFD81B60),
+      const Color(0xFF1E88E5), const Color(0xFFF4511E), const Color(0xFF43A047),
+      const Color(0xFF6D4C41), const Color(0xFF3949AB),
+    ];
+    final idx = symbol.isEmpty ? 0 : symbol.codeUnitAt(0) % colors.length;
+    return colors[idx];
+  }
+
+  Widget _buildComingSoon(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.construction_outlined, color: AppColors.textMuted, size: 40),
+            const SizedBox(height: 12),
+            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final stock = widget.stock;
@@ -580,6 +647,14 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                       Text(stock['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ]),
                   ),
+                  if (!_loadingQuote && _quoteError == null && price != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                        Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
                   // Basket button
                   IconButton(
                     icon: const Icon(Icons.add_shopping_cart_outlined, color: AppColors.textPrimary),
@@ -597,303 +672,34 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               ),
             ),
 
+            // Tab bar
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textMuted,
+                indicatorColor: AppColors.primary,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                tabs: _tabs.map((t) => Tab(text: t)).toList(),
+              ),
+            ),
+
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Price section
-                    if (_loadingQuote)
-                      const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
-                    else if (_quoteError != null)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
-                        child: Row(children: [
-                          const Icon(Icons.info_outline, color: AppColors.textMuted, size: 18),
-                          const SizedBox(width: 10),
-                          Expanded(child: Text(_quoteError!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
-                          TextButton(onPressed: _loadQuote, child: const Text('Retry', style: TextStyle(color: AppColors.primaryDark))),
-                        ]),
-                      )
-                    else ...[
-                        Text('₹${price?.toStringAsFixed(2) ?? '--'}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 32, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Row(children: [
-                          Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, color: isUp ? AppColors.success : AppColors.danger, size: 14),
-                          const SizedBox(width: 4),
-                          Text('${change != null ? (isUp ? '+' : '') + change.toStringAsFixed(2) : '--'}', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 13)),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
-                            child: Text('${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600, fontSize: 12)),
-                          ),
-                        ]),
-                      ],
-
-                    const SizedBox(height: 16),
-
-                    // Chart
-                    if (_loadingHistory)
-                      const Center(child: Padding(padding: EdgeInsets.all(20), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))))
-                    else if (_history.isNotEmpty) ...[
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                        child: PriceChart(history: _history),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // OHLC
-                    if (_ohlc != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _ohlcStat('Open', _ohlc!['open']!),
-                            _ohlcStat('High', _ohlc!['high']!),
-                            _ohlcStat('Low', _ohlc!['low']!),
-                            _ohlcStat('Prev. Close', _ohlc!['prev_close'] ?? (price ?? 0)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    // 52W Range
-                    if (_recentRange != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              const Text('Recent Low', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                              const Text('Recent High', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                            ]),
-                            const SizedBox(height: 4),
-                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              Text('₹${_recentRange!['low']!.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                              Text('₹${_recentRange!['high']!.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                            ]),
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: price != null && _recentRange!['high']! > _recentRange!['low']!
-                                    ? ((price - _recentRange!['low']!) / (_recentRange!['high']! - _recentRange!['low']!)).clamp(0.0, 1.0)
-                                    : 0.5,
-                                minHeight: 6,
-                                backgroundColor: AppColors.border,
-                                valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text('Based on last ${_history.length} trading days', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    // Stock details card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                      child: Column(children: [
-                        _infoRow('Exchange', stock['exchange'] ?? '-'),
-                        const Divider(color: AppColors.border, height: 20),
-                        _infoRow('Sector', stock['sector'] ?? '-'),
-                        if (_quote?['volume'] != null) ...[
-                          const Divider(color: AppColors.border, height: 20),
-                          _infoRow('Volume', _formatVolume((_quote!['volume'] as num).toDouble())),
-                        ],
-                        if (_avgVolume != null) ...[
-                          const Divider(color: AppColors.border, height: 20),
-                          _infoRow('Avg Volume', _formatVolume(_avgVolume!)),
-                        ],
-                        if (_recentRange != null) ...[
-                          const Divider(color: AppColors.border, height: 20),
-                          _infoRow('52W High', '₹${_recentRange!['high']!.toStringAsFixed(2)}', valueColor: AppColors.success),
-                          const Divider(color: AppColors.border, height: 20),
-                          _infoRow('52W Low', '₹${_recentRange!['low']!.toStringAsFixed(2)}', valueColor: AppColors.danger),
-                        ],
-                      ]),
-                    ),
-
-                    // My Holdings card
-                    if (_holdingQty > 0) ...[
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: holdingPnl >= 0 ? AppColors.success.withOpacity(0.05) : AppColors.danger.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: holdingPnl >= 0 ? AppColors.success.withOpacity(0.3) : AppColors.danger.withOpacity(0.3)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Your Holdings', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                            const SizedBox(height: 12),
-                            Row(children: [
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                const Text('Qty', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                Text('${_holdingQty.toStringAsFixed(0)} shares', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                              ])),
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                const Text('Avg Price', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                Text('₹${_avgBuyPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                              ])),
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                const Text('Current Value', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                Text('₹${holdingValue.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                              ])),
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                                const Text('P&L', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                Text('${holdingPnl >= 0 ? '+' : ''}₹${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
-                              ])),
-                            ]),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    // About section
-                    if (_aboutText != null) ...[
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('About', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                            const SizedBox(height: 8),
-                            Text(_aboutText!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.5), maxLines: 5, overflow: TextOverflow.ellipsis),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    // Peer Comparison
-                    if (_peers.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Peer Comparison', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                            const SizedBox(height: 10),
-                            ..._peers.map((p) {
-                              final q = _peerQuotes[p['symbol']];
-                              final price = q != null ? (q['price'] as num?)?.toDouble() : null;
-                              final changePct = q != null ? (q['change_percent'] as num?)?.toDouble() : null;
-                              final isUp = (changePct ?? 0) >= 0;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(p['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                                          Text(p['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                        ],
-                                      ),
-                                    ),
-                                    if (price != null) ...[
-                                      Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${isUp ? '+' : ''}${changePct?.toStringAsFixed(2) ?? '0.00'}%',
-                                        style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600),
-                                      ),
-                                    ] else
-                                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    // Peer Comparison
-                    if (_peers.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Peer Comparison', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                            const SizedBox(height: 10),
-                            ..._peers.map((p) {
-                              final q = _peerQuotes[p['symbol']];
-                              final price = q != null ? (q['price'] as num?)?.toDouble() : null;
-                              final changePct = q != null ? (q['change_percent'] as num?)?.toDouble() : null;
-                              final isUp = (changePct ?? 0) >= 0;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(p['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                                          Text(p['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                        ],
-                                      ),
-                                    ),
-                                    if (price != null) ...[
-                                      Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${isUp ? '+' : ''}${changePct?.toStringAsFixed(2) ?? '0.00'}%',
-                                        style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600),
-                                      ),
-                                    ] else
-                                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-
-                    // BUY / SELL buttons
-                    Row(children: [
-                      Expanded(child: SizedBox(height: 52, child: ElevatedButton(
-                        onPressed: price == null ? null : () => _showOrderTicket('buy'),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: const Text('BUY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      ))),
-                      const SizedBox(width: 12),
-                      Expanded(child: SizedBox(height: 52, child: ElevatedButton(
-                        onPressed: price == null ? null : () => _showOrderTicket('sell'),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: const Text('SELL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      ))),
-                    ]),
-                  ],
-                ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildOverviewTab(price, changePercent, change, isUp, holdingValue, holdingPnl),
+                  _buildComingSoon('Technical indicators (RSI, MACD, Moving Averages) coming soon'),
+                  _buildComingSoon('F&O data (Futures & Options chain) for this stock coming soon'),
+                  _buildComingSoon('Stock-specific news filtering coming soon'),
+                  _buildComingSoon('Corporate events, earnings dates and announcements coming soon'),
+                ],
               ),
             ),
           ],
@@ -901,4 +707,351 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
       ),
     );
   }
+
+  Widget _buildOverviewTab(double? price, double? changePercent, double? change, bool isUp, double holdingValue, double holdingPnl) {
+    final stock = widget.stock;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Price section
+          if (_loadingQuote)
+            const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+          else if (_quoteError != null)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+              child: Row(children: [
+                const Icon(Icons.info_outline, color: AppColors.textMuted, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text(_quoteError!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+                TextButton(onPressed: _loadQuote, child: const Text('Retry', style: TextStyle(color: AppColors.primaryDark))),
+              ]),
+            )
+          else ...[
+              Text('₹${price?.toStringAsFixed(2) ?? '--'}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 32, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Row(children: [
+                Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, color: isUp ? AppColors.success : AppColors.danger, size: 14),
+                const SizedBox(width: 4),
+                Text('${change != null ? (isUp ? '+' : '') + change.toStringAsFixed(2) : '--'}', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 13)),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                  child: Text('${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600, fontSize: 12)),
+                ),
+              ]),
+            ],
+
+          const SizedBox(height: 16),
+
+          // Chart
+          if (_loadingHistory)
+            const Center(child: Padding(padding: EdgeInsets.all(20), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))))
+          else if (_history.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => AdvancedChartScreen(
+                          symbol: stock['symbol'] ?? '',
+                          companyName: stock['company_name'] ?? '',
+                          history: _history,
+                          currentPrice: price,
+                          changePercent: changePercent,
+                        )));
+                      },
+                      icon: const Icon(Icons.candlestick_chart, size: 16, color: AppColors.primary),
+                      label: const Text('Advanced Chart', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  PriceChart(history: _history),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // OHLC
+          if (_ohlc != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _ohlcStat('Open', _ohlc!['open']!),
+                  _ohlcStat('High', _ohlc!['high']!),
+                  _ohlcStat('Low', _ohlc!['low']!),
+                  _ohlcStat('Prev. Close', _ohlc!['prev_close'] ?? (price ?? 0)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // 52W Range
+          if (_recentRange != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text('Recent Low', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                    const Text('Recent High', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ]),
+                  const SizedBox(height: 4),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text('₹${_recentRange!['low']!.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text('₹${_recentRange!['high']!.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ]),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: price != null && _recentRange!['high']! > _recentRange!['low']!
+                          ? ((price - _recentRange!['low']!) / (_recentRange!['high']! - _recentRange!['low']!)).clamp(0.0, 1.0)
+                          : 0.5,
+                      minHeight: 6,
+                      backgroundColor: AppColors.border,
+                      valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text('Based on last ${_history.length} trading days', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // Stock details card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+            child: Column(children: [
+              _infoRow('Exchange', stock['exchange'] ?? '-'),
+              const Divider(color: AppColors.border, height: 20),
+              _infoRow('Sector', stock['sector'] ?? '-'),
+              if (_quote?['volume'] != null) ...[
+                const Divider(color: AppColors.border, height: 20),
+                _infoRow('Volume', _formatVolume((_quote!['volume'] as num).toDouble())),
+              ],
+              if (_avgVolume != null) ...[
+                const Divider(color: AppColors.border, height: 20),
+                _infoRow('Avg Volume', _formatVolume(_avgVolume!)),
+              ],
+              if (_recentRange != null) ...[
+                const Divider(color: AppColors.border, height: 20),
+                _infoRow('52W High', '₹${_recentRange!['high']!.toStringAsFixed(2)}', valueColor: AppColors.success),
+                const Divider(color: AppColors.border, height: 20),
+                _infoRow('52W Low', '₹${_recentRange!['low']!.toStringAsFixed(2)}', valueColor: AppColors.danger),
+              ],
+            ]),
+          ),
+
+          // My Holdings card
+          if (_holdingQty > 0) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: holdingPnl >= 0 ? AppColors.success.withOpacity(0.05) : AppColors.danger.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: holdingPnl >= 0 ? AppColors.success.withOpacity(0.3) : AppColors.danger.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Your Holdings', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('Qty', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text('${_holdingQty.toStringAsFixed(0)} shares', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ])),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('Avg Price', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text('₹${_avgBuyPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ])),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('Current Value', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text('₹${holdingValue.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ])),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                      const Text('P&L', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text('${holdingPnl >= 0 ? '+' : ''}₹${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
+                    ])),
+                  ]),
+                ],
+              ),
+            ),
+          ],
+
+          // About section
+          if (_aboutText != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('About', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Text(_aboutText!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.5), maxLines: 5, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+          ],
+
+          // Financials - placeholder (no data source yet)
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('Financials', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: AppColors.border.withOpacity(0.5), borderRadius: BorderRadius.circular(6)),
+                    child: const Text('Coming Soon', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                const Text('Quarterly revenue, profit and growth data will appear here once a financial data source is connected.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              ],
+            ),
+          ),
+
+          // Mutual funds - placeholder
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('Top Mutual Funds Invested', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: AppColors.border.withOpacity(0.5), borderRadius: BorderRadius.circular(6)),
+                    child: const Text('Coming Soon', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                const Text('Fund holdings data will appear here once connected to a fund-tracking data source.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              ],
+            ),
+          ),
+
+          // Similar Stocks (Peer Comparison, upgraded style)
+          if (_peers.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Similar Stocks', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 4),
+                  const Row(
+                    children: [
+                      Expanded(child: Text('Stock', style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
+                      Text('Market price', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                    ],
+                  ),
+                  const Divider(color: AppColors.border, height: 18),
+                  ..._peers.map((p) {
+                    final symbol = (p['symbol'] ?? '').toString();
+                    final q = _peerQuotes[symbol];
+                    final price = q != null ? (q['price'] as num?)?.toDouble() : null;
+                    final changePct = q != null ? (q['change_percent'] as num?)?.toDouble() : null;
+                    final change = q != null ? (q['change'] as num?)?.toDouble() : null;
+                    final isUp = (changePct ?? 0) >= 0;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(shape: BoxShape.circle, color: _avatarColor(symbol).withOpacity(0.15)),
+                            child: Center(
+                              child: Text(
+                                symbol.isNotEmpty ? symbol[0] : '?',
+                                style: TextStyle(color: _avatarColor(symbol), fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(p['company_name'] ?? symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text(symbol, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                              ],
+                            ),
+                          ),
+                          if (price != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                Text(
+                                  '${isUp ? '+' : ''}${change?.toStringAsFixed(2) ?? '0.00'} (${changePct?.toStringAsFixed(2) ?? '0.00'}%)',
+                                  style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            )
+                          else
+                            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+
+          // BUY / SELL buttons
+          Row(children: [
+            Expanded(child: SizedBox(height: 52, child: ElevatedButton(
+              onPressed: price == null ? null : () => _showOrderTicket('buy'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              child: const Text('BUY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            ))),
+            const SizedBox(width: 12),
+            Expanded(child: SizedBox(height: 52, child: ElevatedButton(
+              onPressed: price == null ? null : () => _showOrderTicket('sell'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              child: const Text('SELL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            ))),
+          ]),
+        ],
+      ),
+    );
+  }
 }
+
+
+
+
+
