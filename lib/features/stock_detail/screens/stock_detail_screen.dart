@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
 import 'package:stock_app/features/news/screens/news_detail_screen.dart';
+import 'package:stock_app/shared/widgets/stock_logo.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -987,17 +988,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
                         children: [
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(shape: BoxShape.circle, color: _avatarColor(symbol).withOpacity(0.15)),
-                            child: Center(
-                              child: Text(
-                                symbol.isNotEmpty ? symbol[0] : '?',
-                                style: TextStyle(color: _avatarColor(symbol), fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
-                            ),
-                          ),
+                          StockLogo(symbol: symbol, companyName: p['company_name']?.toString(), size: 34, borderRadiusFactor: 0.5),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(

@@ -6,6 +6,7 @@ import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
+import 'package:stock_app/shared/widgets/stock_logo.dart';
 
 class WatchlistScreen extends StatefulWidget {
   const WatchlistScreen({super.key});
@@ -468,17 +469,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  Container(
-                                    width: 34,
-                                    height: 34,
-                                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-                                    child: Center(
-                                      child: Text(
-                                        (item['symbol'] ?? '?').toString().substring(0, 1),
-                                        style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
+                                  StockLogo(symbol: item['symbol']?.toString(), companyName: item['company_name']?.toString(), size: 34),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Column(

@@ -24,6 +24,7 @@ import 'package:stock_app/features/calculator/screens/brokerage_calculator_scree
 import 'package:stock_app/features/tax/screens/tax_report_screen.dart';
 import 'package:stock_app/features/assistant/screens/assistant_screen.dart';
 import 'package:stock_app/features/fno/screens/fno_screen.dart';
+import 'package:stock_app/shared/widgets/stock_logo.dart';
 
 const _bg = Color(0xFFF5F6FA);
 const _card = Color(0xFFFFFFFF);
@@ -383,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _quickActionCircle(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _quickActionCircle(String imagePath, String label, Color color, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -393,7 +394,8 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 52,
               height: 52,
               decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.12)),
-              child: Icon(icon, color: color, size: 24),
+              padding: const EdgeInsets.all(12),
+              child: Image.asset(imagePath, fit: BoxFit.contain),
             ),
             const SizedBox(height: 6),
             Text(label, style: const TextStyle(color: _textSub, fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
@@ -666,10 +668,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(color: _card, borderRadius: BorderRadius.circular(18), border: Border.all(color: _cardBorder)),
                       child: Row(
                         children: [
-                          _quickActionCircle(Icons.candlestick_chart_outlined, 'Stocks', const Color(0xFFE53935), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarketsScreen()))),
-                          _quickActionCircle(Icons.savings_outlined, 'Mutual Funds', const Color(0xFFFB8C00), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MutualFundsScreen()))),
-                          _quickActionCircle(Icons.campaign_outlined, 'IPO', const Color(0xFFD81B60), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IpoScreen()))),
-                          _quickActionCircle(Icons.water_drop_outlined, 'Commodity', const Color(0xFF1E88E5), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommodityScreen()))),
+                          _quickActionCircle('assets/icons/stocks.png', 'Stocks', const Color(0xFFE53935), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarketsScreen()))),
+                          _quickActionCircle('assets/icons/mutual_funds.png', 'Mutual Funds', const Color(0xFFFB8C00), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MutualFundsScreen()))),
+                          _quickActionCircle('assets/icons/ipo.png', 'IPO', const Color(0xFFD81B60), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IpoScreen()))),
+                          _quickActionCircle('assets/icons/commodity.png', 'Commodity', const Color(0xFF1E88E5), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommodityScreen()))),
                         ],
                       ),
                     ),
@@ -881,12 +883,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: _cardBorder, width: 0.6))),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: (isUp ? _green : _red).withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text(stock['symbol'].toString().substring(0, 1), style: TextStyle(color: isUp ? _green : _red, fontWeight: FontWeight.bold, fontSize: 14))),
-            ),
+            StockLogo(symbol: stock['symbol']?.toString(), companyName: stock['company_name']?.toString(), size: 36),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

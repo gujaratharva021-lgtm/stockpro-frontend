@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
+import 'package:stock_app/shared/widgets/stock_logo.dart';
 
 class SearchScreen extends StatefulWidget {
   final bool selectMode;
@@ -152,8 +153,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
                             child: Row(children: [
-                              Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-                                child: Center(child: Text((stock['symbol'] ?? '?').toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)))),
+                              StockLogo(symbol: stock['symbol']?.toString(), companyName: stock['company_name']?.toString(), size: 36),
                               const SizedBox(width: 10),
                               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
                                 Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
@@ -191,20 +191,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                (stock['symbol'] ?? '?').toString().substring(0, 1),
-                                style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
+                          StockLogo(symbol: stock['symbol']?.toString(), companyName: stock['company_name']?.toString(), size: 40),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(

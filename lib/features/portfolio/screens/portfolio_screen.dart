@@ -148,6 +148,71 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.length + _options.length;
 
+  String _sortBy = 'default';
+
+  List<dynamic> get _sortedHoldings {
+    final list = List<dynamic>.from(_holdings);
+    double pnlOf(dynamic h) {
+      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+      final quote = _quotes[h['symbol']];
+      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+      return (qty * price) - (qty * avg);
+    }
+    double valueOf(dynamic h) {
+      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+      final quote = _quotes[h['symbol']];
+      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+      return qty * price;
+    }
+    switch (_sortBy) {
+      case 'pnl_high':
+        list.sort((a, b) => pnlOf(b).compareTo(pnlOf(a)));
+        break;
+      case 'pnl_low':
+        list.sort((a, b) => pnlOf(a).compareTo(pnlOf(b)));
+        break;
+      case 'value_high':
+        list.sort((a, b) => valueOf(b).compareTo(valueOf(a)));
+        break;
+      case 'az':
+        list.sort((a, b) => (a['symbol'] ?? '').toString().compareTo((b['symbol'] ?? '').toString()));
+        break;
+    }
+    return list;
+  }
+
+  List<dynamic> get _topGainers {
+    final list = List<dynamic>.from(_holdings);
+    double pctOf(dynamic h) {
+      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+      final quote = _quotes[h['symbol']];
+      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+      final invested = qty * avg;
+      if (invested <= 0) return 0;
+      return ((qty * price) - invested) / invested * 100;
+    }
+    list.sort((a, b) => pctOf(b).compareTo(pctOf(a)));
+    return list.take(3).toList();
+  }
+
+  List<dynamic> get _topLosers {
+    final list = List<dynamic>.from(_holdings);
+    double pctOf(dynamic h) {
+      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+      final quote = _quotes[h['symbol']];
+      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+      final invested = qty * avg;
+      if (invested <= 0) return 0;
+      return ((qty * price) - invested) / invested * 100;
+    }
+    list.sort((a, b) => pctOf(a).compareTo(pctOf(b)));
+    return list.where((h) => pctOf(h) < 0).take(3).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainShell(
@@ -406,10 +471,62 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
+      if (_topGainers.isNotEmpty || _topLosers.isNotEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Top Movers', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _moverColumn('Gainers', _topGainers, true)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _moverColumn('Losers', _topLosers, false)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text('Holdings (${_holdings.length})', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Holdings (${_holdings.length})', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+              PopupMenuButton<String>(
+                initialValue: _sortBy,
+                onSelected: (v) => setState(() => _sortBy = v),
+                child: Row(
+                  children: [
+                    Text(
+                      {'default': 'Default', 'pnl_high': 'P&L: High-Low', 'pnl_low': 'P&L: Low-High', 'value_high': 'Value', 'az': 'A-Z'}[_sortBy] ?? 'Sort',
+                      style: const TextStyle(color: AppColors.primaryDark, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    const Icon(Icons.sort, color: AppColors.primaryDark, size: 16),
+                  ],
+                ),
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'default', child: Text('Default')),
+                  PopupMenuItem(value: 'pnl_high', child: Text('P&L: High to Low')),
+                  PopupMenuItem(value: 'pnl_low', child: Text('P&L: Low to High')),
+                  PopupMenuItem(value: 'value_high', child: Text('Current Value')),
+                  PopupMenuItem(value: 'az', child: Text('Name: A-Z')),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
 
@@ -433,8 +550,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
-                  (context, index) => _holdingRow(_holdings[index]),
-              childCount: _holdings.length,
+                  (context, index) => _holdingRow(_sortedHoldings[index]),
+              childCount: _sortedHoldings.length,
             ),
           ),
         ),
@@ -492,6 +609,44 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           Text('${pct.toStringAsFixed(2)}%', style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
+    );
+  }
+
+  Widget _moverColumn(String title, List<dynamic> items, bool isGain) {
+    if (items.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          const Text('—', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        ...items.map((h) {
+          final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+          final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+          final quote = _quotes[h['symbol']];
+          final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+          final invested = qty * avg;
+          final pct = invested > 0 ? ((qty * price) - invested) / invested * 100 : 0;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: Text(h['symbol']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600))),
+                Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%', style: TextStyle(color: isGain ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 
