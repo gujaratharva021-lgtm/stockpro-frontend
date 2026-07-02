@@ -286,17 +286,6 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                         label: const Text('Start SIP', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showSIPSetup(),
-                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        icon: const Icon(Icons.repeat, size: 18),
-                        label: const Text('Start SIP', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
                     const SizedBox(height: 18),
                     Row(
                       children: [
