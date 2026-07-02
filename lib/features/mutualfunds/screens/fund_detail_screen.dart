@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class FundDetailScreen extends StatefulWidget {
   final String fundId;
@@ -19,11 +20,50 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
   final _amountController = TextEditingController();
   bool _placingOrder = false;
   String? _orderMessage;
+  late Razorpay _razorpay;
+  double _pendingSIPAmount = 0;
+  String _pendingSIPFrequency = 'monthly';
+  String _pendingSIPDate = '';
 
   @override
   void initState() {
     super.initState();
     _load();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _onSIPPaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _onSIPPaymentError);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
+
+  Future<void> _onSIPPaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      await ApiService.createSIP(widget.fundId, _pendingSIPAmount, _pendingSIPFrequency, _pendingSIPDate);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text('SIP of ₹${_pendingSIPAmount.toStringAsFixed(0)} started successfully!'),
+            ]),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment done but SIP setup failed. Contact support.')));
+    }
+  }
+
+  void _onSIPPaymentError(PaymentFailureResponse response) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: ${response.message ?? 'Unknown error'}'), backgroundColor: AppColors.danger),
+    );
   }
 
   Future<void> _load() async {
@@ -207,21 +247,24 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                       return;
                     }
                     try {
-                      await ApiService.createSIP(
-                        widget.fundId, amount, frequency,
-                        '${nextDate.year}-${nextDate.month.toString().padLeft(2, '0')}-${nextDate.day.toString().padLeft(2, '0')}',
-                      );
+                      _pendingSIPAmount = amount;
+                      _pendingSIPFrequency = frequency;
+                      _pendingSIPDate = '${nextDate.year}-${nextDate.month.toString().padLeft(2, '0')}-${nextDate.day.toString().padLeft(2, '0')}';
+
+                      final order = await ApiService.createPaymentOrder(amount);
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(children: [
-                            const Icon(Icons.check_circle, color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
-                            Text('SIP of ₹${amount.toStringAsFixed(0)}/month started!'),
-                          ]),
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
+
+                      final options = {
+                        'key': order['key_id'],
+                        'amount': order['amount'],
+                        'currency': order['currency'],
+                        'name': 'StockPro SIP',
+                        'description': 'First SIP installment - ${_fund?['name'] ?? ''}',
+                        'order_id': order['order_id'],
+                        'prefill': {'contact': '', 'email': ''},
+                        'theme': {'color': '#F5A623'},
+                      };
+                      _razorpay.open(options);
                     } catch (_) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start SIP. Please try again.')));
                     }
