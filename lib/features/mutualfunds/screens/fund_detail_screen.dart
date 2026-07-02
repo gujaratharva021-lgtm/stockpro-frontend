@@ -66,95 +66,183 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
     final amountController = TextEditingController();
     String frequency = 'monthly';
     DateTime nextDate = DateTime.now().add(const Duration(days: 30));
+    final quickAmounts = [500, 1000, 2000, 5000];
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => Padding(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
-              const SizedBox(height: 16),
-              const Text('Start SIP', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
-              const SizedBox(height: 4),
-              Text(_fund?['name'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 16),
-              const Text('Monthly Amount', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                child: TextField(
-                  controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                  decoration: const InputDecoration(prefixText: '₹ ', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('Frequency', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
+              // Handle
+              Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: const Color(0xFFE0E0E0), borderRadius: BorderRadius.circular(2)))),
+
+              // Header
               Row(
-                children: ['monthly', 'weekly', 'daily'].map((f) => Expanded(
-                  child: GestureDetector(
-                    onTap: () => setS(() => frequency = f),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: frequency == f ? AppColors.primary.withOpacity(0.1) : AppColors.background,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: frequency == f ? AppColors.primary : AppColors.border),
-                      ),
-                      child: Center(child: Text(f[0].toUpperCase() + f.substring(1), style: TextStyle(color: frequency == f ? AppColors.primary : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600))),
-                    ),
-                  ),
-                )).toList(),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('First SIP Date', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  GestureDetector(
-                    onTap: () async {
-                      final picked = await showDatePicker(context: ctx, initialDate: nextDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
-                      if (picked != null) setS(() => nextDate = picked);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                      child: Text('${nextDate.day}/${nextDate.month}/${nextDate.year}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.repeat, color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Start SIP', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(_fund?['name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
+
+              // Quick amount chips
+              const Text('Select Amount', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Row(
+                children: quickAmounts.map((amt) => Expanded(
+                  child: GestureDetector(
+                    onTap: () { setS(() {}); amountController.text = amt.toString(); },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: amountController.text == amt.toString() ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: amountController.text == amt.toString() ? AppColors.primary : AppColors.border),
+                      ),
+                      child: Center(
+                        child: Text('₹$amt', style: TextStyle(
+                          color: amountController.text == amt.toString() ? AppColors.primary : AppColors.textSecondary,
+                          fontSize: 12, fontWeight: FontWeight.w600,
+                        )),
+                      ),
+                    ),
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 12),
+
+              // Custom amount input
+              Container(
+                decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+                child: TextField(
+                  controller: amountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (_) => setS(() {}),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
+                  decoration: const InputDecoration(
+                    prefixText: '₹ ',
+                    prefixStyle: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
+                    hintText: 'Enter custom amount',
+                    hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Frequency
+              const Text('Frequency', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _freqChip('monthly', 'Monthly', Icons.calendar_month_outlined, frequency, (f) => setS(() => frequency = f)),
+                  const SizedBox(width: 8),
+                  _freqChip('weekly', 'Weekly', Icons.view_week_outlined, frequency, (f) => setS(() => frequency = f)),
+                  const SizedBox(width: 8),
+                  _freqChip('daily', 'Daily', Icons.today_outlined, frequency, (f) => setS(() => frequency = f)),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Date
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: ctx,
+                    initialDate: nextDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (picked != null) setS(() => nextDate = picked);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today_outlined, color: AppColors.primary, size: 18),
+                      const SizedBox(width: 10),
+                      const Text('First SIP Date', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      const Spacer(),
+                      Text('${nextDate.day} ${_monthName(nextDate.month)} ${nextDate.year}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right, color: AppColors.primary, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Start button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: () async {
                     final amount = double.tryParse(amountController.text);
                     if (amount == null || amount <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
                       return;
                     }
                     try {
-                      await ApiService.createSIP(widget.fundId, amount, frequency, '${nextDate.year}-${nextDate.month.toString().padLeft(2, '0')}-${nextDate.day.toString().padLeft(2, '0')}');
+                      await ApiService.createSIP(
+                        widget.fundId, amount, frequency,
+                        '${nextDate.year}-${nextDate.month.toString().padLeft(2, '0')}-${nextDate.day.toString().padLeft(2, '0')}',
+                      );
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SIP started successfully!')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(children: [
+                            const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text('SIP of ₹${amount.toStringAsFixed(0)}/month started!'),
+                          ]),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
                     } catch (_) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start SIP')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start SIP. Please try again.')));
                     }
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: const Text('Start SIP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.repeat, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        amountController.text.isNotEmpty && double.tryParse(amountController.text) != null
+                            ? 'Start SIP • ₹${amountController.text}/${frequency == 'monthly' ? 'mo' : frequency == 'weekly' ? 'wk' : 'day'}'
+                            : 'Start SIP',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -162,6 +250,35 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
         ),
       ),
     );
+  }
+
+  Widget _freqChip(String value, String label, IconData icon, String selected, Function(String) onTap) {
+    final isSelected = selected == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: isSelected ? AppColors.primary : AppColors.textMuted, size: 16),
+              const SizedBox(height: 4),
+              Text(label, style: TextStyle(color: isSelected ? AppColors.primary : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _monthName(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
   }
 
   @override
