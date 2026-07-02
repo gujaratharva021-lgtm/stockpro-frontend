@@ -588,8 +588,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
               _menuSection('Account', [
                 _menuItem(Icons.person_outline, 'Personal Details', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalDetailsScreen()))),
-                _menuItem(Icons.account_balance_outlined, 'Bank Accounts', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BankAccountsScreen()))),
-                _menuItem(Icons.badge_outlined, 'KYC & Documents', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KycDocumentsScreen()))),
                 _menuItem(Icons.receipt_long_outlined, 'Tax P&L Report', onTap: () => context.push('/tax-report')),
                 _menuItem(Icons.repeat, 'My SIPs', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SipScreen()))),
               ]),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/features/profile/screens/bank_accounts_screen.dart';
+import 'package:stock_app/features/profile/screens/kyc_documents_screen.dart';
 import 'package:dio/dio.dart';
 
 class PersonalDetailsScreen extends StatefulWidget {
@@ -147,6 +149,21 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                       ],
 
                       const SizedBox(height: 24),
+
+                      // Bank Accounts & KYC section
+                      const Text('Bank & Verification', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 10),
+                      _detailCard([
+                        _navRow(Icons.account_balance_outlined, 'Bank Accounts', 'Manage your linked bank accounts', () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const BankAccountsScreen()));
+                        }),
+                        const Divider(color: AppColors.border, height: 1),
+                        _navRow(Icons.badge_outlined, 'KYC & Documents', 'PAN, Aadhaar and verification status', () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const KycDocumentsScreen()));
+                        }),
+                      ]),
+
+                      const SizedBox(height: 24),
                       // Account ID
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -229,6 +246,32 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _navRow(IconData icon, String label, String subtitle, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.textMuted, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+          ],
+        ),
       ),
     );
   }
