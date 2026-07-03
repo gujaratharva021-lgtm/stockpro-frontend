@@ -773,7 +773,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                       label: const Text('Advanced Chart', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                   ),
-                  PriceChart(history: _history),
+                  PriceChart(history: _history, symbol: widget.stock['symbol'] ?? ''),
                 ],
               ),
             ),

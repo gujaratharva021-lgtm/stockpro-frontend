@@ -479,6 +479,18 @@ class ApiService {
     await dio.delete('/mutualfunds/sip/$sipId');
   }
 
+  static Future<List<dynamic>> getIntraday(String symbol, String interval) async {
+    final dio = await _authDio();
+    final res = await dio.get('/stocks/$symbol/intraday?interval=$interval');
+    return res.data['history'] ?? [];
+  }
+
+  static Future<List<dynamic>> getIntraday(String symbol, String interval) async {
+    final dio = await _authDio();
+    final res = await dio.get('/stocks/$symbol/intraday?interval=$interval');
+    return res.data['history'] ?? [];
+  }
+
   static Future<String> getAbout(String symbol) async {
     final dio = await _authDio();
     final res = await dio.get('/stocks/$symbol/about');

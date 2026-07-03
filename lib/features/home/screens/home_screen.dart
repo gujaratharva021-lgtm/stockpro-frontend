@@ -390,12 +390,14 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: onTap,
         child: Column(
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.12)),
-              padding: const EdgeInsets.all(12),
-              child: Image.asset(imagePath, fit: BoxFit.contain),
+            ClipOval(
+              child: Container(
+                width: 52,
+                height: 52,
+                color: color.withOpacity(0.12),
+                padding: const EdgeInsets.all(10),
+                child: Image.asset(imagePath, fit: BoxFit.contain),
+              ),
             ),
             const SizedBox(height: 6),
             Text(label, style: const TextStyle(color: _textSub, fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
