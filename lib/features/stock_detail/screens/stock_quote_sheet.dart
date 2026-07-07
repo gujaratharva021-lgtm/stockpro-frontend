@@ -485,6 +485,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                               history: _history,
                               currentPrice: price,
                               changePercent: changePercent,
+                              exchange: stock['exchange'] ?? 'NSE',
                             )));
                           }),
                           _actionButton(icon: Icons.tune, label: 'Option chain', onTap: () => _showComingSoon('Option chain')),
@@ -600,5 +601,6 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 }
+
 
 
