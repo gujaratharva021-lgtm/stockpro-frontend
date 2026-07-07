@@ -1,16 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
-/// Full TradingView "Advanced Chart" widget embedded via WebView.
-/// This gives the real TradingView UI - drawing tools, indicators,
-/// timeframes, log scale, etc. - exactly like the Kite/TradingView
-/// screenshots, since it loads TradingView's own free embeddable widget
-/// rather than a custom-built chart.
-///
-/// Note: this shows TradingView's own live market data for the symbol
-/// (not our backend's data). NSE/BSE-listed symbols are available on
-/// TradingView under prefixes like NSE: or BSE:.
+/// Full TradingView "Advanced Chart" widget embedded via WebView, using
+/// TradingView's current official embed script
+/// (embed-widget-advanced-chart.js). The older tv.js + `new
+/// TradingView.widget()` approach silently falls back to a demo symbol
+/// (e.g. Apple) when it fails to resolve - this uses the documented,
+/// currently-supported embed method instead.
 class AdvancedChartScreen extends StatefulWidget {
   final String symbol;
   final String companyName;
@@ -43,44 +41,50 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
     return '$prefix:${widget.symbol}';
   }
 
-  String get _widgetHtml => '''
+  String get _widgetHtml {
+    final config = {
+      "autosize": true,
+      "symbol": _tvSymbol,
+      "interval": "D",
+      "timezone": "Asia/Kolkata",
+      "theme": "light",
+      "style": "1",
+      "locale": "in",
+      "toolbar_bg": "#f1f3f6",
+      "enable_publishing": false,
+      "hide_top_toolbar": false,
+      "hide_legend": false,
+      "withdateranges": true,
+      "allow_symbol_change": false,
+      "details": true,
+      "hotlist": false,
+      "calendar": false,
+      "support_host": "https://www.tradingview.com"
+    };
+    final configJson = jsonEncode(config);
+
+    return '''
 <!DOCTYPE html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <style>
       html, body { margin:0; padding:0; height:100%; background:#ffffff; }
-      #tv_chart { height:100%; width:100%; }
+      .tradingview-widget-container { height:100%; width:100%; }
+      .tradingview-widget-container__widget { height:100%; width:100%; }
     </style>
   </head>
   <body>
-    <div id="tv_chart"></div>
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-      new TradingView.widget({
-        "autosize": true,
-        "symbol": "$_tvSymbol",
-        "interval": "D",
-        "timezone": "Asia/Kolkata",
-        "theme": "light",
-        "style": "1",
-        "locale": "in",
-        "toolbar_bg": "#f1f3f6",
-        "enable_publishing": false,
-        "hide_top_toolbar": false,
-        "hide_legend": false,
-        "withdateranges": true,
-        "allow_symbol_change": false,
-        "details": true,
-        "hotlist": false,
-        "calendar": false,
-        "studies": [],
-        "container_id": "tv_chart"
-      });
-    </script>
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        $configJson
+      </script>
+    </div>
   </body>
 </html>
 ''';
+  }
 
   @override
   void initState() {
