@@ -3,6 +3,7 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
 
 class WatchlistScreen extends StatefulWidget {
@@ -12,7 +13,6 @@ class WatchlistScreen extends StatefulWidget {
 }
 
 class _WatchlistScreenState extends State<WatchlistScreen> {
-  // Kite-style blue used for active tab / links (app's own accent stays orange elsewhere)
   static const Color _kiteBlue = Color(0xFF387ED1);
 
   List<dynamic> _watchlist = [];
@@ -23,8 +23,6 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   String _selectedList = 'My Watchlist';
   bool _seedAttempted = false;
 
-  // Same stocks shown in the Kite reference screenshot (GOLDBEES isn't in
-  // this app's demo stock table, so it's left out to avoid a failed add).
   static const List<String> _demoSymbols = ['HDFCBANK', 'INFY', 'TCS', 'ONGC', 'HINDUNILVR'];
 
   @override
@@ -194,6 +192,151 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 
+  // ===== Combined gray header + floating search bar + "New group" link =====
+  // These were three separate SliverToBoxAdapter widgets, shifted up with
+  // Transform.translate. Transform only moves the *paint*, not the layout
+  // box, so the shifted content could get clipped against neighbouring
+  // slivers -> that's the cropped search bar. Fix: build the whole block as
+  // one Stack in a single sliver, positioned properly, nothing to clip.
+  Widget _buildHeaderBlock() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          color: const Color(0xFFF0F1F3),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Watchlist',
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary, size: 26),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _listNames.map((name) {
+                          final isActive = name == _selectedList;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 24),
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() => _selectedList = name);
+                                _load();
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: TextStyle(
+                                      color: isActive ? _kiteBlue : AppColors.textMuted,
+                                      fontSize: 15,
+                                      fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  if (isActive)
+                                    Container(width: name.length * 8.0 + 4, height: 2, color: _kiteBlue),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _createNewList,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _kiteBlue.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(Icons.layers_outlined, color: _kiteBlue, size: 16),
+                          Positioned(
+                            bottom: 5,
+                            right: 5,
+                            child: Icon(Icons.add, color: _kiteBlue, size: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Floating white search bar — overlaps the gray/white boundary.
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 3))],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search, color: AppColors.textMuted, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _addStock,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Text('Search & add', style: TextStyle(color: AppColors.textMuted, fontSize: 15)),
+                    ),
+                  ),
+                ),
+                Text('${_watchlist.length}/250', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                const SizedBox(width: 10),
+                const Icon(Icons.tune, color: AppColors.textPrimary, size: 20),
+              ],
+            ),
+          ),
+        ),
+
+        // "+ New group" link — sits just below the search bar, still overlapping.
+        Positioned(
+          right: 16,
+          bottom: -28,
+          child: GestureDetector(
+            onTap: _createNewList,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.add, color: _kiteBlue, size: 18),
+                SizedBox(width: 4),
+                Text('New group', style: TextStyle(color: _kiteBlue, fontSize: 14, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainShell(
@@ -212,157 +355,11 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           onRefresh: _load,
           child: CustomScrollView(
             slivers: [
-              // ===== Gray header + floating search bar + "new group" link =====
-              // NOTE: these three pieces used to be three separate
-              // SliverToBoxAdapters. Flutter's Viewport clips each sliver's
-              // painting to that sliver's own geometry, so when the search
-              // bar was Transform.translate'd upward to overlap the header
-              // above it, that overlapping portion got clipped off (the
-              // "crop" bug). Fix: put all three in ONE SliverToBoxAdapter /
-              // single Column, so the translate offsets stay inside one
-              // continuous paint region instead of crossing a sliver
-              // boundary.
+              // ===== Gray header + floating search bar + New group link (combined) =====
               SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    Container(
-                      color: const Color(0xFFF0F1F3),
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Watchlist',
-                                style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
-                              ),
-                              const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary, size: 26),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: _listNames.map((name) {
-                                      final isActive = name == _selectedList;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 24),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() => _selectedList = name);
-                                            _load();
-                                          },
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                name,
-                                                style: TextStyle(
-                                                  color: isActive ? _kiteBlue : AppColors.textMuted,
-                                                  fontSize: 15,
-                                                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              if (isActive)
-                                                Container(width: name.length * 8.0 + 4, height: 2, color: _kiteBlue),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _createNewList,
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: _kiteBlue.withOpacity(0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Icon(Icons.layers_outlined, color: _kiteBlue, size: 16),
-                                      Positioned(
-                                        bottom: 5,
-                                        right: 5,
-                                        child: Icon(Icons.add, color: _kiteBlue, size: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // ===== Floating white search bar (overlaps gray/white boundary) =====
-                    Transform.translate(
-                      offset: const Offset(0, -20),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 3))],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.search, color: AppColors.textMuted, size: 22),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: _addStock,
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    child: Text('Search & add', style: TextStyle(color: AppColors.textMuted, fontSize: 15)),
-                                  ),
-                                ),
-                              ),
-                              Text('${_watchlist.length}/250', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-                              const SizedBox(width: 10),
-                              const Icon(Icons.tune, color: AppColors.textPrimary, size: 20),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // ===== "+ New group" link =====
-                    Transform.translate(
-                      offset: const Offset(0, -12),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: _createNewList,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.add, color: _kiteBlue, size: 18),
-                                SizedBox(width: 4),
-                                Text('New group', style: TextStyle(color: _kiteBlue, fontSize: 14, fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 28),
+                  child: _buildHeaderBlock(),
                 ),
               ),
 
@@ -411,18 +408,13 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       final hasEvent = item['has_event'] == true;
 
                       return GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => StockDetailScreen(stock: {
-                              'id': item['stock_id'] ?? item['id'],
-                              'symbol': item['symbol'],
-                              'company_name': item['company_name'],
-                              'exchange': item['exchange'] ?? '',
-                              'sector': item['sector'] ?? '',
-                            }),
-                          ),
-                        ).then((_) => _load()),
+                        onTap: () => showStockQuoteSheet(context, {
+                          'id': item['stock_id'] ?? item['id'],
+                          'symbol': item['symbol'],
+                          'company_name': item['company_name'],
+                          'exchange': item['exchange'] ?? '',
+                          'sector': item['sector'] ?? '',
+                        }).then((_) => _load()),
                         onLongPress: () => _showStockOptions(item),
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
