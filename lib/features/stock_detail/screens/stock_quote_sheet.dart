@@ -309,7 +309,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
             children: [
               Icon(icon, color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.w500)),
+              Text(label, style: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
@@ -364,8 +364,8 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-          Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500)),
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -380,7 +380,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           children: [
             Icon(icon, color: iconColor, size: 20),
             const SizedBox(width: 14),
-            Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
+            Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
           ],
         ),
       ),
@@ -419,9 +419,9 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     for (final l in depthSell) { totalSellQty += (l['quantity'] as num?) ?? 0; }
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.92,
+      initialChildSize: 0.94,
       minChildSize: 0.5,
-      maxChildSize: 0.95,
+      maxChildSize: 1.0,
       builder: (context, scrollController) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -436,10 +436,10 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                   Expanded(
                     child: ListView(
                       controller: scrollController,
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + MediaQuery.of(context).padding.bottom + 16),
                       children: [
                         // Header: symbol + price
-                        Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
+                        Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
                         if (_error != null)
                           Row(children: [
@@ -448,13 +448,13 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                           ])
                         else
                           Row(children: [
-                            Text(stock['exchange'] ?? 'NSE', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                            Text(stock['exchange'] ?? 'NSE', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                             const SizedBox(width: 8),
-                            Text(price != null ? price.toStringAsFixed(2) : '--', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 15, fontWeight: FontWeight.w600)),
+                            Text(price != null ? price.toStringAsFixed(2) : '--', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
                             const SizedBox(width: 8),
                             Text(
                               change != null ? '${isUp ? '+' : ''}${change.toStringAsFixed(2)} (${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%)' : '--',
-                              style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 13),
+                              style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12),
                             ),
                           ]),
                         const Divider(height: 28, color: AppColors.border),
@@ -545,15 +545,15 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
 
                         // Day's range
                         if (low != null && high != null) ...[
-                          const Text("Day's range", style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                          const Text("Day's range", style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                           const SizedBox(height: 12),
                           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            const Text('Low', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                            const Text('High', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                            const Text('Low', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                            const Text('High', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
                           ]),
                           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text(low.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 15)),
-                            Text(high.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 15)),
+                            Text(low.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+                            Text(high.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
                           ]),
                           const SizedBox(height: 8),
                           ClipRRect(
@@ -578,13 +578,13 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                         if (upperCircuit != null) _kvRow('Upper circuit', upperCircuit.toStringAsFixed(2)),
 
                         const Divider(height: 28, color: AppColors.border),
-                        const Text('Apps', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                        const Text('Apps', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                         _appRow(icon: Icons.arrow_upward, iconColor: Colors.orange, label: 'Fundamentals', onTap: () => _showComingSoon('Fundamentals')),
                         const Divider(height: 1, color: AppColors.border),
                         _appRow(icon: Icons.bolt, iconColor: AppColors.primary, label: 'Technicals', onTap: () => _showComingSoon('Technicals')),
 
                         const SizedBox(height: 20),
-                        const Text('Pin to overview', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                        const Text('Pin to overview', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                         const SizedBox(height: 10),
                         Row(children: [
                           Expanded(child: OutlinedButton(onPressed: () => _showComingSoon('Pin to overview'), style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.border)), child: const Text('Spot 1', style: TextStyle(color: AppColors.textPrimary)))),
@@ -600,4 +600,5 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 }
+
 
