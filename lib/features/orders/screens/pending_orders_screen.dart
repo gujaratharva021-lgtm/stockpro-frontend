@@ -102,7 +102,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return MainShell(
-      currentIndex: 3,
+      currentIndex: 1,
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(

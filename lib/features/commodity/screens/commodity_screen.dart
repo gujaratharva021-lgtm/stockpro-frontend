@@ -12,12 +12,14 @@ class CommodityScreen extends StatefulWidget {
 
 class _CommodityScreenState extends State<CommodityScreen> {
   List<dynamic> _commodities = [];
+  List<dynamic> _holdings = [];
   final Map<String, Map<String, dynamic>> _details = {};
   bool _loading = true;
+  bool _loadingHoldings = false;
   String? _error;
-  int _tab = 0; // 0=Overview, 1=Metals, 2=Energy, 3=Agri, 4=Currency
+  int _tab = 0; // 0=Overview, 1=Metals, 2=Energy, 3=Agri, 4=Currency, 5=Holdings
 
-  static const List<String> _tabs = ['Overview', 'Metals', 'Energy', 'Agri', 'Currency'];
+  static const List<String> _tabs = ['Overview', 'Metals', 'Energy', 'Agri', 'Currency', 'Holdings'];
 
   static const Map<String, String> _categoryMap = {
     'GOLD': 'Metals',
@@ -78,10 +80,23 @@ class _CommodityScreenState extends State<CommodityScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+    _loadHoldings();
+  }
+
+  Future<void> _loadHoldings() async {
+    setState(() => _loadingHoldings = true);
+    try {
+      final holdings = await ApiService.getCommodityPortfolio();
+      if (mounted) setState(() => _holdings = holdings);
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loadingHoldings = false);
+    }
   }
 
   List<dynamic> get _filteredCommodities {
     if (_tab == 0) return _commodities;
+    if (_tab == 5) return []; // Holdings tab uses its own list
     final tabName = _tabs[_tab];
     return _commodities.where((c) {
       final symbol = (c['symbol'] ?? '').toString().toUpperCase();
@@ -148,7 +163,56 @@ class _CommodityScreenState extends State<CommodityScreen> {
 
             const SizedBox(height: 12),
 
-            if (_loading)
+            if (_tab == 5) ...[
+              Expanded(
+                child: _loadingHoldings
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                    : _holdings.isEmpty
+                        ? const Center(child: Text('No commodity holdings yet', style: TextStyle(color: AppColors.textSecondary)))
+                        : RefreshIndicator(
+                            onRefresh: _loadHoldings,
+                            color: AppColors.primary,
+                            child: ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              itemCount: _holdings.length,
+                              separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 1),
+                              itemBuilder: (context, index) {
+                                final h = _holdings[index];
+                                final name = (h['name'] ?? h['commodity_name'] ?? '-').toString();
+                                final units = (h['units'] ?? h['quantity'] ?? 0).toString();
+                                final invested = (h['invested_amount'] as num?)?.toDouble() ?? 0.0;
+                                final currentValue = (h['current_value'] as num?)?.toDouble() ?? invested;
+                                final pnl = currentValue - invested;
+                                final isUp = pnl >= 0;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                                            const SizedBox(height: 3),
+                                            Text('Units: $units', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text('₹${currentValue.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                          Text('${isUp ? '+' : ''}₹${pnl.toStringAsFixed(2)}', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+              ),
+            ] else if (_loading)
               const Expanded(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
             else if (_error != null)
               Expanded(child: Center(child: Text(_error!, style: const TextStyle(color: AppColors.textSecondary))))

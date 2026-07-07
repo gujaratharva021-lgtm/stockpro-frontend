@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'auth_token');
       if (token != null && mounted) {
-        context.go('/home');
+        context.go('/watchlist');
       } else {
         setState(() => _error = 'No saved session. Please login with password first.');
       }
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final res = await ApiService.login(_emailController.text.trim(), _passwordController.text);
       const storage = FlutterSecureStorage();
       await storage.write(key: 'auth_token', value: res['token']);
-      if (mounted) context.go('/home');
+      if (mounted) context.go('/watchlist');
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error']?.toString() ?? 'Login failed');
     } catch (e) {

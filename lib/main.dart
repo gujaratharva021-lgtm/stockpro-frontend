@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_app/features/auth/screens/splash_screen.dart';
 import 'package:stock_app/features/auth/screens/login_screen.dart';
 import 'package:stock_app/features/auth/screens/signup_screen.dart';
-import 'package:stock_app/features/home/screens/home_screen.dart';
 import 'package:stock_app/features/watchlist/screens/watchlist_screen.dart';
+import 'package:stock_app/features/ipo/screens/ipo_screen.dart';
 import 'package:stock_app/features/portfolio/screens/portfolio_screen.dart';
 import 'package:stock_app/features/news/screens/news_screen.dart';
 
@@ -44,8 +44,8 @@ final _router = GoRouter(
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
-    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
     GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
+    GoRoute(path: '/ipo', builder: (context, state) => const IpoScreen()),
     GoRoute(path: '/portfolio', builder: (context, state) => const PortfolioScreen()),
     GoRoute(path: '/news', builder: (context, state) => const NewsScreen()),
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingFlow()),

@@ -17,11 +17,24 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
   String? _error;
   bool _applying = false;
   int _lots = 1;
+  final _upiController = TextEditingController();
+  String? _upiError;
+
+  bool _isValidUpi(String upi) {
+    final regex = RegExp(r'^[\w.\-]{2,256}@[a-zA-Z][a-zA-Z0-9]{2,64}$');
+    return regex.hasMatch(upi.trim());
+  }
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _upiController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -66,6 +79,13 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
   }
 
   Future<void> _confirmApply() async {
+    final upi = _upiController.text.trim();
+    if (!_isValidUpi(upi)) {
+      setState(() => _upiError = 'Enter a valid UPI ID (e.g. name@bank)');
+      return;
+    }
+    setState(() => _upiError = null);
+
     final lotSize = _ipo!['lot_size'] as int;
     final priceHigh = (_ipo!['price_band_high'] as num).toDouble();
     final amount = _lots * lotSize * priceHigh;
@@ -76,7 +96,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
         backgroundColor: Colors.white,
         title: const Text('Confirm Application', style: TextStyle(color: AppColors.textPrimary)),
         content: Text(
-          'Apply for $_lots lot(s) (${_lots * lotSize} shares) of ${_ipo!['company_name']} at ₹${priceHigh.toStringAsFixed(0)}/share?\n\nTotal amount: ₹${amount.toStringAsFixed(0)}',
+          'Apply for $_lots lot(s) (${_lots * lotSize} shares) of ${_ipo!['company_name']} at ₹${priceHigh.toStringAsFixed(0)}/share?\n\nTotal amount: ₹${amount.toStringAsFixed(0)}\nUPI ID: $upi',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -94,7 +114,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
 
     setState(() => _applying = true);
     try {
-      await ApiService.applyIPO(widget.ipoId, _lots);
+      await ApiService.applyIPO(widget.ipoId, _lots, upi);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Application submitted successfully')),
@@ -211,6 +231,32 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
                 ),
                 if (isOpen) ...[
                   const SizedBox(height: 24),
+                  const Text('UPI ID', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _upiController,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'yourname@bank',
+                      hintStyle: const TextStyle(color: AppColors.textMuted),
+                      errorText: _upiError,
+                      filled: true,
+                      fillColor: AppColors.cardBackground,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                    onChanged: (_) {
+                      if (_upiError != null) setState(() => _upiError = null);
+                    },
+                  ),
+                  const SizedBox(height: 20),
                   const Text('Number of Lots', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 12),
                   Row(

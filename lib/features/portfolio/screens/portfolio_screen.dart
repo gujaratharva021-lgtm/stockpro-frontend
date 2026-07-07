@@ -259,7 +259,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 ),
               ),
               SliverToBoxAdapter(
-                child: Padding(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [

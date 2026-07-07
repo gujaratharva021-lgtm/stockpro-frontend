@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/ipo/screens/ipo_detail_screen.dart';
+import 'package:stock_app/shared/widgets/main_shell.dart';
 
 class IpoScreen extends StatefulWidget {
   const IpoScreen({super.key});
@@ -66,7 +67,9 @@ class _IpoScreenState extends State<IpoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MainShell(
+      currentIndex: 3,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
@@ -157,6 +160,7 @@ class _IpoScreenState extends State<IpoScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

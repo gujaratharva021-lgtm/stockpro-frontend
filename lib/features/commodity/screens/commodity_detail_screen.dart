@@ -19,6 +19,10 @@ class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
   final _amountController = TextEditingController();
   bool _placingOrder = false;
   String? _orderMessage;
+  String? _amountError;
+
+  static const double _minAmount = 100.0;
+  static const double _maxAmount = 10000000.0;
 
   @override
   void initState() {
@@ -42,12 +46,29 @@ class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
   }
 
   Future<void> _placeOrder(String buySell) async {
-    final amount = double.tryParse(_amountController.text);
+    final text = _amountController.text.trim();
+    final amount = double.tryParse(text);
+
     if (amount == null || amount <= 0) {
-      setState(() => _orderMessage = 'Enter a valid amount');
+      setState(() => _amountError = 'Enter a valid amount');
       return;
     }
+    if (amount < _minAmount) {
+      setState(() => _amountError = 'Minimum investment is ₹${_minAmount.toStringAsFixed(0)}');
+      return;
+    }
+    if (amount > _maxAmount) {
+      setState(() => _amountError = 'Maximum investment is ₹${_maxAmount.toStringAsFixed(0)}');
+      return;
+    }
+    final decimalPart = text.contains('.') ? text.split('.')[1] : '';
+    if (decimalPart.length > 2) {
+      setState(() => _amountError = 'Amount can have up to 2 decimal places');
+      return;
+    }
+
     setState(() {
+      _amountError = null;
       _placingOrder = true;
       _orderMessage = null;
     });
@@ -146,14 +167,23 @@ class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
                                   controller: _amountController,
                                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                   style: const TextStyle(color: AppColors.textPrimary),
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     labelText: 'Amount',
-                                    labelStyle: TextStyle(color: AppColors.textMuted),
+                                    labelStyle: const TextStyle(color: AppColors.textMuted),
                                     prefixText: '₹ ',
+                                    errorText: _amountError,
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   ),
+                                  onChanged: (_) {
+                                    if (_amountError != null) setState(() => _amountError = null);
+                                  },
                                 ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Minimum ₹${_minAmount.toStringAsFixed(0)} · Maximum ₹${_maxAmount.toStringAsFixed(0)}',
+                                style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                               ),
                               if (_orderMessage != null) ...[
                                 const SizedBox(height: 12),

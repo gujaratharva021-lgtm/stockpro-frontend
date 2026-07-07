@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
+import 'package:stock_app/core/services/api_service.dart';
 
 class _Candle {
   final DateTime? date;
@@ -51,6 +52,7 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
   String _range = 'ALL';
   String _chartType = 'candle'; // candle | line
   late List<_Candle> _allCandles;
+  List<dynamic> _intradayData = [];
 
   @override
   void initState() {
@@ -58,7 +60,17 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
     _allCandles = widget.history.map((h) => _Candle.fromMap(h as Map)).toList();
   }
 
+  Future<void> _loadIntraday(String interval) async {
+    try {
+      final data = await ApiService.getIntraday(widget.symbol, interval.toLowerCase());
+      if (mounted) setState(() => _intradayData = data);
+    } catch (_) {}
+  }
+
   List<_Candle> get _filtered {
+    if (['5m', '15m', '30m', '1H'].contains(_range)) {
+      return _intradayData.map((h) => _Candle.fromMap(h as Map)).toList();
+    }
     if (_allCandles.isEmpty) return [];
     int n;
     switch (_range) {
@@ -72,7 +84,7 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
   }
 
   List<dynamic> get _filteredAsMaps {
-    // for reuse with existing PriceChart widget (line mode)
+    if (['5m', '15m', '30m', '1H'].contains(_range)) return _intradayData;
     final f = _filtered;
     final startIdx = _allCandles.length - f.length;
     return widget.history.sublist(startIdx < 0 ? 0 : startIdx);
@@ -145,7 +157,7 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
                                 : Container(
                                     padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
                                     decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                                    child: PriceChart(history: _filteredAsMaps),
+                                    child: PriceChart(history: _filteredAsMaps, symbol: widget.symbol),
                                   ),
                           ),
                           const SizedBox(height: 8),
@@ -160,10 +172,15 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
 
             // Range tabs
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['1W', '1M', '3M', 'ALL'].map((r) => _rangeTab(r)).toList(),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: ['5m', '15m', '30m', '1H', '1W', '1M', '3M', 'ALL']
+                      .map((r) => Padding(padding: const EdgeInsets.only(right: 6), child: _rangeTab(r)))
+                      .toList(),
+                ),
               ),
             ),
           ],
@@ -191,7 +208,12 @@ class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
   Widget _rangeTab(String r) {
     final active = _range == r;
     return GestureDetector(
-      onTap: () => setState(() => _range = r),
+      onTap: () {
+        setState(() => _range = r);
+        if (['5m', '15m', '30m', '1H'].contains(r)) {
+          _loadIntraday(r);
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(

@@ -308,7 +308,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           child: Row(children: [
             const Icon(Icons.check_circle, color: AppColors.success, size: 24),
             const SizedBox(width: 12),
-            Text('+91 ${_phoneController.text} verified successfully', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
+            Expanded(
+              child: Text('+91 ${_phoneController.text} verified successfully', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
+            ),
           ]),
         ),
     ]);

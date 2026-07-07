@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (token == null) {
       context.go('/login');
     } else {
-      context.go('/home');
+      context.go('/watchlist');
     }
   }
 

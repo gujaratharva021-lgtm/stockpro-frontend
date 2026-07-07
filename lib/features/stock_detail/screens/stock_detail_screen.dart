@@ -682,6 +682,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
               child: TabBar(
                 controller: _tabController,
                 isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.zero,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 14),
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.textMuted,
                 indicatorColor: AppColors.primary,

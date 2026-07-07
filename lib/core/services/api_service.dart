@@ -355,11 +355,12 @@ class ApiService {
     return res.data['applications'] ?? [];
   }
 
-  static Future<void> applyIPO(String ipoId, int lots) async {
+  static Future<void> applyIPO(String ipoId, int lots, String upiId) async {
     final dio = await _authDio();
     await dio.post('/ipo/apply', data: {
       'ipo_id': ipoId,
       'lots': lots,
+      'upi_id': upiId,
     });
   }
 
@@ -477,12 +478,6 @@ class ApiService {
   static Future<void> cancelSIP(String sipId) async {
     final dio = await _authDio();
     await dio.delete('/mutualfunds/sip/$sipId');
-  }
-
-  static Future<List<dynamic>> getIntraday(String symbol, String interval) async {
-    final dio = await _authDio();
-    final res = await dio.get('/stocks/$symbol/intraday?interval=$interval');
-    return res.data['history'] ?? [];
   }
 
   static Future<List<dynamic>> getIntraday(String symbol, String interval) async {

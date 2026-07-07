@@ -301,6 +301,127 @@ class _MarketsScreenState extends State<MarketsScreen> {
     );
   }
 
+  void _showQuickBuy(dynamic stock, double? price) {
+    if (price == null || price <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Price not available right now')),
+      );
+      return;
+    }
+    int qty = 1;
+    bool placing = false;
+    String? error;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final total = qty * price;
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(stock['company_name'] ?? stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                            Text('₹${price.toStringAsFixed(2)} / share', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      IconButton(icon: const Icon(Icons.close, color: AppColors.textPrimary), onPressed: () => Navigator.pop(ctx)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  const Text('Quantity', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          if (qty > 1) setModalState(() => qty--);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(width: 36, height: 36, decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.remove, size: 16, color: AppColors.primary)),
+                      ),
+                      Expanded(child: Center(child: Text('$qty', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)))),
+                      InkWell(
+                        onTap: () => setModalState(() => qty++),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(width: 36, height: 36, decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.add, size: 16, color: AppColors.primary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Total Amount', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                        Text('₹${total.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 10),
+                    Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      onPressed: placing
+                          ? null
+                          : () async {
+                              setModalState(() {
+                                placing = true;
+                                error = null;
+                              });
+                              try {
+                                await ApiService.placeOrder(stock['id'], 'BUY', qty, price);
+                                if (ctx.mounted) {
+                                  Navigator.pop(ctx);
+                                }
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Bought $qty share(s) of ${stock['symbol'] ?? ''}')),
+                                  );
+                                  _loadStocks();
+                                }
+                              } catch (e) {
+                                setModalState(() {
+                                  placing = false;
+                                  error = 'Order failed. Please try again';
+                                });
+                              }
+                            },
+                      child: placing
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Buy Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _stockRow(dynamic s) {
     final symbol = s['symbol'];
     final quote = _quotes[symbol];
@@ -343,6 +464,16 @@ class _MarketsScreenState extends State<MarketsScreen> {
                   ],
                 ),
               ],
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () => _showQuickBuy(s, price),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(8)),
+                child: const Text('Buy', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
             ),
           ],
         ),

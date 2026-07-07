@@ -100,7 +100,7 @@ class _KycSuccessScreenState extends State<KycSuccessScreen> with SingleTickerPr
         SizedBox(
           width: double.infinity, height: 52,
           child: ElevatedButton(
-            onPressed: () => context.go('/home'),
+            onPressed: () => context.go('/watchlist'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
