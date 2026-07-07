@@ -204,7 +204,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
       children: [
         Container(
           color: const Color(0xFFF0F1F3),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 68),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -477,3 +477,4 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 }
+
