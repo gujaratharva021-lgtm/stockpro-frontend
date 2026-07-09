@@ -154,7 +154,7 @@ class ApiService {
     return res.data['orders'] ?? [];
   }
 
-  static Future<void> createPendingOrder(String stockId, String buySell, String orderType, double quantity, double triggerPrice) async {
+  static Future<void> createPendingOrder(String stockId, String buySell, String orderType, double quantity, double triggerPrice, {bool isGtt = false}) async {
     final dio = await _authDio();
     await dio.post('/pending-orders', data: {
       'stock_id': stockId,
@@ -162,12 +162,44 @@ class ApiService {
       'order_type': orderType,
       'quantity': quantity,
       'trigger_price': triggerPrice,
+      'is_gtt': isGtt,
     });
   }
 
   static Future<void> cancelPendingOrder(String orderId) async {
     final dio = await _authDio();
     await dio.delete('/pending-orders/$orderId');
+  }
+
+
+  static Future<double> getBalance() async {
+    final result = await getMe();
+    final user = result['user'] ?? {};
+    return (user['balance'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  static Future<Map<String, dynamic>> mtfOpenPosition(String stockId, String symbol, double quantity) async {
+    final dio = await _authDio();
+    final res = await dio.post('/mtf/open', data: {
+      'stock_id': stockId,
+      'symbol': symbol,
+      'quantity': quantity,
+    });
+    return res.data['position'] ?? {};
+  }
+
+  static Future<void> mtfClosePosition(String positionId, String symbol) async {
+    final dio = await _authDio();
+    await dio.post('/mtf/close', data: {
+      'position_id': positionId,
+      'symbol': symbol,
+    });
+  }
+
+  static Future<List<dynamic>> mtfGetPositions() async {
+    final dio = await _authDio();
+    final res = await dio.get('/mtf/positions');
+    return res.data['positions'] ?? [];
   }
 
   static Future<List<dynamic>> getNews() async {
@@ -492,13 +524,19 @@ class ApiService {
     return res.data['about'] as String? ?? '';
   }
 
-  static Future<String> askAssistant(String message) async {
-    try {
-      final dio = await _authDio();
-      final res = await dio.post('/assistant/chat', data: {'message': message});
-      return res.data['reply'] as String? ?? 'No response';
-    } catch (e) {
-      return 'Error: $e';
-    }
+	static Future<String> askAssistant(String message, {List<Map<String, String>> history = const []}) async {
+		try {
+			final dio = await _authDio();
+			final res = await dio.post('/assistant/chat', data: {'message': message, 'history': history});
+			return res.data['reply'] as String? ?? 'No response';
+		} catch (e) {
+			return 'Error: $e';
+		}
+	}
+
+  static Future<List<dynamic>> getOptionChain(String symbol, String expiry) async {
+    final dio = await _authDio();
+    final res = await dio.get('/stocks/$symbol/options', queryParameters: {'expiry': expiry});
+    return res.data['option_chain'] ?? [];
   }
 }

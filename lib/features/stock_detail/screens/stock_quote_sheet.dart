@@ -3,10 +3,18 @@ import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/fundamentals_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/option_chain_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/set_alert_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/gtt_screen.dart';
+import 'package:stock_app/core/services/notes_service.dart';
+import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
 /// Opens the Kite-style stock quote bottom sheet: BUY/SELL, view chart /
 /// option chain, set alert / add notes / create GTT, bid-offer depth,
-/// day's range, and the rest of the quote detail — matching the reference
+/// day's range, and the rest of the quote detail ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â matching the reference
 /// screenshots. Call this instead of pushing StockDetailScreen when the
 /// user taps a stock in the watchlist.
 Future<void> showStockQuoteSheet(BuildContext context, Map<String, dynamic> stock) {
@@ -85,6 +93,39 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature is coming soon')),
+    );
+  }
+
+  void _showAddNotesDialog() {
+    final symbol = widget.stock['symbol'] ?? '';
+    final controller = TextEditingController(text: NotesService().getNote(symbol) ?? "");
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [const Text('Notes'), IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx))],
+        ),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(hintText: 'eg: buy later', border: OutlineInputBorder()),
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                NotesService().setNote(symbol, controller.text);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note saved for this session')));
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              child: const Text('Save', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -200,102 +241,41 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 
-  void _showOrderTicket(String buySell) {
-    final isBuy = buySell == 'buy';
+  void _showOrderTicket(String buySell) async {
     final currentPrice = _quote != null ? (_quote!['price'] as num).toDouble() : 0.0;
-    String orderType = 'MARKET';
-    final priceController = TextEditingController(text: currentPrice.toStringAsFixed(2));
-    final qtyController = TextEditingController(text: '1');
-    bool submitting = false;
-    String? errorMsg;
+    final changePercent = _quote != null ? ((_quote!['change_percent'] as num?)?.toDouble() ?? 0.0) : 0.0;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          final price = double.tryParse(priceController.text) ?? currentPrice;
-          final qty = double.tryParse(qtyController.text) ?? 0;
-          final value = price * qty;
-          return Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
-                      child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 12)),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(widget.stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 17)),
-                  ]),
-                  const SizedBox(height: 16),
-                  Row(children: [
-                    Expanded(child: OutlinedButton(onPressed: () => setSheetState(() { orderType = 'MARKET'; priceController.text = currentPrice.toStringAsFixed(2); }), style: OutlinedButton.styleFrom(backgroundColor: orderType == 'MARKET' ? AppColors.primary.withOpacity(0.1) : null), child: const Text('Market'))),
-                    const SizedBox(width: 10),
-                    Expanded(child: OutlinedButton(onPressed: () => setSheetState(() => orderType = 'LIMIT'), style: OutlinedButton.styleFrom(backgroundColor: orderType == 'LIMIT' ? AppColors.primary.withOpacity(0.1) : null), child: const Text('Limit'))),
-                  ]),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: priceController,
-                    enabled: orderType == 'LIMIT',
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => setSheetState(() {}),
-                    decoration: const InputDecoration(labelText: 'Price', prefixText: '₹ ', border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: qtyController,
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setSheetState(() {}),
-                    decoration: const InputDecoration(labelText: 'Quantity', border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 14),
-                  Text('Value: ₹${value.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
-                  if (errorMsg != null) ...[
-                    const SizedBox(height: 10),
-                    Text(errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
-                  ],
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: submitting ? null : () async {
-                        if (qty <= 0 || price <= 0) { setSheetState(() => errorMsg = 'Enter valid price and quantity'); return; }
-                        setSheetState(() { submitting = true; errorMsg = null; });
-                        try {
-                          if (orderType == 'MARKET') {
-                            await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
-                          } else {
-                            await ApiService.createPendingOrder(widget.stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
-                          }
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
-                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${isBuy ? 'Buy' : 'Sell'} order placed')));
-                          _load();
-                        } catch (e) {
-                          setSheetState(() { submitting = false; errorMsg = 'Order failed: ${e.toString()}'; });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: isBuy ? AppColors.success : AppColors.danger),
-                      child: submitting
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text(isBuy ? 'BUY NOW' : 'SELL NOW', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderTicketScreen(
+          stock: widget.stock,
+          buySell: buySell,
+          currentPrice: currentPrice,
+          changePercent: changePercent,
+          holdingQty: 0,
+          avgBuyPrice: 0,
+          calcBrokerage: (value, product) => 0,
+          calcTaxes: (value, buySell) => 0,
+          onSubmit: ({required String orderType, required double qty, required double price}) async {
+            if (orderType == 'MARKET') {
+              await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
+              return 'Executed';
+            } else {
+              await ApiService.createPendingOrder(widget.stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
+              return 'Pending';
+            }
+          },
+        ),
       ),
     );
+
+    if (result != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${result['buySell'] == 'buy' ? 'Buy' : 'Sell'} order placed')),
+      );
+      _load();
+    }
   }
 
   Widget _actionButton({required IconData icon, required String label, required VoidCallback onTap}) {
@@ -488,13 +468,13 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                               exchange: stock['exchange'] ?? 'NSE',
                             )));
                           }),
-                          _actionButton(icon: Icons.tune, label: 'Option chain', onTap: () => _showComingSoon('Option chain')),
+                          _actionButton(icon: Icons.tune, label: 'Option chain', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OptionChainScreen(stock: widget.stock)))),
                         ]),
                         const Divider(height: 20, color: AppColors.border),
                         Row(children: [
-                          _actionButton(icon: Icons.notifications_none, label: 'Set alert', onTap: _showSetAlertDialog),
-                          _actionButton(icon: Icons.description_outlined, label: 'Add notes', onTap: () => _showComingSoon('Notes')),
-                          _actionButton(icon: Icons.shortcut, label: 'Create GTT', onTap: _showCreateGTTDialog),
+                          _actionButton(icon: Icons.notifications_none, label: 'Set alert', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SetAlertScreen(stock: widget.stock, currentPrice: price)))),
+                          _actionButton(icon: Icons.description_outlined, label: 'Add notes', onTap: _showAddNotesDialog),
+                          _actionButton(icon: Icons.shortcut, label: 'Create GTT', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GttScreen(stock: widget.stock, currentPrice: price, changePercent: changePercent)))),
                         ]),
                         const Divider(height: 24, color: AppColors.border),
 
@@ -580,9 +560,9 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
 
                         const Divider(height: 28, color: AppColors.border),
                         const Text('Apps', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                        _appRow(icon: Icons.arrow_upward, iconColor: Colors.orange, label: 'Fundamentals', onTap: () => _showComingSoon('Fundamentals')),
+                        _appRow(icon: Icons.arrow_upward, iconColor: Colors.orange, label: 'Fundamentals', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FundamentalsScreen(stock: widget.stock)))),
                         const Divider(height: 1, color: AppColors.border),
-                        _appRow(icon: Icons.bolt, iconColor: AppColors.primary, label: 'Technicals', onTap: () => _showComingSoon('Technicals')),
+                        _appRow(icon: Icons.bolt, iconColor: AppColors.primary, label: 'Technicals', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TechnicalsScreen(stock: widget.stock)))),
 
                         const SizedBox(height: 20),
                         const Text('Pin to overview', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
@@ -601,6 +581,5 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 }
-
 
 

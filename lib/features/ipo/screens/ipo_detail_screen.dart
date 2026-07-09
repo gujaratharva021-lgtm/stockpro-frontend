@@ -78,6 +78,16 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
     }
   }
 
+  String _formatDateShort(dynamic dateStr) {
+    if (dateStr == null) return '-';
+    try {
+      final d = DateTime.parse(dateStr.toString());
+      return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '-';
+    }
+  }
+
   Future<void> _confirmApply() async {
     final upi = _upiController.text.trim();
     if (!_isValidUpi(upi)) {
@@ -171,6 +181,10 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
     final priceHigh = (ipo['price_band_high'] as num?)?.toDouble() ?? 0.0;
     final lotSize = ipo['lot_size'] ?? 1;
     final isOpen = status == 'open';
+    final aboutText = ipo['about_text'] as String?;
+    final strengths = (ipo['strengths'] as List<dynamic>?)?.cast<String>();
+    final risks = (ipo['risks'] as List<dynamic>?)?.cast<String>();
+    final financials = (ipo['financials'] as List<dynamic>?)?.cast<Map<String, dynamic>>();
 
     return Column(
       children: [
@@ -183,10 +197,20 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
               Expanded(
-                child: Text(
-                  ipo['company_name'] ?? '',
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ipo['company_name'] ?? '',
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      ipo['company_name'] ?? '',
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -213,6 +237,8 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
                   ),
                   child: Column(
                     children: [
+                      _detailRow('Min Qty', '${ipo['min_qty'] ?? lotSize}'),
+                      const Divider(height: 24, color: AppColors.border),
                       _detailRow('Price Band', '₹${priceLow.toStringAsFixed(0)} - ₹${priceHigh.toStringAsFixed(0)}'),
                       const Divider(height: 24, color: AppColors.border),
                       _detailRow('Lot Size', '$lotSize shares'),
@@ -229,6 +255,64 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
                     ],
                   ),
                 ),
+
+                if (aboutText != null) ...[
+                  const SizedBox(height: 24),
+                  const Text('About the company', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 8),
+                  Text(aboutText, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5)),
+                ],
+
+                if (financials != null && financials.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Financials', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                      const Text('₹ in crores', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  ..._buildFinancialsChart(financials),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _legendDot(const Color(0xFF90A4E8), 'Total Assets'),
+                      const SizedBox(width: 14),
+                      _legendDot(const Color(0xFFF0C674), 'Revenue'),
+                      const SizedBox(width: 14),
+                      _legendDot(const Color(0xFFEF8C7C), 'Profit After Tax'),
+                    ],
+                  ),
+                ],
+
+                if (strengths != null && strengths.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text('Strengths', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 10),
+                  ...strengths.map((s) => _bulletLine(s)),
+                ],
+
+                if (risks != null && risks.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text('Risks', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 10),
+                  ...risks.map((r) => _bulletLine(r)),
+                ],
+
+                if (ipo['allotment_date'] != null) ...[
+                  const SizedBox(height: 24),
+                  const Text('IPO status', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 14),
+                  _timelineStep('Offer start', _formatDateShort(ipo['open_date']), false),
+                  _timelineStep('Offer end', _formatDateShort(ipo['close_date']), false),
+                  _timelineStep('Allotment', _formatDateShort(ipo['allotment_date']), false),
+                  _timelineStep('Refund Initiation', _formatDateShort(ipo['refund_date']), false),
+                  _timelineStep('Demat transfer', _formatDateShort(ipo['demat_transfer_date']), false),
+                  _timelineStep('Listing', _formatDateShort(ipo['listing_date']), false),
+                  _timelineStep('Mandate end', _formatDateShort(ipo['mandate_end_date']), true),
+                ],
+
                 if (isOpen) ...[
                   const SizedBox(height: 24),
                   const Text('UPI ID', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
@@ -319,6 +403,119 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  List<Widget> _buildFinancialsChart(List<Map<String, dynamic>> financials) {
+    double maxVal = 0;
+    for (final f in financials) {
+      final assets = (f['total_assets'] as num?)?.toDouble() ?? 0;
+      final revenue = (f['revenue'] as num?)?.toDouble() ?? 0;
+      if (assets > maxVal) maxVal = assets;
+      if (revenue > maxVal) maxVal = revenue;
+    }
+    if (maxVal <= 0) maxVal = 1;
+
+    return financials.map((f) {
+      final assets = (f['total_assets'] as num?)?.toDouble() ?? 0;
+      final revenue = (f['revenue'] as num?)?.toDouble() ?? 0;
+      final pat = (f['profit_after_tax'] as num?)?.toDouble() ?? 0;
+      final year = (f['year'] ?? '').toString();
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(year, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(height: 6),
+            _financialBar(assets, maxVal, const Color(0xFF90A4E8)),
+            const SizedBox(height: 4),
+            _financialBar(revenue, maxVal, const Color(0xFFF0C674)),
+            const SizedBox(height: 4),
+            _financialBar(pat, maxVal, const Color(0xFFEF8C7C)),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _financialBar(double value, double maxVal, Color color) {
+    final fraction = (value / maxVal).clamp(0.03, 1.0);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final barWidth = constraints.maxWidth * 0.75;
+        return Row(
+          children: [
+            Container(
+              width: barWidth * fraction,
+              height: 14,
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+            ),
+            const SizedBox(width: 8),
+            Text(value.toStringAsFixed(2), style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+      ],
+    );
+  }
+
+  Widget _bulletLine(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Icon(Icons.circle, size: 5, color: AppColors.textSecondary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4))),
+        ],
+      ),
+    );
+  }
+
+  Widget _timelineStep(String label, String date, bool isLast) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.border, width: 1.5)),
+              ),
+              if (!isLast) Expanded(child: Container(width: 1.5, color: AppColors.border)),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
+                const SizedBox(height: 2),
+                Text(date, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

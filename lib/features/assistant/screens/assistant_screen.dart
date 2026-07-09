@@ -33,7 +33,12 @@ class _AssistantScreenState extends State<AssistantScreen> {
     _scrollToBottom();
 
     try {
-      final reply = await ApiService.askAssistant(text.trim());
+			final history = _messages
+				.where((m) => m['role'] == 'user' || m['role'] == 'ai')
+				.map((m) => {'role': m['role'] == 'ai' ? 'model' : 'user', 'message': m['text'] ?? ''})
+				.toList();
+			final historyBeforeThisTurn = history.isNotEmpty ? history.sublist(0, history.length - 1) : history;
+			final reply = await ApiService.askAssistant(text.trim(), history: historyBeforeThisTurn);
       setState(() => _messages.add({'role': 'ai', 'text': reply}));
     } catch (_) {
       setState(() => _messages.add({

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -16,6 +17,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   static const Color _kiteBlue = Color(0xFF387ED1);
 
   List<dynamic> _watchlist = [];
+  Map<String, String> _exchangeBySymbol = {};
   Map<String, Map<String, dynamic>> _quotes = {};
   bool _loading = true;
   String? _error;
@@ -30,6 +32,20 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     super.initState();
     _loadListNames();
     _load().then((_) => _seedDemoStocksIfMissing());
+    _loadExchanges();
+  }
+
+  Future<void> _loadExchanges() async {
+    try {
+      final stocks = await ApiService.getStocks();
+      final map = <String, String>{};
+      for (final s in stocks) {
+        final symbol = s['symbol'];
+        final exchange = s['exchange'];
+        if (symbol != null && exchange != null) map[symbol] = exchange;
+      }
+      if (mounted) setState(() => _exchangeBySymbol = map);
+    } catch (_) {}
   }
 
   Future<void> _loadListNames() async {
@@ -215,7 +231,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     'Watchlist',
                     style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary, size: 26),
+                  GestureDetector(onTap: () => showOverviewSheet(context), child: const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary, size: 26)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -284,7 +300,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           ),
         ),
 
-        // Floating white search bar — overlaps the gray/white boundary.
+        // Floating white search bar - overlaps the gray/white boundary.
         Positioned(
           left: 16,
           right: 16,
@@ -317,7 +333,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           ),
         ),
 
-        // "+ New group" link — sits just below the search bar, still overlapping.
+        // "+ New group" link - sits just below the search bar, still overlapping.
         Positioned(
           right: 16,
           bottom: -28,
@@ -412,7 +428,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                           'id': item['stock_id'] ?? item['id'],
                           'symbol': item['symbol'],
                           'company_name': item['company_name'],
-                          'exchange': item['exchange'] ?? '',
+                          'exchange': _exchangeBySymbol[item['symbol']] ?? '',
                           'sector': item['sector'] ?? '',
                         }).then((_) => _load()),
                         onLongPress: () => _showStockOptions(item),

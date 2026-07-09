@@ -5,6 +5,7 @@ import 'package:stock_app/features/auth/screens/login_screen.dart';
 import 'package:stock_app/features/auth/screens/signup_screen.dart';
 import 'package:stock_app/features/watchlist/screens/watchlist_screen.dart';
 import 'package:stock_app/features/ipo/screens/ipo_screen.dart';
+import 'package:stock_app/features/ipo/screens/bids_screen.dart';
 import 'package:stock_app/features/portfolio/screens/portfolio_screen.dart';
 import 'package:stock_app/features/news/screens/news_screen.dart';
 
@@ -17,7 +18,7 @@ import 'package:stock_app/features/profile/screens/profile_screen.dart';
 import 'package:stock_app/features/compare/screens/compare_screen.dart';
 import 'package:stock_app/features/heatmap/screens/heatmap_screen.dart';
 import 'package:stock_app/features/tax/screens/tax_report_screen.dart';
-import 'package:stock_app/features/orders/screens/pending_orders_screen.dart';
+import 'package:stock_app/features/orders/screens/orders_screen.dart';
 import 'package:stock_app/features/calculator/screens/brokerage_calculator_screen.dart';
 import 'package:stock_app/features/screener/screens/screener_screen.dart';
 import 'package:stock_app/features/portfolio/screens/performance_screen.dart';
@@ -45,7 +46,7 @@ final _router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
     GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
-    GoRoute(path: '/ipo', builder: (context, state) => const IpoScreen()),
+    GoRoute(path: '/ipo', builder: (context, state) => const BidsScreen()),
     GoRoute(path: '/portfolio', builder: (context, state) => const PortfolioScreen()),
     GoRoute(path: '/news', builder: (context, state) => const NewsScreen()),
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingFlow()),
@@ -54,7 +55,7 @@ final _router = GoRouter(
     GoRoute(path: '/compare', builder: (context, state) => const CompareScreen()),
     GoRoute(path: '/heatmap', builder: (context, state) => const HeatmapScreen()),
     GoRoute(path: '/tax-report', builder: (context, state) => const TaxReportScreen()),
-    GoRoute(path: '/pending-orders', builder: (context, state) => const PendingOrdersScreen()),
+    GoRoute(path: '/pending-orders', builder: (context, state) => const OrdersScreen()),
     GoRoute(path: '/brokerage-calculator', builder: (context, state) => const BrokerageCalculatorScreen()),
     GoRoute(path: '/screener', builder: (context, state) => const ScreenerScreen()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformanceScreen()),

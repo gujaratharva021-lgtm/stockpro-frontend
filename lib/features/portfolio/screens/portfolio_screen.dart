@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -6,6 +7,8 @@ import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/utils/export_helper.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
+import 'package:stock_app/features/portfolio/screens/family_screen.dart';
 
 class PortfolioScreen extends StatefulWidget {
   const PortfolioScreen({super.key});
@@ -35,10 +38,20 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   bool _firstLoad = true;
 
+  bool _searching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     _loadAll();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -150,34 +163,67 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   String _sortBy = 'default';
 
+  double _changePctOf(dynamic h) {
+    final quote = _quotes[h['symbol']];
+    return quote != null ? (quote['change_percent'] as num?)?.toDouble() ?? 0 : 0;
+  }
+
+  double _ltpOf(dynamic h) {
+    final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+    final quote = _quotes[h['symbol']];
+    return quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+  }
+
+  double _pnlAbsOf(dynamic h) {
+    final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+    final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+    final price = _ltpOf(h);
+    return (qty * price) - (qty * avg);
+  }
+
+  double _pnlPctOf(dynamic h) {
+    final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+    final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+    final price = _ltpOf(h);
+    final invested = qty * avg;
+    if (invested <= 0) return 0;
+    return ((qty * price) - invested) / invested * 100;
+  }
+
+  double _investedOf(dynamic h) {
+    final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+    final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+    return qty * avg;
+  }
+
   List<dynamic> get _sortedHoldings {
-    final list = List<dynamic>.from(_holdings);
-    double pnlOf(dynamic h) {
-      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
-      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
-      final quote = _quotes[h['symbol']];
-      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
-      return (qty * price) - (qty * avg);
-    }
-    double valueOf(dynamic h) {
-      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
-      final quote = _quotes[h['symbol']];
-      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
-      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
-      return qty * price;
+    var list = List<dynamic>.from(_holdings);
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      list = list.where((h) {
+        final symbol = (h['symbol'] ?? '').toString().toLowerCase();
+        final name = (h['company_name'] ?? '').toString().toLowerCase();
+        return symbol.contains(q) || name.contains(q);
+      }).toList();
     }
     switch (_sortBy) {
-      case 'pnl_high':
-        list.sort((a, b) => pnlOf(b).compareTo(pnlOf(a)));
-        break;
-      case 'pnl_low':
-        list.sort((a, b) => pnlOf(a).compareTo(pnlOf(b)));
-        break;
-      case 'value_high':
-        list.sort((a, b) => valueOf(b).compareTo(valueOf(a)));
-        break;
       case 'az':
         list.sort((a, b) => (a['symbol'] ?? '').toString().compareTo((b['symbol'] ?? '').toString()));
+        break;
+      case 'change_pct':
+        list.sort((a, b) => _changePctOf(b).compareTo(_changePctOf(a)));
+        break;
+      case 'ltp':
+        list.sort((a, b) => _ltpOf(b).compareTo(_ltpOf(a)));
+        break;
+      case 'pnl_abs':
+        list.sort((a, b) => _pnlAbsOf(b).compareTo(_pnlAbsOf(a)));
+        break;
+      case 'pnl_pct':
+        list.sort((a, b) => _pnlPctOf(b).compareTo(_pnlPctOf(a)));
+        break;
+      case 'invested':
+        list.sort((a, b) => _investedOf(b).compareTo(_investedOf(a)));
         break;
     }
     return list;
@@ -185,32 +231,159 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   List<dynamic> get _topGainers {
     final list = List<dynamic>.from(_holdings);
-    double pctOf(dynamic h) {
-      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
-      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
-      final quote = _quotes[h['symbol']];
-      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
-      final invested = qty * avg;
-      if (invested <= 0) return 0;
-      return ((qty * price) - invested) / invested * 100;
-    }
-    list.sort((a, b) => pctOf(b).compareTo(pctOf(a)));
+    list.sort((a, b) => _pnlPctOf(b).compareTo(_pnlPctOf(a)));
     return list.take(3).toList();
   }
 
   List<dynamic> get _topLosers {
     final list = List<dynamic>.from(_holdings);
-    double pctOf(dynamic h) {
-      final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
-      final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
-      final quote = _quotes[h['symbol']];
-      final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
-      final invested = qty * avg;
-      if (invested <= 0) return 0;
-      return ((qty * price) - invested) / invested * 100;
-    }
-    list.sort((a, b) => pctOf(a).compareTo(pctOf(b)));
-    return list.where((h) => pctOf(h) < 0).take(3).toList();
+    list.sort((a, b) => _pnlPctOf(a).compareTo(_pnlPctOf(b)));
+    return list.where((h) => _pnlPctOf(h) < 0).take(3).toList();
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) {
+          Widget sortTile(String key, String label) {
+            final selected = _sortBy == key;
+            return ListTile(
+              title: Text(label, style: TextStyle(color: selected ? AppColors.primary : AppColors.textPrimary, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
+              trailing: selected ? const Icon(Icons.check, color: AppColors.primary) : null,
+              onTap: () {
+                setState(() => _sortBy = key);
+                Navigator.pop(ctx);
+              },
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            child: SingleChildScrollView(
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Filter', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                    TextButton(
+                      onPressed: () {
+                        setState(() { _sortBy = 'default'; _searchQuery = ''; _searchController.clear(); });
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('CLEAR', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+                const Divider(color: AppColors.border),
+                const Text('Sort', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                sortTile('az', 'Alphabetically'),
+                sortTile('change_pct', '% Change'),
+                sortTile('ltp', 'Last Traded Price'),
+                sortTile('pnl_abs', 'Profit & Loss (Absolute)'),
+                sortTile('pnl_pct', 'Profit & Loss (Percent)'),
+                sortTile('invested', 'Invested'),
+              ],
+            ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _toolbarIcon(IconData icon, {VoidCallback? onTap}) {
+    return IconButton(
+      icon: Icon(icon, color: AppColors.textMuted, size: 20),
+      onPressed: onTap,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+    );
+  }
+
+  Widget _buildToolbarRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: _searching
+          ? Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      hintText: 'Search holdings',
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.border)),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
+                  onPressed: () => setState(() {
+                    _searching = false;
+                    _searchQuery = '';
+                    _searchController.clear();
+                  }),
+                ),
+              ],
+            )
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+              children: [
+                _toolbarIcon(Icons.search, onTap: () => setState(() => _searching = true)),
+                const SizedBox(width: 6),
+                _toolbarIcon(Icons.tune, onTap: _showFilterSheet),
+                const SizedBox(width: 4),
+                PopupMenuButton<int>(
+                  onSelected: (i) => setState(() => _tab = i),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Equity', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary, size: 18),
+                    ],
+                  ),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 0, child: Text('Equity')),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyScreen())),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.people_outline, color: AppColors.primary, size: 18),
+                      SizedBox(width: 4),
+                      Text('Family', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () => context.push('/performance'),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.donut_small, color: AppColors.primary, size: 18),
+                      SizedBox(width: 4),
+                      Text('Analytics', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            ),
+    );
   }
 
   @override
@@ -233,25 +406,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       const Text('Portfolio', style: TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
                       Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.show_chart, color: AppColors.textPrimary),
-                            onPressed: () => context.push('/performance'),
-                          ),
-                          if (_transactions.isNotEmpty)
-                            PopupMenuButton<String>(
-                              icon: const Icon(Icons.download_outlined, color: AppColors.textSecondary, size: 22),
-                              onSelected: (value) {
-                                if (value == 'pdf') {
-                                  ExportHelper.exportTransactionsPdf(_transactions);
-                                } else {
-                                  ExportHelper.exportTransactionsCsv(_transactions);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(value: 'pdf', child: Text('Download Statement (PDF)')),
-                                const PopupMenuItem(value: 'csv', child: Text('Export as CSV')),
-                              ],
-                            ),
+                          GestureDetector(onTap: () => showOverviewSheet(context), child: const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary)),
                         ],
                       ),
                     ],
@@ -267,12 +422,11 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       _tabChip('Holdings', _holdings.length, 0),
                       const SizedBox(width: 20),
                       _tabChip('Positions', _positionsCount, 1),
-                      const SizedBox(width: 20),
-                      _tabChip('Mutual Funds', _myFunds.length, 2),
                     ],
                   ),
                 ),
               ),
+              SliverToBoxAdapter(child: _buildToolbarRow()),
               const SliverToBoxAdapter(child: Divider(color: AppColors.border, height: 24)),
 
               if (_loading)
@@ -282,7 +436,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               else ...[
                   if (_tab == 0) ..._buildHoldingsTab(),
                   if (_tab == 1) ..._buildPositionsTab(),
-                  if (_tab == 2) ..._buildMutualFundsTab(),
                 ],
             ],
           ),
@@ -301,12 +454,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           Row(
             children: [
               Text(label, style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textSecondary, fontSize: 14, fontWeight: active ? FontWeight.bold : FontWeight.w500)),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(color: active ? AppColors.primary.withOpacity(0.15) : AppColors.border, borderRadius: BorderRadius.circular(10)),
-                child: Text('$count', style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
             ],
           ),
           if (active) Container(margin: const EdgeInsets.only(top: 6), height: 2, width: 24, color: AppColors.primary),
@@ -319,185 +466,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     final isUp = _totalReturns >= 0;
     final isTodayUp = _todayReturns >= 0;
     return [
-      // Summary card
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Current Value', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          const SizedBox(height: 4),
-                          Text('₹${_totalCurrentValue.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Total Returns', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${isUp ? '+' : ''}₹${_totalReturns.toStringAsFixed(2)} (${_totalReturnsPct.toStringAsFixed(2)}%)',
-                            style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Invested Value', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          const SizedBox(height: 4),
-                          Text('₹${_totalInvested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Today's Returns", style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${isTodayUp ? '+' : ''}₹${_todayReturns.toStringAsFixed(2)} (${_todayReturnsPct.toStringAsFixed(2)}%)',
-                            style: TextStyle(color: isTodayUp ? AppColors.success : AppColors.danger, fontSize: 14, fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                const Divider(color: AppColors.border, height: 1),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(children: [
-                      const Text('1D Returns ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                      Text('${isTodayUp ? '+' : ''}${_todayReturnsPct.toStringAsFixed(2)}%', style: TextStyle(color: isTodayUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.bold)),
-                    ]),
-                    GestureDetector(
-                      onTap: () => context.push('/pending-orders'),
-                      child: const Row(
-                        children: [
-                          Text('All Orders', style: TextStyle(color: AppColors.primaryDark, fontSize: 12, fontWeight: FontWeight.w600)),
-                          Icon(Icons.chevron_right, color: AppColors.primaryDark, size: 16),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
 
-      const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-      // Allocation card
-      if (_totalCurrentValue > 0)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Allocation', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 110,
-                        height: 110,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            PieChart(
-                              PieChartData(
-                                sections: _allocationSections(),
-                                centerSpaceRadius: 32,
-                                sectionsSpace: 2,
-                              ),
-                            ),
-                            const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('Total', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _allocRow('Equity', AppColors.success, _stocksCurrent),
-                            _allocRow('Mutual Funds', const Color(0xFF1E88E5), _mfInvested),
-                            _allocRow('ETFs', const Color(0xFF8E24AA), _etfInvested),
-                            _allocRow('Cash & Others', AppColors.primary, _balance),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-      const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-      if (_topGainers.isNotEmpty || _topLosers.isNotEmpty)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Top Movers', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: _moverColumn('Gainers', _topGainers, true)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _moverColumn('Losers', _topLosers, false)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
 
       SliverToBoxAdapter(
         child: Padding(
@@ -505,14 +475,14 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Holdings (${_holdings.length})', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+              Text('Holdings (${_sortedHoldings.length})', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
               PopupMenuButton<String>(
                 initialValue: _sortBy,
                 onSelected: (v) => setState(() => _sortBy = v),
                 child: Row(
                   children: [
                     Text(
-                      {'default': 'Default', 'pnl_high': 'P&L: High-Low', 'pnl_low': 'P&L: Low-High', 'value_high': 'Value', 'az': 'A-Z'}[_sortBy] ?? 'Sort',
+                      {'default': 'Default', 'az': 'A-Z', 'change_pct': '% Change', 'ltp': 'LTP', 'pnl_abs': 'P&L', 'pnl_pct': 'P&L %', 'invested': 'Invested'}[_sortBy] ?? 'Sort',
                       style: const TextStyle(color: AppColors.primaryDark, fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                     const Icon(Icons.sort, color: AppColors.primaryDark, size: 16),
@@ -520,10 +490,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 ),
                 itemBuilder: (context) => const [
                   PopupMenuItem(value: 'default', child: Text('Default')),
-                  PopupMenuItem(value: 'pnl_high', child: Text('P&L: High to Low')),
-                  PopupMenuItem(value: 'pnl_low', child: Text('P&L: Low to High')),
-                  PopupMenuItem(value: 'value_high', child: Text('Current Value')),
-                  PopupMenuItem(value: 'az', child: Text('Name: A-Z')),
+                  PopupMenuItem(value: 'az', child: Text('Alphabetically')),
+                  PopupMenuItem(value: 'change_pct', child: Text('% Change')),
+                  PopupMenuItem(value: 'ltp', child: Text('Last Traded Price')),
+                  PopupMenuItem(value: 'pnl_abs', child: Text('Profit & Loss (Absolute)')),
+                  PopupMenuItem(value: 'pnl_pct', child: Text('Profit & Loss (Percent)')),
+                  PopupMenuItem(value: 'invested', child: Text('Invested')),
                 ],
               ),
             ],
@@ -531,7 +503,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         ),
       ),
 
-      if (_holdings.isEmpty)
+      if (_sortedHoldings.isEmpty)
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
@@ -540,7 +512,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 children: [
                   Icon(Icons.pie_chart_outline, color: AppColors.textMuted, size: 40),
                   const SizedBox(height: 10),
-                  const Text('No holdings yet', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  Text(_searchQuery.isNotEmpty ? 'No holdings match your search' : 'No holdings yet', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                 ],
               ),
             ),
@@ -558,24 +530,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         ),
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              _bottomAction(Icons.pie_chart_outline, 'Analyse', () => context.push('/performance')),
-              _bottomAction(Icons.sync, 'Smart Rebalance', () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Smart Rebalance is coming soon')),
-                );
-              }),
-              _bottomAction(Icons.file_download_outlined, 'Import Holdings', _showImportHoldings),
-              _bottomAction(Icons.description_outlined, 'Tax P&L', () => context.push('/tax-report')),
-            ],
-          ),
-        ),
-      ),
 
       const SliverToBoxAdapter(child: SizedBox(height: 24)),
     ];
@@ -620,7 +574,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         children: [
           Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('—', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          const Text('â€”', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       );
     }
@@ -630,12 +584,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
         const SizedBox(height: 6),
         ...items.map((h) {
-          final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
-          final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
-          final quote = _quotes[h['symbol']];
-          final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
-          final invested = qty * avg;
-          final pct = invested > 0 ? ((qty * price) - invested) / invested * 100 : 0;
+          final pct = _pnlPctOf(h);
           return Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: Row(
@@ -695,18 +644,13 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     final isUp = returns >= 0;
 
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => StockDetailScreen(stock: {
-            'id': h['stock_id'] ?? h['id'],
-            'symbol': h['symbol'],
-            'company_name': h['company_name'],
-            'exchange': h['exchange'] ?? 'NSE',
-            'sector': h['sector'] ?? '',
-          }),
-        ),
-      ),
+      onTap: () => showStockQuoteSheet(context, {
+        'id': h['stock_id'] ?? h['id'],
+        'symbol': h['symbol'],
+        'company_name': h['company_name'],
+        'exchange': h['exchange'] ?? 'NSE',
+        'sector': h['sector'] ?? '',
+      }),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 0.6))),

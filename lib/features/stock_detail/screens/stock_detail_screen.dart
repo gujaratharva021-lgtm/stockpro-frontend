@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
@@ -6,17 +6,25 @@ import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
+import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
 import 'package:stock_app/features/news/screens/news_detail_screen.dart';
 import 'package:stock_app/shared/widgets/stock_logo.dart';
+import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
-  const StockDetailScreen({super.key, required this.stock});
+  final int initialTabIndex;
+  const StockDetailScreen({super.key, required this.stock, this.initialTabIndex = 0});
   @override
   State<StockDetailScreen> createState() => _StockDetailScreenState();
 }
 
 class _StockDetailScreenState extends State<StockDetailScreen> with SingleTickerProviderStateMixin {
+  List<dynamic> _optionChain = [];
+  bool _loadingOptionChain = false;
+  String? _optionChainError;
+  String _selectedExpiry = '2026-07-28';
+  final List<String> _expiryOptions = ['2026-07-28', '2026-08-25', '2026-09-29'];
   Map<String, dynamic>? _quote;
   bool _loadingQuote = true;
   String? _quoteError;
@@ -38,7 +46,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: _tabs.length, vsync: this, initialIndex: widget.initialTabIndex);
     _loadQuote();
     _checkWatchlist();
     _loadHistory();
@@ -46,6 +54,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     _loadAbout();
     _loadPeers();
     _loadStockNews();
+    _loadOptionChain();
   }
 
   @override
@@ -84,6 +93,19 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     final volumes = _history.map((h) => (h['volume'] as num?)?.toDouble()).whereType<double>().toList();
     if (volumes.isEmpty) return null;
     return volumes.reduce((a, b) => a + b) / volumes.length;
+  }
+
+  Future<void> _loadOptionChain() async {
+    setState(() { _loadingOptionChain = true; _optionChainError = null; });
+    try {
+      final chain = await ApiService.getOptionChain(widget.stock['symbol'], _selectedExpiry);
+      print('OPTION_CHAIN_DEBUG: $chain');
+      setState(() => _optionChain = chain);
+    } catch (e) {
+      setState(() => _optionChainError = 'Option chain unavailable right now');
+    } finally {
+      if (mounted) setState(() => _loadingOptionChain = false);
+    }
   }
 
   Future<void> _loadHistory() async {
@@ -309,179 +331,45 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 
-  void _showOrderTicket(String buySell) {
-    final isBuy = buySell == 'buy';
+  void _showOrderTicket(String buySell) async {
     final currentPrice = _quote != null ? (_quote!['price'] as num).toDouble() : 0.0;
     final changePercent = _quote != null ? (_quote!['change_percent'] as num).toDouble() : 0.0;
 
-    String orderType = 'MARKET';
-    String product = 'DELIVERY';
-    String validity = 'DAY';
-    final priceController = TextEditingController(text: currentPrice.toStringAsFixed(2));
-    final qtyController = TextEditingController(text: '1');
-    bool submitting = false;
-    String? errorMsg;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) {
-        return StatefulBuilder(builder: (sheetContext, setSheetState) {
-          final price = double.tryParse(priceController.text) ?? currentPrice;
-          final qty = double.tryParse(qtyController.text) ?? 0;
-          final stockValue = price * qty;
-          final brokerage = _calcBrokerage(stockValue, product);
-          final taxes = _calcTaxes(stockValue, buySell);
-          final total = isBuy ? stockValue + brokerage + taxes : stockValue - brokerage - taxes;
-
-          return Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
-                  const SizedBox(height: 16),
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
-                      child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 12)),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(widget.stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 17)),
-                  ]),
-                  const SizedBox(height: 4),
-                  Row(children: [
-                    Text('${widget.stock['exchange'] ?? 'NSE'}: ₹${currentPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                    const SizedBox(width: 6),
-                    Text('${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(2)}%', style: TextStyle(color: changePercent >= 0 ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
-                  ]),
-                  if (!isBuy && _holdingQty > 0) ...[
-                    const SizedBox(height: 6),
-                    Text('Holding: ${_holdingQty.toStringAsFixed(0)} Shares • Avg ₹${_avgBuyPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  ],
-                  const SizedBox(height: 18),
-                  const Text('Order Type', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(child: _radioChip('Market', orderType == 'MARKET', () { setSheetState(() { orderType = 'MARKET'; priceController.text = currentPrice.toStringAsFixed(2); }); })),
-                    const SizedBox(width: 10),
-                    Expanded(child: _radioChip('Limit', orderType == 'LIMIT', () { setSheetState(() => orderType = 'LIMIT'); })),
-                  ]),
-                  const SizedBox(height: 14),
-                  const Text('Price', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  Container(
-                    decoration: BoxDecoration(color: orderType == 'MARKET' ? AppColors.border.withOpacity(0.3) : AppColors.cardBackground, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                    child: TextField(
-                      controller: priceController,
-                      enabled: orderType == 'LIMIT',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onChanged: (_) => setSheetState(() {}),
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                      decoration: const InputDecoration(prefixText: '₹ ', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text('Quantity', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  Container(
-                    decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                    child: TextField(
-                      controller: qtyController,
-                      keyboardType: TextInputType.number,
-                      onChanged: (_) => setSheetState(() {}),
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                      decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(isBuy ? 'Investment Amount' : 'Expected Value', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text('₹${stockValue.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  const Text('Product', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(child: _radioChip('Delivery (CNC)', product == 'DELIVERY', () => setSheetState(() => product = 'DELIVERY'))),
-                    const SizedBox(width: 10),
-                    Expanded(child: _radioChip('Intraday (MIS)', product == 'INTRADAY', () => setSheetState(() => product = 'INTRADAY'))),
-                  ]),
-                  const SizedBox(height: 14),
-                  const Text('Order Validity', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(child: _radioChip('Day', validity == 'DAY', () => setSheetState(() => validity = 'DAY'))),
-                    const SizedBox(width: 10),
-                    Expanded(child: _radioChip('IOC', validity == 'IOC', () => setSheetState(() => validity = 'IOC'))),
-                  ]),
-                  const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
-                    child: Column(children: [
-                      const Align(alignment: Alignment.centerLeft, child: Text('Estimated Charges', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600))),
-                      const SizedBox(height: 10),
-                      _chargeRow('Stock Value', stockValue),
-                      _chargeRow('Brokerage', brokerage),
-                      _chargeRow('Taxes & Charges', taxes),
-                      const Divider(color: AppColors.border, height: 16),
-                      _chargeRow(isBuy ? 'Total' : 'Net Receivable', total, bold: true),
-                    ]),
-                  ),
-                  if (errorMsg != null) ...[
-                    const SizedBox(height: 12),
-                    Text(errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
-                  ],
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: submitting ? null : () async {
-                        if (qty <= 0) { setSheetState(() => errorMsg = 'Enter a valid quantity'); return; }
-                        if (price <= 0) { setSheetState(() => errorMsg = 'Enter a valid price'); return; }
-                        setSheetState(() { submitting = true; errorMsg = null; });
-                        try {
-                          String status;
-                          if (orderType == 'MARKET') {
-                            await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
-                            status = 'Executed';
-                          } else {
-                            await ApiService.createPendingOrder(widget.stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
-                            status = 'Pending';
-                          }
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
-                          _loadQuote();
-                          _loadHolding();
-                          if (mounted) {
-                            setState(() {});
-                            _showOrderConfirmation(buySell: buySell, qty: qty, orderType: orderType, status: status);
-                          }
-                        } catch (e) {
-                          setSheetState(() {
-                            submitting = false;
-                            errorMsg = e.toString().contains('insufficient shares') ? 'You don\'t have enough shares to sell' : e.toString().contains('insufficient') ? 'Insufficient balance' : 'Order failed: ' + (e is DioException ? (e.response?.data?.toString() ?? e.toString()) : e.toString());
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: isBuy ? AppColors.success : AppColors.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                      child: submitting
-                          ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text(isBuy ? 'BUY NOW' : 'SELL NOW', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-      },
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderTicketScreen(
+          stock: widget.stock,
+          buySell: buySell,
+          currentPrice: currentPrice,
+          changePercent: changePercent,
+          holdingQty: _holdingQty,
+          avgBuyPrice: _avgBuyPrice,
+          calcBrokerage: _calcBrokerage,
+          calcTaxes: _calcTaxes,
+          onSubmit: ({required String orderType, required double qty, required double price}) async {
+            if (orderType == 'MARKET') {
+              await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
+              return 'Executed';
+            } else {
+              await ApiService.createPendingOrder(widget.stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
+              return 'Pending';
+            }
+          },
+        ),
+      ),
     );
+
+    if (result != null && mounted) {
+      _loadQuote();
+      _loadHolding();
+      _showOrderConfirmation(
+        buySell: result['buySell'] as String,
+        qty: result['qty'] as double,
+        orderType: result['orderType'] as String,
+        status: result['status'] as String,
+      );
+    }
   }
 
   void _showOrderConfirmation({required String buySell, required double qty, required String orderType, required String status}) {
@@ -605,6 +493,215 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     return colors[idx];
   }
 
+  String _expiryLabel(String expiry) {
+    try {
+      final date = DateTime.parse(expiry);
+      final now = DateTime.now();
+      final days = date.difference(now).inDays;
+      final dd = DateFormat('d MMM').format(date);
+      if (days <= 0) return dd;
+      if (days < 45) {
+        final weeks = (days / 7).round();
+        return '$dd (${weeks <= 1 ? '1 Week' : '$weeks Weeks'})';
+      }
+      final months = (days / 30).round();
+      return '$dd (${months <= 1 ? '1 Month' : '$months Months'})';
+    } catch (_) {
+      return expiry;
+    }
+  }
+
+  double? get _pcr {
+    if (_optionChain.isEmpty) return null;
+    double callOi = 0;
+    double putOi = 0;
+    for (final row in _optionChain) {
+      final call = row['call_option'];
+      final put = row['put_option'];
+      callOi += ((call?['oi'] as num?) ?? 0).toDouble();
+      putOi += ((put?['oi'] as num?) ?? 0).toDouble();
+    }
+    if (callOi == 0) return null;
+    return putOi / callOi;
+  }
+
+  double? get _maxPain {
+    if (_optionChain.isEmpty) return null;
+    double? best;
+    double bestLoss = double.infinity;
+    for (final row in _optionChain) {
+      final strike = (row['strike_price'] as num?)?.toDouble();
+      if (strike == null) continue;
+      double loss = 0;
+      for (final r in _optionChain) {
+        final s = (r['strike_price'] as num?)?.toDouble();
+        if (s == null) continue;
+        final callOi = ((r['call_option']?['oi'] as num?) ?? 0).toDouble();
+        final putOi = ((r['put_option']?['oi'] as num?) ?? 0).toDouble();
+        if (strike > s) loss += (strike - s) * callOi;
+        if (strike < s) loss += (s - strike) * putOi;
+      }
+      if (loss < bestLoss) {
+        bestLoss = loss;
+        best = strike;
+      }
+    }
+    return best;
+  }
+
+  Widget _statBox(String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionChainTab() {
+    final price = _quote != null ? (_quote!['price'] as num?)?.toDouble() : null;
+    final changePercent = _quote != null ? (_quote!['change_percent'] as num?)?.toDouble() : null;
+    final isUp = (changePercent ?? 0) >= 0;
+
+    return Column(
+      children: [
+        // Search-style price header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                const SizedBox(width: 10),
+                Text(widget.stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                const Spacer(),
+                if (price != null) ...[
+                  Text(price.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(width: 6),
+                  Text('${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+                ],
+              ],
+            ),
+          ),
+        ),
+        // Expiry chips
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _expiryOptions.map((exp) {
+                final selected = exp == _selectedExpiry;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(_expiryLabel(exp)),
+                    selected: selected,
+                    onSelected: (_) {
+                      setState(() => _selectedExpiry = exp);
+                      _loadOptionChain();
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        // Column headers
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              Expanded(child: Text('Call LTP', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+              SizedBox(width: 70, child: Text('Strike', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+              Expanded(child: Text('Put LTP', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+            ],
+          ),
+        ),
+        const Divider(color: AppColors.border, height: 12),
+        if (_loadingOptionChain)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (_optionChainError != null)
+          Expanded(child: Center(child: Text(_optionChainError!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))))
+        else if (_optionChain.isEmpty)
+          const Expanded(child: Center(child: Text('No option chain data available', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))))
+        else
+          Expanded(
+            child: ListView.separated(
+              itemCount: _optionChain.length,
+              separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 1),
+              itemBuilder: (context, index) {
+                final row = _optionChain[index];
+                final call = row['call_option'];
+                final put = row['put_option'];
+                final strike = row['strike_price'];
+                final atm = price != null && strike != null && ((strike as num).toDouble() - price).abs() < 2.5;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${call?['ltp'] ?? '-'}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            Text('OI: ${call?['oi'] ?? '-'}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 70,
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            color: atm ? AppColors.textPrimary : AppColors.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('$strike', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: atm ? Colors.white : AppColors.textPrimary)),
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('${put?['ltp'] ?? '-'}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            Text('OI: ${put?['oi'] ?? '-'}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        // PCR / Max Pain footer
+        if (_optionChain.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.border)),
+            ),
+            child: Row(
+              children: [
+                _statBox('PCR', _pcr != null ? _pcr!.toStringAsFixed(2) : '-'),
+                _statBox('Max Pain', _maxPain != null ? _maxPain!.toStringAsFixed(0) : '-'),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
   Widget _buildComingSoon(String message) {
     return Center(
       child: Padding(
@@ -699,8 +796,26 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                 controller: _tabController,
                 children: [
                   _buildOverviewTab(price, changePercent, change, isUp, holdingValue, holdingPnl),
-                  _buildComingSoon('Technical indicators (RSI, MACD, Moving Averages) coming soon'),
-                  _buildComingSoon('F&O data (Futures & Options chain) for this stock coming soon'),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.show_chart, color: AppColors.textMuted, size: 40),
+                          const SizedBox(height: 12),
+                          const Text('View RSI, SMA crossovers and detected candlestick patterns', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TechnicalsScreen(stock: widget.stock))),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                            child: const Text('View Technicals', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _buildOptionChainTab(),
                   _buildComingSoon('Stock-specific news filtering coming soon'),
                   _buildComingSoon('Corporate events, earnings dates and announcements coming soon'),
                 ],
@@ -893,7 +1008,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                     ])),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       const Text('P&L', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                      Text('${holdingPnl >= 0 ? '+' : ''}₹${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('${holdingPnl >= 0 ? '+' : ''}?${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
                     ])),
                   ]),
                 ],
@@ -1044,7 +1159,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 }
-
 
 
 
