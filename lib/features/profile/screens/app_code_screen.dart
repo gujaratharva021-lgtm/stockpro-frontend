@@ -18,7 +18,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
   DateTime? _createdAt;
   DateTime? _regeneratedAt;
 
-  static const _baseUrl = 'https://stock-backend-11rm.onrender.com/api/v1';
+  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   @override
   void initState() {

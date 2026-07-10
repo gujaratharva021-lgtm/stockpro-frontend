@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
                                       image: _user?['avatar_url'] != null
                                           ? DecorationImage(
-                                              image: NetworkImage('https://stock-backend-11rm.onrender.com${_user!['avatar_url']}'),
+                                              image: NetworkImage('https://adjimrxt3y.ap-south-1.awsapprunner.com${_user!['avatar_url']}'),
                                               fit: BoxFit.cover,
                                             )
                                           : null,

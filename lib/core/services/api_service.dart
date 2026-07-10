@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://stock-backend-11rm.onrender.com/api/v1';
+  static const String baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   static final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,

@@ -13,7 +13,7 @@ class _ConnectedAppsScreenState extends State<ConnectedAppsScreen> {
   List<dynamic> _apps = [];
   bool _loading = true;
 
-  static const _baseUrl = 'https://stock-backend-11rm.onrender.com/api/v1';
+  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   @override
   void initState() {

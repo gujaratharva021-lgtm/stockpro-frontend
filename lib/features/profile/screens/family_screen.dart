@@ -14,7 +14,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   bool _loading = true;
   bool _saving = false;
 
-  static const _baseUrl = 'https://stock-backend-11rm.onrender.com/api/v1';
+  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   final List<String> _relations = ['Spouse', 'Parent', 'Child', 'Sibling', 'Other'];
 

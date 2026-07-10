@@ -11,7 +11,7 @@ class WebSocketService {
   static void connect() {
     if (_channel != null) return; // already connected
     try {
-      _channel = WebSocketChannel.connect(Uri.parse('wss://stock-backend-11rm.onrender.com/ws'));
+      _channel = WebSocketChannel.connect(Uri.parse('wss://adjimrxt3y.ap-south-1.awsapprunner.com/ws'));
       _channel!.stream.listen(
             (data) {
           try {

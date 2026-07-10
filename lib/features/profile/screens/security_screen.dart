@@ -62,7 +62,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       final token = await ApiService.getToken();
                       final dio = Dio();
                       await dio.patch(
-                        'https://stock-backend-11rm.onrender.com/api/v1/auth/change-password',
+                        'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1/auth/change-password',
                         data: {'current_password': currentController.text, 'new_password': newController.text},
                         options: Options(headers: {'Authorization': 'Bearer $token'}),
                       );
