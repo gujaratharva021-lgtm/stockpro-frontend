@@ -21,6 +21,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
   bool _loading = true;
   List<dynamic> _pendingOrders = [];
+  List<dynamic> _transactions = [];
   List<dynamic> _sips = [];
   List<dynamic> _alerts = [];
   Map<String, String> _symbolByStockId = {};
@@ -46,6 +47,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         ApiService.getSIPs(),
         ApiService.getAlerts(),
         ApiService.getStocks(),
+        ApiService.getTransactions(),
       ]);
       final stocks = results[3];
       final map = <String, String>{};
@@ -55,6 +57,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       if (mounted) {
         setState(() {
           _pendingOrders = results[0];
+          _transactions = results[4];
           _sips = results[1];
           _alerts = results[2];
           _symbolByStockId = map;
@@ -75,6 +78,70 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     }
   }
 
+  Future<void> _modifyOrder(String orderId, double price, int quantity) async {
+    try {
+      await ApiService.modifyPendingOrder(orderId, price: price, quantity: quantity);
+      if (mounted) Navigator.pop(context);
+      _loadAll();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order modified')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not modify order')));
+    }
+  }
+
+  void _showModifyOrder(Map<String, dynamic> order) {
+    final priceController = TextEditingController(text: (order['trigger_price'] ?? '0').toString());
+    final qtyController = TextEditingController(text: (order['quantity'] ?? '0').toString());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 16),
+            Text('Modify Order - ' + (order['symbol'] ?? ''), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            const SizedBox(height: 20),
+            const Text('Quantity', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            const SizedBox(height: 6),
+            TextField(
+              controller: qtyController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+            ),
+            const SizedBox(height: 16),
+            const Text('Price', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            const SizedBox(height: 6),
+            TextField(
+              controller: priceController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  final price = double.tryParse(priceController.text) ?? 0;
+                  final qty = int.tryParse(qtyController.text) ?? 0;
+                  _modifyOrder(order['id'], price, qty);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                child: const Text('MODIFY ORDER', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   void _showOrderDetail(Map<String, dynamic> order) {
     final isBuy = order['buy_sell'] == 'BUY';
     final status = order['status'] ?? '';
@@ -280,12 +347,18 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             ),
             if (status == 'PENDING') ...[
               const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => _cancelOrder(order['id']),
-                  child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12)),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => _showModifyOrder(order),
+                    child: const Text('Modify', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                  TextButton(
+                    onPressed: () => _cancelOrder(order['id']),
+                    child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12)),
+                  ),
+                ],
               ),
             ],
           ],
@@ -299,6 +372,21 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     final List<dynamic> filtered;
     if (filterStatus == 'GTT') {
       filtered = _pendingOrders.where((o) => o['is_gtt'] == true).toList();
+    } else if (filterStatus == 'EXECUTED') {
+      final executedPending = _pendingOrders.where((o) => o['status'] == 'EXECUTED' && o['is_gtt'] != true).toList();
+      final marketExecuted = _transactions.map((t) => {
+        'id': t['id'],
+        'stock_id': t['stock_id'],
+        'symbol': _symbolByStockId[t['stock_id']] ?? '',
+        'buy_sell': t['buy_sell'],
+        'order_type': 'MARKET',
+        'quantity': t['quantity'],
+        'price': t['price'],
+        'status': 'EXECUTED',
+        'created_at': t['created_at'],
+        'is_gtt': false,
+      }).toList();
+      filtered = [...marketExecuted, ...executedPending];
     } else if (filterStatus.isEmpty) {
       filtered = _pendingOrders.where((o) => o['is_gtt'] != true).toList();
     } else {

@@ -22,6 +22,7 @@ class _MainShellState extends State<MainShell> {
       case 2: context.go('/portfolio'); break;
       case 3: context.push('/ipo'); break;
       case 4: context.push('/profile'); break;
+      case 5: context.go('/dashboard'); break;
     }
   }
 
@@ -51,7 +52,7 @@ class _MainShellState extends State<MainShell> {
               _navItem(Icons.receipt_long_outlined, Icons.receipt_long, 'Orders', 1),
               _navItem(Icons.pie_chart_outline, Icons.pie_chart, 'Portfolio', 2),
               _navItem(Icons.gavel_outlined, Icons.gavel, 'Bids', 3),
-              _navItem(Icons.account_circle_outlined, Icons.account_circle, 'Profile', 4, showDot: true),
+              _navItem(Icons.account_circle_outlined, Icons.account_circle, 'Profile', 4),
             ],
           ),
         ),
@@ -101,6 +102,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 const Divider(color: AppColors.border, height: 1),
                 const SizedBox(height: 16),
+                _sidebarItem(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', 5),
                 _sidebarItem(Icons.bookmark_border, Icons.bookmark, 'Watchlist', 0),
                 _sidebarItem(Icons.receipt_long_outlined, Icons.receipt_long, 'Orders', 1),
                 _sidebarItem(Icons.pie_chart_outline, Icons.pie_chart, 'Portfolio', 2),
@@ -181,7 +183,7 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _navItem(IconData icon, IconData activeIcon, String label, int index, {bool showDot = false}) {
+  Widget _navItem(IconData icon, IconData activeIcon, String label, int index) {
     final isActive = widget.currentIndex == index;
     return Expanded(
       child: InkWell(
@@ -191,23 +193,8 @@ class _MainShellState extends State<MainShell> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(isActive ? activeIcon : icon,
-                      color: isActive ? AppColors.primaryDark : AppColors.textMuted, size: 22),
-                  if (showDot)
-                    Positioned(
-                      top: -1,
-                      right: -1,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
-                      ),
-                    ),
-                ],
-              ),
+              Icon(isActive ? activeIcon : icon,
+                  color: isActive ? AppColors.primaryDark : AppColors.textMuted, size: 22),
               const SizedBox(height: 4),
               Text(label,
                   style: TextStyle(

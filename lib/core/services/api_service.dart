@@ -24,9 +24,23 @@ class ApiService {
     await _storage.delete(key: 'auth_token');
   }
 
+  static bool _interceptorAdded = false;
+
   static Future<Dio> _authDio() async {
-    final token = await getToken();
-    _dio.options.headers['Authorization'] = token != null ? 'Bearer $token' : '';
+    if (!_interceptorAdded) {
+      _interceptorAdded = true;
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await getToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            options.headers.remove('Authorization');
+          }
+          handler.next(options);
+        },
+      ));
+    }
     return _dio;
   }
 
@@ -169,6 +183,14 @@ class ApiService {
   static Future<void> cancelPendingOrder(String orderId) async {
     final dio = await _authDio();
     await dio.delete('/pending-orders/$orderId');
+  }
+
+  static Future<void> modifyPendingOrder(String orderId, {required double price, required int quantity}) async {
+    final dio = await _authDio();
+    await dio.patch('/pending-orders/$orderId', data: {
+      'trigger_price': price,
+      'quantity': quantity,
+    });
   }
 
 
@@ -476,6 +498,12 @@ class ApiService {
   static Future<void> withdrawFunds(double amount) async {
     final dio = await _authDio();
     await dio.post('/payments/withdraw', data: {'amount': amount});
+  }
+
+  static Future<List<dynamic>> getWalletHistory() async {
+    final dio = await _authDio();
+    final res = await dio.get('/payments/history');
+    return res.data['transactions'] ?? [];
   }
 
   static Future<void> deleteAccount(String password) async {

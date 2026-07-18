@@ -16,6 +16,7 @@ import 'package:stock_app/features/profile/screens/connected_apps_screen.dart';
 import 'package:stock_app/features/profile/screens/family_screen.dart';
 import 'package:stock_app/features/profile/screens/gift_stocks_screen.dart';
 import 'package:stock_app/features/profile/screens/app_code_screen.dart';
+import 'package:stock_app/features/profile/screens/link_web_session_screen.dart';
 import 'package:stock_app/features/profile/screens/help_support_screen.dart';
 import 'package:stock_app/features/tax/screens/pnl_report_screen.dart';
 import 'package:stock_app/core/services/privacy_mode_service.dart';
@@ -328,6 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _menuSection('Account', [
                         _menuItem(Icons.currency_rupee, 'Funds', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FundsScreen()))),
                         _menuItem(Icons.lock_outline, 'App Code', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AppCodeScreen()))),
+                        _menuItem(Icons.desktop_windows_outlined, 'Link Web Session', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LinkWebSessionScreen()))),
                         _menuItem(Icons.person_outline, 'Profile', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalDetailsScreen()))),
                         _menuItem(Icons.settings_outlined, 'Settings', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
                         _menuItem(Icons.apps_outlined, 'Connected Apps', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ConnectedAppsScreen()))),

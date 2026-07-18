@@ -4,8 +4,12 @@ import 'package:stock_app/features/auth/screens/splash_screen.dart';
 import 'package:stock_app/features/auth/screens/login_screen.dart';
 import 'package:stock_app/features/auth/screens/signup_screen.dart';
 import 'package:stock_app/features/watchlist/screens/watchlist_screen.dart';
+import 'package:stock_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:stock_app/features/ipo/screens/ipo_screen.dart';
 import 'package:stock_app/features/ipo/screens/bids_screen.dart';
+import 'package:stock_app/features/profile/screens/app_code_screen.dart';
+import 'package:stock_app/features/auth/screens/code_login_screen.dart';
+import 'package:stock_app/features/profile/screens/link_web_session_screen.dart';
 import 'package:stock_app/features/portfolio/screens/portfolio_screen.dart';
 import 'package:stock_app/features/news/screens/news_screen.dart';
 
@@ -18,6 +22,7 @@ import 'package:stock_app/features/profile/screens/profile_screen.dart';
 import 'package:stock_app/features/compare/screens/compare_screen.dart';
 import 'package:stock_app/features/heatmap/screens/heatmap_screen.dart';
 import 'package:stock_app/features/tax/screens/tax_report_screen.dart';
+import 'package:stock_app/features/orders/screens/pending_orders_screen.dart';
 import 'package:stock_app/features/orders/screens/orders_screen.dart';
 import 'package:stock_app/features/calculator/screens/brokerage_calculator_screen.dart';
 import 'package:stock_app/features/screener/screens/screener_screen.dart';
@@ -46,7 +51,11 @@ final _router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
     GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
+    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
     GoRoute(path: '/ipo', builder: (context, state) => const BidsScreen()),
+    GoRoute(path: '/app-code', builder: (context, state) => const AppCodeScreen()),
+    GoRoute(path: '/code-login', builder: (context, state) => const CodeLoginScreen()),
+    GoRoute(path: '/link-web-session', builder: (context, state) => const LinkWebSessionScreen()),
     GoRoute(path: '/portfolio', builder: (context, state) => const PortfolioScreen()),
     GoRoute(path: '/news', builder: (context, state) => const NewsScreen()),
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingFlow()),

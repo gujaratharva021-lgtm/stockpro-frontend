@@ -300,7 +300,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           ),
         ),
 
-        // Floating white search bar - overlaps the gray/white boundary.
+        // Floating white search bar — overlaps the gray/white boundary.
         Positioned(
           left: 16,
           right: 16,
@@ -333,7 +333,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           ),
         ),
 
-        // "+ New group" link - sits just below the search bar, still overlapping.
+        // "+ New group" link — sits just below the search bar, still overlapping.
         Positioned(
           right: 16,
           bottom: -28,
@@ -493,4 +493,3 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 }
-

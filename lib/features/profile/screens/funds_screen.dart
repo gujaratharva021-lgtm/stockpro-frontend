@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/features/wallet/screens/wallet_history_screen.dart';
 
 class FundsScreen extends StatefulWidget {
   const FundsScreen({super.key});
@@ -16,6 +17,8 @@ class _FundsScreenState extends State<FundsScreen> {
   late Razorpay _razorpay;
   double _pendingAmount = 0;
   String _pendingOrderId = '';
+  double _totalPayin = 0;
+  double _totalPayout = 0;
 
   @override
   void initState() {
@@ -37,7 +40,21 @@ class _FundsScreenState extends State<FundsScreen> {
     setState(() => _loading = true);
     try {
       final res = await ApiService.getMe();
-      setState(() => _user = res['user']);
+      final history = await ApiService.getWalletHistory();
+      double payin = 0, payout = 0;
+      for (final t in history) {
+        final amt = (t['amount'] as num?)?.toDouble() ?? 0;
+        if (t['type'] == 'credit') {
+          payin += amt;
+        } else {
+          payout += amt;
+        }
+      }
+      setState(() {
+        _user = res['user'];
+        _totalPayin = payin;
+        _totalPayout = payout;
+      });
     } catch (_) {
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -264,6 +281,13 @@ class _FundsScreenState extends State<FundsScreen> {
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
         title: const Text('Funds', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Wallet history',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletHistoryScreen())),
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
@@ -338,8 +362,8 @@ class _FundsScreenState extends State<FundsScreen> {
                     ),
                     const Divider(height: 32, color: AppColors.border),
                     _statRow('Opening balance', _balance.toStringAsFixed(2)),
-                    _statRow('Payin', '0.00'),
-                    _statRow('Payout', '0.00'),
+                    _statRow('Payin', _totalPayin.toStringAsFixed(2)),
+                    _statRow('Payout', _totalPayout.toStringAsFixed(2)),
                   ],
                 ),
               ),

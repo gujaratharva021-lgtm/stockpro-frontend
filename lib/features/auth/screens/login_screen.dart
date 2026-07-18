@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
@@ -58,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final res = await ApiService.login(_emailController.text.trim(), _passwordController.text);
       const storage = FlutterSecureStorage();
       await storage.write(key: 'auth_token', value: res['token']);
-      if (mounted) context.go('/watchlist');
+      if (mounted) context.go(kIsWeb ? '/dashboard' : '/watchlist');
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error']?.toString() ?? 'Login failed');
     } catch (e) {
@@ -150,6 +151,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ),
+          if (kIsWeb) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/code-login'),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.phonelink_lock_outlined, color: AppColors.primaryDark, size: 19),
+                label: const Text('Login with Code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
+              ),
+            ),
+          ],
           if (_biometricAvailable) ...[
             const SizedBox(height: 16),
             Center(

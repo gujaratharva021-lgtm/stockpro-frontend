@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:go_router/go_router.dart';
 
 class AppCodeScreen extends StatefulWidget {
   const AppCodeScreen({super.key});
@@ -262,6 +264,18 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
                           label: const Text('Regenerate Code', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold)),
                         ),
                       ),
+                      if (kIsWeb) ...[
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () => context.go('/watchlist'),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                            child: const Text('Continue to App', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
