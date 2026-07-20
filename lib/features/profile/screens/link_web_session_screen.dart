@@ -93,7 +93,7 @@ class _LinkWebSessionScreenState extends State<LinkWebSessionScreen> {
         const Text('Enter the code from your browser', style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         const Text(
-          'Open StockPro on your computer, tap "Login with Code", and type the 6-character code shown there.',
+          'Open OneInvest on your computer, tap "Login with Code", and type the 6-character code shown there.',
           style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.4),
         ),
         const SizedBox(height: 24),

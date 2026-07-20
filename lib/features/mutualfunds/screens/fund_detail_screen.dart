@@ -258,7 +258,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                         'key': order['key_id'],
                         'amount': order['amount'],
                         'currency': order['currency'],
-                        'name': 'StockPro SIP',
+                        'name': 'OneInvest SIP',
                         'description': 'First SIP installment - ${_fund?['name'] ?? ''}',
                         'order_id': order['order_id'],
                         'prefill': {'contact': '', 'email': ''},

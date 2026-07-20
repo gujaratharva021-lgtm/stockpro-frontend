@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -74,7 +74,7 @@ class _FundsScreenState extends State<FundsScreen> {
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('₹${_pendingAmount.toStringAsFixed(0)} added successfully!'), backgroundColor: Colors.green),
+          SnackBar(content: Text('?${_pendingAmount.toStringAsFixed(0)} added successfully!'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
@@ -112,7 +112,7 @@ class _FundsScreenState extends State<FundsScreen> {
         'key': order['key_id'],
         'amount': order['amount'],
         'currency': order['currency'],
-        'name': 'StockPro',
+        'name': 'OneInvest',
         'description': 'Add funds to wallet',
         'order_id': order['order_id'],
         'prefill': {
@@ -148,7 +148,7 @@ class _FundsScreenState extends State<FundsScreen> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(prefixText: '₹ ', labelText: 'Amount', border: OutlineInputBorder()),
+              decoration: const InputDecoration(prefixText: '? ', labelText: 'Amount', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 16),
             Row(
@@ -166,7 +166,7 @@ class _FundsScreenState extends State<FundsScreen> {
                       ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('₹$amt', maxLines: 1, style: const TextStyle(fontSize: 14)),
+                        child: Text('?$amt', maxLines: 1, style: const TextStyle(fontSize: 14)),
                       ),
                     ),
                   ),
@@ -210,12 +210,12 @@ class _FundsScreenState extends State<FundsScreen> {
           children: [
             const Text('Withdraw Funds', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 4),
-            Text('Available balance: ₹${_balance.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            Text('Available balance: ?${_balance.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
             const SizedBox(height: 16),
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(prefixText: '₹ ', labelText: 'Amount', border: OutlineInputBorder()),
+              decoration: const InputDecoration(prefixText: '? ', labelText: 'Amount', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -238,7 +238,7 @@ class _FundsScreenState extends State<FundsScreen> {
                     await _load();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('₹${amt.toStringAsFixed(0)} withdrawn successfully'), backgroundColor: Colors.green),
+                        SnackBar(content: Text('?${amt.toStringAsFixed(0)} withdrawn successfully'), backgroundColor: Colors.green),
                       );
                     }
                   } catch (e) {
@@ -309,7 +309,7 @@ class _FundsScreenState extends State<FundsScreen> {
                         children: [
                           const Text('Available margin (Cash + Collateral)', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                           const SizedBox(height: 8),
-                          Text('₹${_balance.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 30)),
+                          Text('?${_balance.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 30)),
                         ],
                       ),
                     ),

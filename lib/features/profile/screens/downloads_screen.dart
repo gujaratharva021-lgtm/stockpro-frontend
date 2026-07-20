@@ -82,10 +82,10 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                     child: pw.Text('S', style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 16)),
                   ),
                   pw.SizedBox(width: 8),
-                  pw.Text('StockPro', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                  pw.Text('OneInvest', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
                 ],
               ),
-              pw.Text('www.stockpro.app', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+              pw.Text('www.OneInvest.app', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             ],
           ),
           pw.SizedBox(height: 18),
@@ -151,7 +151,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('This is a system-generated statement from StockPro.', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+          pw.Text('This is a system-generated statement from OneInvest.', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
           pw.Text('Page ${ctx.pageNumber} of ${ctx.pagesCount}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
         ],
       ),
@@ -279,7 +279,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           ],
         ),
       );
-      await _saveAndShare(doc, 'StockPro_Holdings_Statement.pdf');
+      await _saveAndShare(doc, 'OneInvest_Holdings_Statement.pdf');
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not generate holdings statement')));
@@ -375,7 +375,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           ],
         ),
       );
-      await _saveAndShare(doc, 'StockPro_Trade_Statement.pdf');
+      await _saveAndShare(doc, 'OneInvest_Trade_Statement.pdf');
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not generate trade statement')));
@@ -479,7 +479,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           ],
         ),
       );
-      await _saveAndShare(doc, 'StockPro_Tax_PL_Report.pdf');
+      await _saveAndShare(doc, 'OneInvest_Tax_PL_Report.pdf');
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not generate tax report')));

@@ -369,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 20),
                       _menuSection('Others', [
                         _menuItem(Icons.person_add_alt_outlined, 'Invite Friends', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InviteFriendsScreen()))),
-                        _menuItem(Icons.description_outlined, 'Licenses', onTap: () => showLicensePage(context: context, applicationName: 'StockPro', applicationVersion: 'v1.0')),
+                        _menuItem(Icons.description_outlined, 'Licenses', onTap: () => showLicensePage(context: context, applicationName: 'OneInvest', applicationVersion: 'v1.0')),
                       ]),
                       const SizedBox(height: 24),
                       Padding(
@@ -380,7 +380,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Center(child: Text('StockPro v1.0', style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
+                      const Center(child: Text('OneInvest v1.0', style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
                       const SizedBox(height: 30),
                     ],
                   ),

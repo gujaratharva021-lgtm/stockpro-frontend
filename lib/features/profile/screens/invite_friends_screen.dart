@@ -6,9 +6,9 @@ import 'package:stock_app/core/theme/app_colors.dart';
 class InviteFriendsScreen extends StatelessWidget {
   const InviteFriendsScreen({super.key});
 
-  static const String _referralCode = 'STOCKPRO2026';
+  static const String _referralCode = 'OneInvest2026';
   static const String _shareText =
-      'Join me on StockPro! Trade stocks and mutual funds easily. Use my referral code $_referralCode when you sign up.';
+      'Join me on OneInvest! Trade stocks and mutual funds easily. Use my referral code $_referralCode when you sign up.';
 
   Future<void> _shareOnWhatsApp() async {
     final uri = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(_shareText)}');
@@ -51,7 +51,7 @@ class InviteFriendsScreen extends StatelessWidget {
                         children: const [
                           Icon(Icons.card_giftcard, color: Colors.white, size: 32),
                           SizedBox(height: 12),
-                          Text('Invite friends to StockPro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('Invite friends to OneInvest', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                           SizedBox(height: 6),
                           Text('Share your referral code and help friends start trading.', style: TextStyle(color: Colors.white70, fontSize: 12)),
                         ],

@@ -52,7 +52,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _contactCard(Icons.email_outlined, 'Email', 'support@stockpro.in', const Color(0xFF1E88E5), () => _openUrl('mailto:support@stockpro.in'))),
+                        Expanded(child: _contactCard(Icons.email_outlined, 'Email', 'support@OneInvest.in', const Color(0xFF1E88E5), () => _openUrl('mailto:support@OneInvest.in'))),
                         const SizedBox(width: 12),
                         Expanded(child: _contactCard(Icons.chat_outlined, 'WhatsApp', 'Chat with us', const Color(0xFF25D366), () => _openUrl('https://wa.me/919999999999'))),
                       ],

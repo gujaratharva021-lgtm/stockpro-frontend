@@ -99,7 +99,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('StockPro AI', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                Text('OneInvest AI', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
                 Text('Powered by Gemini', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
               ],
             ),

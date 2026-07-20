@@ -325,7 +325,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Transform.translate(
                 offset: Offset(0, 14 * (1 - ev)),
                 child: const Text(
-                  'StockPro',
+                  'OneInvest',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 30,

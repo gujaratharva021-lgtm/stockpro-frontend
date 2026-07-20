@@ -90,7 +90,7 @@ class _MainShellState extends State<MainShell> {
                       ),
                       const SizedBox(width: 10),
                       const Text(
-                        'StockPro',
+                        'OneInvest',
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 18,

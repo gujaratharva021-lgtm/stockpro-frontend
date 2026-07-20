@@ -54,7 +54,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: const Icon(Icons.trending_up, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 10),
-              const Text('StockPro', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('OneInvest', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 32),
@@ -147,7 +147,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     children: [
                       Icon(Icons.trending_up, color: Colors.white, size: 64),
                       SizedBox(height: 24),
-                      Text('StockPro', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+                      Text('OneInvest', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
                       SizedBox(height: 12),
                       Text('Trade smarter, grow faster', style: TextStyle(color: Colors.white70, fontSize: 16)),
                       SizedBox(height: 40),

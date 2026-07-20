@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:candlesticks/candlesticks.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/constants/nifty_symbols.dart';
 
 class TechnicalsScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -23,22 +24,7 @@ class _TechEvent {
 // stocks would require too many live-quote calls to be practical client-side,
 // so we scope it to well-known large caps across major sectors - all real
 // symbols from the catalog, not fabricated.
-const List<String> _kMarketWatchSymbols = [
-  'HDFCBANK', 'ICICIBANK', 'SBIN', 'AXISBANK', 'KOTAKBANK', 'INDUSINDBK',
-  'INFY', 'TCS', 'WIPRO', 'HCLTECH', 'TECHM', 'LTIM',
-  'RELIANCE', 'ONGC', 'IOC', 'BPCL', 'GAIL',
-  'HINDUNILVR', 'ITC', 'NESTLEIND', 'BRITANNIA', 'DABUR', 'MARICO',
-  'TATAMOTORS', 'MARUTI', 'M&M', 'BAJAJ-AUTO', 'EICHERMOT', 'HEROMOTOCO',
-  'SUNPHARMA', 'CIPLA', 'DRREDDY', 'LUPIN', 'AUROPHARMA', 'DIVISLAB',
-  'TATASTEEL', 'JSWSTEEL', 'HINDALCO', 'VEDL', 'NATIONALUM', 'COALINDIA',
-  'LT', 'ULTRACEMCO', 'GRASIM', 'SHREECEM', 'AMBUJACEM',
-  'ADANIENT', 'ADANIPORTS', 'ADANIGREEN', 'ADANIPOWER',
-  'TITAN', 'ASIANPAINT', 'DMART',
-  'BAJFINANCE', 'BAJAJFINSV', 'HDFCLIFE', 'SBILIFE', 'ICICIGI',
-  'NTPC', 'POWERGRID', 'TATAPOWER',
-  'BHARTIARTL', 'IDEA',
-  'ZOMATO', 'PAYTM', 'NYKAA', 'POLICYBZR',
-];
+
 
 class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerProviderStateMixin {
   late TabController _mainTab;
@@ -160,7 +146,7 @@ class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerPr
       } catch (_) {}
 
       final allStocks = await ApiService.getStocks();
-      final selected = allStocks.where((s) => _kMarketWatchSymbols.contains(s['symbol'])).toList();
+      final selected = allStocks.where((s) => kNiftyWatchSymbols.contains(s['symbol'])).toList();
       if (mounted) setState(() => _marketStocks = selected);
 
       const batchSize = 12;

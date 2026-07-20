@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
+import 'package:stock_app/core/constants/nifty_symbols.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -40,8 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final balance = results[1] as double;
       final allStocks = results[2] as List<dynamic>;
       final ipos = results[3] as List<dynamic>;
-
-      final sample = allStocks.take(20).toList();
+      final sample = allStocks.where((s) => kNiftyWatchSymbols.contains(s['symbol'])).toList();
 
       if (mounted) {
         setState(() {
@@ -89,42 +89,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return list.take(5).toList();
   }
 
+  String get _greeting {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  Color _avatarColor(String symbol) {
+    final colors = [
+      const Color(0xFF6366F1), const Color(0xFF8B5CF6), const Color(0xFFEC4899),
+      const Color(0xFF06B6D4), const Color(0xFFF59E0B), const Color(0xFF10B981),
+      const Color(0xFF3B82F6), const Color(0xFFEF4444),
+    ];
+    final idx = symbol.codeUnits.fold<int>(0, (a, b) => a + b) % colors.length;
+    return colors[idx];
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainShell(
       currentIndex: 5,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F2F5),
+        backgroundColor: const Color(0xFFF4F6FB),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(32),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hi, $_userName',
-                        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(child: _marginCard('Equity', _balance)),
-                        const SizedBox(width: 20),
-                        Expanded(child: _marginCard('Commodity', 0)),
-                      ],
+                    _headerBanner(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Transform.translate(
+                            offset: const Offset(0, -36),
+                            child: Row(
+                              children: [
+                                Expanded(child: _marginCard('Equity', _balance, Icons.account_balance_wallet_rounded, const Color(0xFF6366F1))),
+                                const SizedBox(width: 20),
+                                Expanded(child: _marginCard('Commodity', 0, Icons.local_fire_department_rounded, const Color(0xFFF59E0B))),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(flex: 2, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
+                              const SizedBox(width: 20),
+                              Expanded(flex: 2, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
+                              const SizedBox(width: 20),
+                              Expanded(flex: 2, child: _iposCard()),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          _marketOverviewCard(),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 32),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 2, child: _moversCard('Top Gainers', _topGainers, true)),
-                        const SizedBox(width: 20),
-                        Expanded(flex: 2, child: _moversCard('Top Losers', _topLosers, false)),
-                        const SizedBox(width: 20),
-                        Expanded(flex: 2, child: _iposCard()),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    _marketOverviewCard(),
                   ],
                 ),
               ),
@@ -132,31 +156,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _marginCard(String title, double amount) {
+  Widget _headerBanner() {
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(32, 40, 32, 90),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$_greeting, $_userName',
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 6),
+              Text('Here\'s what\'s happening in the markets today',
+                  style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.85))),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(14)),
+            child: const Icon(Icons.insights_rounded, color: Colors.white, size: 28),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _marginCard(String title, double amount, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-          const SizedBox(height: 12),
-          Text(amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2),
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w500)),
+            ],
+          ),
           const SizedBox(height: 16),
+          Text(amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Margins used', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              const Text('0', style: TextStyle(color: AppColors.textPrimary, fontSize: 12)),
+              const Text('0', style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Opening balance', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              Text(amount.toStringAsFixed(0), style: const TextStyle(color: AppColors.textPrimary, fontSize: 12)),
+              Text(amount.toStringAsFixed(0), style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
         ],
@@ -164,15 +236,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _moversCard(String title, List<dynamic> list, bool isGainers) {
+  Widget _moversCard(String title, List<dynamic> list, IconData icon, Color accent) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 4))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
-          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(icon, color: accent, size: 18),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 14),
           if (list.isEmpty)
             const Text('No data yet', style: TextStyle(color: AppColors.textMuted, fontSize: 12))
           else
@@ -183,16 +265,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final pct = _changePctOf(symbol);
               final color = pct >= 0 ? AppColors.success : AppColors.danger;
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.symmetric(vertical: 7),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(symbol, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(color: _avatarColor(symbol), shape: BoxShape.circle),
+                      child: Center(
+                        child: Text(symbol.isNotEmpty ? symbol[0] : '?',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(symbol, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis),
+                    ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(price?.toStringAsFixed(2) ?? '-', style: TextStyle(fontSize: 13, color: color)),
-                        Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%', style: TextStyle(fontSize: 11, color: color)),
+                        Text(price?.toStringAsFixed(2) ?? '-', style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                          child: Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%', style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+                        ),
                       ],
                     ),
                   ],
@@ -207,28 +306,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _iposCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 4))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Upcoming IPOs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
-          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.rocket_launch_rounded, color: Color(0xFF7C3AED), size: 18),
+              const SizedBox(width: 8),
+              const Text('Upcoming IPOs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 14),
           if (_ipos.isEmpty)
             const Text('No IPOs right now', style: TextStyle(color: AppColors.textMuted, fontSize: 12))
           else
-            ..._ipos.take(6).map((ipo) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text((ipo['company_name'] ?? ipo['name'] ?? '-').toString(),
-                            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
+            ..._ipos.take(6).map((ipo) {
+              final status = (ipo['status'] ?? '').toString();
+              final isOpen = status.toLowerCase() == 'open';
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text((ipo['company_name'] ?? ipo['name'] ?? '-').toString(),
+                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: (isOpen ? AppColors.success : const Color(0xFFF59E0B)).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      Text((ipo['status'] ?? '').toString(), style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                    ],
-                  ),
-                )),
+                      child: Text(status, style: TextStyle(fontSize: 10, color: isOpen ? AppColors.success : const Color(0xFFF59E0B), fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -241,16 +361,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final close = (p['close'] as num?)?.toDouble() ?? (p['price'] as num?)?.toDouble() ?? 0;
       spots.add(FlSpot(i.toDouble(), close));
     }
+    final isUp = spots.length > 1 ? spots.last.y >= spots.first.y : true;
+    final trendColor = isUp ? AppColors.success : AppColors.danger;
 
     return Container(
       padding: const EdgeInsets.all(24),
-      height: 320,
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+      height: 340,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 4))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Market overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
-          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(Icons.show_chart_rounded, color: trendColor, size: 18),
+              const SizedBox(width: 8),
+              const Text('Market overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 18),
           Expanded(
             child: spots.isEmpty
                 ? const Center(child: Text('No chart data', style: TextStyle(color: AppColors.textMuted)))
@@ -263,10 +395,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         LineChartBarData(
                           spots: spots,
                           isCurved: true,
-                          color: AppColors.primary,
-                          barWidth: 2,
+                          color: trendColor,
+                          barWidth: 2.5,
                           dotData: const FlDotData(show: false),
-                          belowBarData: BarAreaData(show: true, color: AppColors.primary.withOpacity(0.08)),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [trendColor.withOpacity(0.18), trendColor.withOpacity(0.0)],
+                            ),
+                          ),
                         ),
                       ],
                     ),

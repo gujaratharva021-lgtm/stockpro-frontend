@@ -27,7 +27,7 @@ class BiometricService {
   static Future<bool> authenticate() async {
     try {
       return await _auth.authenticate(
-        localizedReason: 'Use biometric to login to StockPro',
+        localizedReason: 'Use biometric to login to OneInvest',
         options: const AuthenticationOptions(
           biometricOnly: false,
           stickyAuth: true,

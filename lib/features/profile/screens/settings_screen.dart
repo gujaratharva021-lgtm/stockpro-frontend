@@ -132,8 +132,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             _section([
               _menuItem(Icons.help_outline, 'Help & Support', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()))),
-              _menuItem(Icons.privacy_tip_outlined, 'Privacy Policy', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/stockpro-legal/privacy-policy.html')),
-              _menuItem(Icons.description_outlined, 'Terms of Service', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/stockpro-legal/terms-of-service.html')),
+              _menuItem(Icons.privacy_tip_outlined, 'Privacy Policy', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/OneInvest-legal/privacy-policy.html')),
+              _menuItem(Icons.description_outlined, 'Terms of Service', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/OneInvest-legal/terms-of-service.html')),
             ]),
           ],
         ),

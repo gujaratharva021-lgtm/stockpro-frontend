@@ -102,7 +102,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Enter this code in your StockPro mobile app under Profile ? Link Web Session',
+                    'Enter this code in your OneInvest mobile app under Profile ? Link Web Session',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.4),
                     textAlign: TextAlign.center,
                   ),

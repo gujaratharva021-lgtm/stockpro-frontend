@@ -83,7 +83,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'StockPro',
+      title: 'OneInvest',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light().copyWith(
         textTheme: GoogleFonts.notoSansTextTheme(AppTheme.light().textTheme),
