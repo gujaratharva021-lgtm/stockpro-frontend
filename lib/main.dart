@@ -1,4 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/features/auth/screens/splash_screen.dart';
 import 'package:stock_app/features/auth/screens/login_screen.dart';
@@ -35,7 +39,22 @@ import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    print('Firebase init failed: $e');
+  }
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -92,3 +111,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

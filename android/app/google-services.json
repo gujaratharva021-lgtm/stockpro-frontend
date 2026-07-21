@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "783102575626",
+    "project_id": "digital-town-3391f",
+    "storage_bucket": "digital-town-3391f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783102575626:android:b3922feda111374c3d4bf3",
+        "android_client_info": {
+          "package_name": "com.digitaltown.digital_town_resident"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd3jay-b5el-rc_BNFrb2CckW2od4h6FY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783102575626:android:2c1f66f250c040293d4bf3",
+        "android_client_info": {
+          "package_name": "com.example.climatetech_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd3jay-b5el-rc_BNFrb2CckW2od4h6FY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783102575626:android:fbcafd406ce430373d4bf3",
+        "android_client_info": {
+          "package_name": "com.stockpro.stock_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd3jay-b5el-rc_BNFrb2CckW2od4h6FY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
