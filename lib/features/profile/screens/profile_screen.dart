@@ -82,6 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
+    await ApiService.clearToken();
     if (mounted) context.go('/login');
   }
 
@@ -144,12 +145,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           });
                           try {
                             await ApiService.deleteAccount(passwordController.text);
+                            await ApiService.clearToken();
                             if (mounted) {
-                              Navigator.pop(dialogContext);
-                              context.go('/login');
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Account deleted successfully')),
                               );
+                              Navigator.pop(dialogContext);
+                              context.go('/login');
                             }
                           } catch (e) {
                             setDialogState(() {
@@ -215,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
                                       image: _user?['avatar_url'] != null
                                           ? DecorationImage(
-                                              image: NetworkImage('https://adjimrxt3y.ap-south-1.awsapprunner.com${_user!['avatar_url']}'),
+                                              image: NetworkImage('https://${ApiService.host}${_user!['avatar_url']}'),
                                               fit: BoxFit.cover,
                                             )
                                           : null,

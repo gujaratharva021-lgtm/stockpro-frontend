@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
+import 'package:stock_app/core/services/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
@@ -13,7 +14,6 @@ class CodeLoginScreen extends StatefulWidget {
 }
 
 class _CodeLoginScreenState extends State<CodeLoginScreen> {
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
   String? _code;
   String _status = 'loading';
   Timer? _pollTimer;
@@ -34,7 +34,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
     setState(() => _status = 'loading');
     try {
       final dio = Dio();
-      final res = await dio.post('$_baseUrl/auth/web-session/create');
+      final res = await dio.post('${ApiService.baseUrl}/auth/web-session/create');
       setState(() {
         _code = res.data['code'];
         _status = 'pending';
@@ -51,7 +51,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
       if (_code == null) return;
       try {
         final dio = Dio();
-        final res = await dio.get('$_baseUrl/auth/web-session/status/$_code');
+        final res = await dio.get('${ApiService.baseUrl}/auth/web-session/status/$_code');
         final status = res.data['status'];
         if (status == 'linked') {
           _pollTimer?.cancel();

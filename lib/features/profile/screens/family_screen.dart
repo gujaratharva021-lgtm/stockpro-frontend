@@ -14,7 +14,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
   bool _loading = true;
   bool _saving = false;
 
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   final List<String> _relations = ['Spouse', 'Parent', 'Child', 'Sibling', 'Other'];
 
@@ -30,7 +29,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       final res = await dio.get(
-        '$_baseUrl/auth/family',
+        '${ApiService.baseUrl}/auth/family',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() => _members = res.data['family_members'] ?? []);
@@ -51,7 +50,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.post(
-        '$_baseUrl/auth/family',
+        '${ApiService.baseUrl}/auth/family',
         data: {'member_name': name, 'relation': relation, 'email': email},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -78,7 +77,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.delete(
-        '$_baseUrl/auth/family/$id',
+        '${ApiService.baseUrl}/auth/family/$id',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       _load();

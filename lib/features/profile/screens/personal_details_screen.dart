@@ -55,7 +55,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.patch(
-        'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1/auth/profile',
+        '${ApiService.baseUrl}/auth/profile',
         data: {'name': _nameController.text.trim()},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -112,7 +112,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                             shape: BoxShape.circle,
                             gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
                             image: _user?['avatar_url'] != null
-                                ? DecorationImage(image: NetworkImage('https://adjimrxt3y.ap-south-1.awsapprunner.com${_user!['avatar_url']}'), fit: BoxFit.cover)
+                                ? DecorationImage(image: NetworkImage('https://${ApiService.host}${_user!['avatar_url']}'), fit: BoxFit.cover)
                                 : null,
                           ),
                           child: _user?['avatar_url'] == null

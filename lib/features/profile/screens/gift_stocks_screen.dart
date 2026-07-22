@@ -16,7 +16,6 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
   bool _loading = true;
   bool _saving = false;
 
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   @override
   void initState() {
@@ -38,8 +37,8 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
       final token = await ApiService.getToken();
       final headers = Options(headers: {'Authorization': 'Bearer $token'});
       final results = await Future.wait([
-        dio.get('$_baseUrl/auth/gifts/sent', options: headers),
-        dio.get('$_baseUrl/auth/gifts/received', options: headers),
+        dio.get('${ApiService.baseUrl}/auth/gifts/sent', options: headers),
+        dio.get('${ApiService.baseUrl}/auth/gifts/received', options: headers),
       ]);
       setState(() {
         _sent = results[0].data['gifts'] ?? [];
@@ -62,7 +61,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.post(
-        '$_baseUrl/auth/gifts',
+        '${ApiService.baseUrl}/auth/gifts',
         data: {
           'recipient_email': email,
           'stock_symbol': symbol,
@@ -95,9 +94,9 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
       final token = await ApiService.getToken();
       final headers = Options(headers: {'Authorization': 'Bearer $token'});
       if (action == 'cancel') {
-        await dio.delete('$_baseUrl/auth/gifts/$id', options: headers);
+        await dio.delete('${ApiService.baseUrl}/auth/gifts/$id', options: headers);
       } else {
-        await dio.post('$_baseUrl/auth/gifts/$id/$action', options: headers);
+        await dio.post('${ApiService.baseUrl}/auth/gifts/$id/$action', options: headers);
       }
       _load();
       if (mounted) {

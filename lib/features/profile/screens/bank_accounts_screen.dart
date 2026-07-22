@@ -14,7 +14,6 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
   bool _loading = true;
   bool _saving = false;
 
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   @override
   void initState() {
@@ -28,7 +27,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       final res = await dio.get(
-        '$_baseUrl/auth/bank-accounts',
+        '${ApiService.baseUrl}/auth/bank-accounts',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() => _accounts = res.data['bank_accounts'] ?? []);
@@ -49,7 +48,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.post(
-        '$_baseUrl/auth/bank-accounts',
+        '${ApiService.baseUrl}/auth/bank-accounts',
         data: {
           'bank_name': bankName,
           'account_number': accountNumber,
@@ -81,7 +80,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.delete(
-        '$_baseUrl/auth/bank-accounts/$id',
+        '${ApiService.baseUrl}/auth/bank-accounts/$id',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       _load();

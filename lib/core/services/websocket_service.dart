@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:stock_app/core/services/api_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketService {
@@ -11,7 +12,7 @@ class WebSocketService {
   static void connect() {
     if (_channel != null) return; // already connected
     try {
-      _channel = WebSocketChannel.connect(Uri.parse('wss://adjimrxt3y.ap-south-1.awsapprunner.com/ws'));
+      _channel = WebSocketChannel.connect(Uri.parse(ApiService.wsUrl));
       _channel!.stream.listen(
             (data) {
           try {

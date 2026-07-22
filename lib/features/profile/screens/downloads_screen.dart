@@ -15,7 +15,6 @@ class DownloadsScreen extends StatefulWidget {
 }
 
 class _DownloadsScreenState extends State<DownloadsScreen> {
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
   String? _generating;
 
   static final _brand = PdfColor.fromInt(0xFFF5A623);
@@ -214,7 +213,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     try {
       final dio = await _authedDio();
       final userRes = await ApiService.getMe();
-      final res = await dio.get('$_baseUrl/portfolio/holdings');
+      final res = await dio.get('${ApiService.baseUrl}/portfolio/holdings');
       final holdings = res.data['holdings'] as List<dynamic>? ?? [];
 
       double totalInvested = 0;
@@ -296,7 +295,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     try {
       final dio = await _authedDio();
       final userRes = await ApiService.getMe();
-      final res = await dio.get('$_baseUrl/portfolio/transactions');
+      final res = await dio.get('${ApiService.baseUrl}/portfolio/transactions');
       final txns = res.data['transactions'] as List<dynamic>? ?? [];
 
       int buyCount = 0, sellCount = 0;
@@ -392,7 +391,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     try {
       final dio = await _authedDio();
       final userRes = await ApiService.getMe();
-      final res = await dio.get('$_baseUrl/portfolio/tax-report');
+      final res = await dio.get('${ApiService.baseUrl}/portfolio/tax-report');
       final data = res.data;
       final gains = data['gains'] as List<dynamic>? ?? [];
       final totalStcg = (data['total_stcg'] as num? ?? 0).toDouble();

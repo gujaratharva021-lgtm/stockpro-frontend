@@ -11,7 +11,6 @@ class LinkWebSessionScreen extends StatefulWidget {
 }
 
 class _LinkWebSessionScreenState extends State<LinkWebSessionScreen> {
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
   final _codeController = TextEditingController();
   bool _submitting = false;
   String? _error;
@@ -37,7 +36,7 @@ class _LinkWebSessionScreenState extends State<LinkWebSessionScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.post(
-        '$_baseUrl/auth/web-session/link',
+        '${ApiService.baseUrl}/auth/web-session/link',
         data: {'code': code},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );

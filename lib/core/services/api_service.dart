@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
+  static const String host = 'adjimrxt3y.ap-south-1.awsapprunner.com';
+  static const String baseUrl = 'https://$host/api/v1';
+  static const String wsUrl = 'wss://$host/ws';
 
   static final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
@@ -38,6 +40,23 @@ class ApiService {
             options.headers.remove('Authorization');
           }
           handler.next(options);
+        },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            // Some endpoints (like delete-account) also return 401 for a
+            // wrong password confirmation, which has nothing to do with
+            // the auth token itself -- only clear the token when the
+            // error is actually about the token/auth header, not a
+            // in-request password check.
+            final message = error.response?.data is Map
+                ? (error.response!.data['error']?.toString().toLowerCase() ?? '')
+                : '';
+            final isPasswordCheck = message.contains('password');
+            if (!isPasswordCheck) {
+              await clearToken();
+            }
+          }
+          handler.next(error);
         },
       ));
     }

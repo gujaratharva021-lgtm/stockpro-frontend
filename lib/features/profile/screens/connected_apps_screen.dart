@@ -13,7 +13,6 @@ class _ConnectedAppsScreenState extends State<ConnectedAppsScreen> {
   List<dynamic> _apps = [];
   bool _loading = true;
 
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   @override
   void initState() {
@@ -27,7 +26,7 @@ class _ConnectedAppsScreenState extends State<ConnectedAppsScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       final res = await dio.get(
-        '$_baseUrl/auth/connected-apps',
+        '${ApiService.baseUrl}/auth/connected-apps',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() => _apps = res.data['connected_apps'] ?? []);
@@ -47,7 +46,7 @@ class _ConnectedAppsScreenState extends State<ConnectedAppsScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.delete(
-        '$_baseUrl/auth/connected-apps/$id',
+        '${ApiService.baseUrl}/auth/connected-apps/$id',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       _load();

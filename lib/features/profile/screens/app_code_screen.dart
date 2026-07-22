@@ -20,7 +20,6 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
   DateTime? _createdAt;
   DateTime? _regeneratedAt;
 
-  static const _baseUrl = 'https://adjimrxt3y.ap-south-1.awsapprunner.com/api/v1';
 
   @override
   void initState() {
@@ -34,7 +33,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       final res = await dio.get(
-        '$_baseUrl/auth/app-code',
+        '${ApiService.baseUrl}/auth/app-code',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() {
@@ -60,7 +59,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       final res = await dio.post(
-        '$_baseUrl/auth/app-code/regenerate',
+        '${ApiService.baseUrl}/auth/app-code/regenerate',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() {
@@ -90,7 +89,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
       final dio = Dio();
       final token = await ApiService.getToken();
       await dio.post(
-        '$_baseUrl/auth/app-code/toggle',
+        '${ApiService.baseUrl}/auth/app-code/toggle',
         data: {'is_active': value},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
