@@ -52,6 +52,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
       await ApiService.cancelPendingOrder(orderId);
       _load();
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not cancel order')),
       );
@@ -176,7 +177,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(color: active ? AppColors.primary.withOpacity(0.15) : AppColors.border, borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: active ? AppColors.primary.withValues(alpha: 0.15) : AppColors.border, borderRadius: BorderRadius.circular(10)),
                   child: Text('$count', style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
               ],
@@ -291,7 +292,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                     child: Text(o['buy_sell'] ?? '', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 8),
@@ -300,7 +301,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                 child: const Text('OPEN', style: TextStyle(color: AppColors.primaryDark, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -408,7 +409,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                     child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 8),
@@ -417,7 +418,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: AppColors.success.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                 child: const Text('EXECUTED', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -451,7 +452,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                     child: Text(o['buy_sell'] ?? '', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 8),
@@ -460,7 +461,7 @@ class _PendingOrdersScreenState extends State<PendingOrdersScreen> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: AppColors.textMuted.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: AppColors.textMuted.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                 child: const Text('CANCELLED', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],

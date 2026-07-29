@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -44,6 +44,8 @@ class OrderTicketScreen extends StatefulWidget {
     required String orderType,
     required double qty,
     required double price,
+    double? marketProtectionPercent,
+    String productType,
   }) onSubmit;
 
   const OrderTicketScreen({
@@ -71,6 +73,19 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   String _validity = 'DAY'; // DAY | IOC
   bool _useSecondaryExchange = false;
 
+  // Advanced order options: stoploss (a trigger price that fires a market/
+  // limit sell once the price falls to protect against loss), GTT (Good
+  // Till Triggered -- stays pending indefinitely until the target price
+  // is hit, unlike a regular order which expires same-day), and Market
+  // Protection (caps the worst price a MARKET order can fill at, so a
+  // sudden price gap doesn't execute far away from the quoted price).
+  bool _stoplossEnabled = false;
+  bool _gttEnabled = false;
+  bool _marketProtectionEnabled = false;
+  late TextEditingController _stoplossController;
+  late TextEditingController _gttTargetController;
+  double _marketProtectionPercent = 3.0;
+
   late TextEditingController _qtyController;
   late TextEditingController _priceController;
 
@@ -89,6 +104,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     _qtyController = TextEditingController(text: '1');
     _priceController = TextEditingController(text: widget.currentPrice.toStringAsFixed(2));
     _legsController = TextEditingController(text: '2');
+    _stoplossController = TextEditingController();
+    _gttTargetController = TextEditingController();
     _loadBalance();
   }
 
@@ -106,6 +123,9 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     _qtyController.dispose();
     _priceController.dispose();
     _legsController.dispose();
+    
+    _stoplossController.dispose();
+    _gttTargetController.dispose();
     super.dispose();
   }
 
@@ -138,7 +158,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   void _adjustPrice(double delta) {
     final current = double.tryParse(_priceController.text) ?? widget.currentPrice;
     final updated = (current + delta).clamp(0.05, double.infinity);
-    setState(() => _priceController.text = updated.toStringAsFixed(2));
+    setState(() {
+      _priceController.text = updated.toStringAsFixed(2);
+      _orderType = 'LIMIT';
+    });
   }
 
   double get _qty => double.tryParse(_qtyController.text) ?? 0;
@@ -179,6 +202,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   double get _marginRequired => _stockValue * 0.20;
 
   Future<void> _handleSubmit() async {
+    if (_submitting) return; // guard against duplicate rapid-fire submissions
     if (_productTab == 'ICEBERG') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Iceberg orders are coming soon')),
@@ -237,7 +261,56 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     }
 
     try {
-      final status = await widget.onSubmit(orderType: _orderType, qty: _qty, price: _price);
+      final status = await widget.onSubmit(orderType: _orderType, qty: _qty, price: _price, marketProtectionPercent: (_orderType == 'MARKET' && _marketProtectionEnabled) ? _marketProtectionPercent : null, productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR');
+      // If the user enabled Stoploss and/or GTT alongside a Regular order,
+      // place them as separate pending orders once the main order succeeds
+      // -- these are protective/target orders that trigger independently,
+      // not part of the immediate buy/sell itself.
+      if (_productTab == 'REGULAR') {
+        if (_stoplossEnabled) {
+          final slPrice = double.tryParse(_stoplossController.text);
+          if (slPrice != null && slPrice > 0) {
+            try {
+              await ApiService.createPendingOrder(
+                widget.stock['id'],
+                'SELL',
+                'STOP_LOSS',
+                _qty,
+                slPrice,
+              );
+            } catch (_) {
+              // Main order already succeeded -- surface a soft warning
+              // rather than treating the whole submission as failed.
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order placed, but Stoploss could not be set. Add it from Orders.')),
+                );
+              }
+            }
+          }
+        }
+        if (_gttEnabled) {
+          final gttPrice = double.tryParse(_gttTargetController.text);
+          if (gttPrice != null && gttPrice > 0) {
+            try {
+              await ApiService.createPendingOrder(
+                widget.stock['id'],
+                widget.buySell.toUpperCase(),
+                'LIMIT',
+                _qty,
+                gttPrice,
+                isGtt: true,
+              );
+            } catch (_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order placed, but GTT could not be set. Add it from Orders.')),
+                );
+              }
+            }
+          }
+        }
+      }
       if (mounted) {
         Navigator.pop(context, {
           'buySell': widget.buySell,
@@ -282,7 +355,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.15),
+                  color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(isBuy ? 'BUY' : 'SELL',
@@ -335,7 +408,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           if (_productTab == 'ICEBERG' || (_productTab == 'MTF' && !isBuy))
             Container(
               width: double.infinity,
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 _productTab == 'ICEBERG'
@@ -347,7 +420,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           if (_productTab == 'MTF' && isBuy)
             Container(
               width: double.infinity,
-              color: AppColors.success.withOpacity(0.08),
+              color: AppColors.success.withValues(alpha: 0.08),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: const Text(
                 'You pay 20% margin upfront. The rest is funded by the broker at 18% p.a. interest.',
@@ -388,12 +461,22 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                   const SizedBox(height: 8),
                   _stepperField(
                     controller: _priceController,
-                    enabled: _orderType == 'LIMIT',
+                    enabled: true,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                     onIncrement: () => _adjustPrice(0.05),
                     onDecrement: () => _adjustPrice(-0.05),
+                    onChanged: (_) {
+                      if (_orderType != 'LIMIT') {
+                        setState(() => _orderType = 'LIMIT');
+                      }
+                    },
                   ),
+                  const SizedBox(height: 16),
+                  if (_productTab == 'REGULAR') ...[
+                    _advancedOrderOptions(),
+                    const SizedBox(height: 16),
+                  ],
                   const SizedBox(height: 16),
                   if (_productTab == 'ICEBERG') ...[
                     _icebergLegsSection(),
@@ -445,8 +528,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         child: Row(children: [
           Radio<bool>(
               value: true,
-              groupValue: selected,
-              onChanged: (_) => onTap(),
+              groupValue: selected, // ignore: deprecated_member_use
+              onChanged: (_) => onTap(), // ignore: deprecated_member_use
               activeColor: _accentColor,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
           Text(label,
@@ -520,6 +603,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     required VoidCallback onDecrement,
     bool enabled = true,
     List<TextInputFormatter>? inputFormatters,
+    ValueChanged<String>? onChanged,
   }) {
     return Container(
       decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)),
@@ -530,7 +614,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             enabled: enabled,
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
-            onChanged: (_) => setState(() {}),
+            onChanged: (v) {
+              setState(() {});
+              onChanged?.call(v);
+            },
             style: const TextStyle(fontSize: 20, color: AppColors.textPrimary),
             decoration: const InputDecoration(
                 border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14)),
@@ -559,8 +646,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Radio<bool>(
             value: true,
-            groupValue: selected,
-            onChanged: (_) => onTap(),
+            groupValue: selected, // ignore: deprecated_member_use
+            onChanged: (_) => onTap(), // ignore: deprecated_member_use
             activeColor: _accentColor,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
         Text(label,
@@ -608,7 +695,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? _accentColor.withOpacity(0.12) : Colors.transparent,
+          color: selected ? _accentColor.withValues(alpha: 0.12) : Colors.transparent,
           border: Border.all(color: selected ? _accentColor : AppColors.border),
           borderRadius: BorderRadius.circular(8),
         ),
@@ -797,11 +884,13 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             top: 4,
             child: GestureDetector(
               onHorizontalDragUpdate: (details) {
+                if (_submitting) return;
                 setState(() {
                   _swipeProgress = (_swipeProgress + details.delta.dx / maxDrag).clamp(0.0, 1.0);
                 });
               },
               onHorizontalDragEnd: (details) {
+                if (_submitting) return;
                 if (_swipeProgress > 0.85) {
                   setState(() => _swipeProgress = 1.0);
                   _handleSubmit();
@@ -824,5 +913,115 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         ]),
       );
     });
+  }
+
+  Widget _advancedOrderOptions() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Advanced Options', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary)),
+          const SizedBox(height: 10),
+          _advancedOptionRow(
+            label: 'Stoploss',
+            subtitle: 'Auto-sell if price falls to protect against loss',
+            value: _stoplossEnabled,
+            onChanged: (v) => setState(() => _stoplossEnabled = v),
+          ),
+          if (_stoplossEnabled) ...[
+            const SizedBox(height: 8),
+            _stepperField(
+              controller: _stoplossController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\\d*\\.?\\d{0,2}'))],
+              onIncrement: () {
+                final current = double.tryParse(_stoplossController.text) ?? widget.currentPrice;
+                setState(() => _stoplossController.text = (current + 0.05).toStringAsFixed(2));
+              },
+              onDecrement: () {
+                final current = double.tryParse(_stoplossController.text) ?? widget.currentPrice;
+                setState(() => _stoplossController.text = (current - 0.05).clamp(0.05, double.infinity).toStringAsFixed(2));
+              },
+            ),
+          ],
+          const SizedBox(height: 12),
+          _advancedOptionRow(
+            label: 'GTT (Good Till Triggered)',
+            subtitle: 'Stays pending until your target price is hit, no expiry',
+            value: _gttEnabled,
+            onChanged: (v) => setState(() => _gttEnabled = v),
+          ),
+          if (_gttEnabled) ...[
+            const SizedBox(height: 8),
+            _stepperField(
+              controller: _gttTargetController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\\d*\\.?\\d{0,2}'))],
+              onIncrement: () {
+                final current = double.tryParse(_gttTargetController.text) ?? widget.currentPrice;
+                setState(() => _gttTargetController.text = (current + 0.05).toStringAsFixed(2));
+              },
+              onDecrement: () {
+                final current = double.tryParse(_gttTargetController.text) ?? widget.currentPrice;
+                setState(() => _gttTargetController.text = (current - 0.05).clamp(0.05, double.infinity).toStringAsFixed(2));
+              },
+            ),
+          ],
+          if (_orderType == 'MARKET') ...[
+            const SizedBox(height: 12),
+            _advancedOptionRow(
+              label: 'Market Protection',
+              subtitle: 'Caps how far your MARKET order can fill from the quoted price',
+              value: _marketProtectionEnabled,
+              onChanged: (v) => setState(() => _marketProtectionEnabled = v),
+            ),
+            if (_marketProtectionEnabled) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text('Protect up to', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Expanded(
+                    child: Slider(
+                      value: _marketProtectionPercent,
+                      min: 1,
+                      max: 10,
+                      divisions: 18,
+                      label: '${_marketProtectionPercent.toStringAsFixed(1)}%',
+                      activeColor: _accentColor,
+                      onChanged: (v) => setState(() => _marketProtectionPercent = v),
+                    ),
+                  ),
+                  Text('${_marketProtectionPercent.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                ],
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _advancedOptionRow({
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            ],
+          ),
+        ),
+        Switch(value: value, onChanged: onChanged, activeThumbColor: _accentColor),
+      ],
+    );
   }
 }

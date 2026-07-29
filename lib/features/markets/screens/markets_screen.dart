@@ -14,7 +14,7 @@ class MarketsScreen extends StatefulWidget {
 
 class _MarketsScreenState extends State<MarketsScreen> {
   List<dynamic> _stocks = [];
-  Map<String, Map<String, dynamic>> _quotes = {};
+  final Map<String, Map<String, dynamic>> _quotes = {};
   bool _loading = true;
   String? _error;
   String _category = 'Explore';
@@ -23,7 +23,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   Map<String, dynamic> _nifty = {'value': '--', 'percent': '--', 'isUp': true};
   Map<String, dynamic> _sensex = {'value': '--', 'percent': '--', 'isUp': true};
   Map<String, dynamic> _bankNifty = {'value': '--', 'percent': '--', 'isUp': true};
-  Map<String, List<double>> _indexSpots = {};
+  final Map<String, List<double>> _indexSpots = {};
 
   @override
   void initState() {
@@ -99,7 +99,6 @@ class _MarketsScreenState extends State<MarketsScreen> {
     if (_category == 'Explore') return _stocks;
     return _stocks.where((s) {
       final sector = (s['sector'] ?? '').toString().toLowerCase();
-      final symbol = (s['symbol'] ?? '').toString().toLowerCase();
       switch (_category) {
         case 'Nifty 50':
           return true; // no separate index-membership flag in backend; Explore tab already shows full list
@@ -364,7 +363,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -440,7 +439,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
             Container(
               width: 34,
               height: 34,
-              decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
               child: Center(child: Text((symbol ?? '?').toString().substring(0, 1), style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14))),
             ),
             const SizedBox(width: 10),

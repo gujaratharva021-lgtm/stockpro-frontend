@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/fundamentals_screen.dart';
-import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/option_chain_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/set_alert_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/gtt_screen.dart';
@@ -14,7 +13,7 @@ import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
 /// Opens the Kite-style stock quote bottom sheet: BUY/SELL, view chart /
 /// option chain, set alert / add notes / create GTT, bid-offer depth,
-/// day's range, and the rest of the quote detail ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â matching the reference
+/// day's range, and the rest of the quote detail — matching the reference
 /// screenshots. Call this instead of pushing StockDetailScreen when the
 /// user taps a stock in the watchlist.
 Future<void> showStockQuoteSheet(BuildContext context, Map<String, dynamic> stock) {
@@ -129,6 +128,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 
+  // ignore: unused_element
   void _showSetAlertDialog() {
     final controller = TextEditingController();
     String direction = 'ABOVE';
@@ -190,6 +190,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 
+  // ignore: unused_element
   void _showCreateGTTDialog() {
     final priceController = TextEditingController();
     final qtyController = TextEditingController(text: '1');
@@ -257,9 +258,21 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           avgBuyPrice: 0,
           calcBrokerage: (value, product) => 0,
           calcTaxes: (value, buySell) => 0,
-          onSubmit: ({required String orderType, required double qty, required double price}) async {
+          onSubmit: ({required String orderType, required double qty, required double price, double? marketProtectionPercent, String productType = 'REGULAR'}) async {
             if (orderType == 'MARKET') {
-              await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
+              // Re-fetch the price right before submitting -- the price
+              // captured when the sheet opened may be stale.
+              final freshQuote = await ApiService.getQuote(widget.stock['symbol']);
+              final rawPrice = freshQuote['price'];
+              if (rawPrice is! num) throw Exception('Could not get a live price for this order');
+              final freshPrice = rawPrice.toDouble();
+              if (marketProtectionPercent != null && currentPrice > 0) {
+                final deviation = ((freshPrice - currentPrice).abs() / currentPrice) * 100;
+                if (deviation > marketProtectionPercent) {
+                  throw Exception('Price moved ${deviation.toStringAsFixed(1)}% since you opened this order, beyond your ${marketProtectionPercent.toStringAsFixed(1)}% protection limit. Order not placed.');
+                }
+              }
+              await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), freshPrice, productType: productType);
               return 'Executed';
             } else {
               await ApiService.createPendingOrder(widget.stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
@@ -271,10 +284,13 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
 
     if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result['buySell'] == 'buy' ? 'Buy' : 'Sell'} order placed')),
-      );
       _load();
+      _showOrderConfirmation(
+        buySell: result['buySell'] as String,
+        qty: result['qty'] as double,
+        orderType: result['orderType'] as String,
+        status: result['status'] as String,
+      );
     }
   }
 
@@ -305,7 +321,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           Expanded(
             child: Stack(
               children: [
-                Positioned.fill(child: FractionallySizedBox(alignment: Alignment.centerRight, widthFactor: bidFrac.clamp(0.0, 1.0), child: Container(color: AppColors.primary.withOpacity(0.08)))),
+                Positioned.fill(child: FractionallySizedBox(alignment: Alignment.centerRight, widthFactor: bidFrac.clamp(0.0, 1.0), child: Container(color: AppColors.primary.withValues(alpha: 0.08)))),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(children: [
@@ -321,7 +337,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           Expanded(
             child: Stack(
               children: [
-                Positioned.fill(child: FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: offerFrac.clamp(0.0, 1.0), child: Container(color: AppColors.danger.withOpacity(0.08)))),
+                Positioned.fill(child: FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: offerFrac.clamp(0.0, 1.0), child: Container(color: AppColors.danger.withValues(alpha: 0.08)))),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(children: [
@@ -577,6 +593,76 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                   ),
                 ],
               ),
+      ),
+    );
+
+  }
+  String _generateOrderId() {
+    final now = DateTime.now();
+    return 'TRD${DateFormat('yyyyMMdd').format(now)}${now.millisecondsSinceEpoch % 100000}';
+  }
+
+  void _showOrderConfirmation({required String buySell, required double qty, required String orderType, required String status}) {
+    final isBuy = buySell == 'buy';
+    final orderId = _generateOrderId();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 64, height: 64, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.success.withValues(alpha: 0.12)), child: const Icon(Icons.check_circle, color: AppColors.success, size: 38)),
+              const SizedBox(height: 16),
+              const Text('Order Placed Successfully', style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              const SizedBox(height: 6),
+              Text('${isBuy ? 'BUY' : 'SELL'} Order', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+                child: Column(children: [
+                  _confirmRow('Stock', widget.stock['symbol'] ?? ''),
+                  _confirmRow('Qty', qty.toStringAsFixed(0)),
+                  _confirmRow('Price', orderType == 'MARKET' ? 'Market' : 'Limit'),
+                  _confirmRow('Status', status, valueColor: status == 'Executed' ? AppColors.success : AppColors.primary),
+                  _confirmRow('Order ID', orderId),
+                ]),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    Navigator.pop(context);
+                  },
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: const Text('Done', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _confirmRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }

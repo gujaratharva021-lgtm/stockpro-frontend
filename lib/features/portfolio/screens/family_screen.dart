@@ -79,7 +79,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: members.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, i) {
                 final m = members[i];
                 return Container(
@@ -90,7 +90,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                       Container(
                         width: 40,
                         height: 40,
-                        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), shape: BoxShape.circle),
                         child: Center(child: Text(m.name.isNotEmpty ? m.name[0].toUpperCase() : '?', style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold))),
                       ),
                       const SizedBox(width: 12),

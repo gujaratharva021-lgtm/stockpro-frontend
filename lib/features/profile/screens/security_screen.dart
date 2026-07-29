@@ -66,7 +66,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                         data: {'current_password': currentController.text, 'new_password': newController.text},
                         options: Options(headers: {'Authorization': 'Bearer $token'}),
                       );
+                      if (!ctx.mounted) return;
                       Navigator.pop(ctx);
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed successfully'), backgroundColor: AppColors.success));
                     } catch (_) {
                       setS(() { saving = false; error = 'Incorrect current password'; });
@@ -142,7 +144,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: AppColors.success.withOpacity(0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.success.withOpacity(0.3))),
+                      decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.success.withValues(alpha: 0.3))),
                       child: Row(
                         children: [
                           const Icon(Icons.shield_outlined, color: AppColors.success, size: 24),
@@ -177,7 +179,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
         child: Row(
           children: [
-            Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 22)),
+            Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 22)),
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -83,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ListTile(
         leading: Icon(icon, color: AppColors.textSecondary, size: 20),
         title: Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
-        trailing: Switch(value: value, onChanged: onChanged, activeColor: AppColors.primary),
+        trailing: Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

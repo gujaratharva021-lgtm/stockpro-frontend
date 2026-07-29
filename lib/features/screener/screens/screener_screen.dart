@@ -16,8 +16,8 @@ class _ScreenerScreenState extends State<ScreenerScreen> {
 
   Set<String> _selectedSectors = {};
   String _changeFilter = 'ALL'; // ALL, GAINERS, LOSERS
-  double _minPrice = 0;
-  double _maxPrice = 50000;
+  final double _minPrice = 0;
+  final double _maxPrice = 50000;
   String _sortBy = 'NAME'; // NAME, PRICE_HIGH, PRICE_LOW, CHANGE_HIGH, CHANGE_LOW
 
   @override

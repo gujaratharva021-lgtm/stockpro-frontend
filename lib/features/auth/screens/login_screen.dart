@@ -30,14 +30,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkBiometric() async {
     final available = await BiometricService.isAvailable();
     final enabled = await BiometricService.isEnabled();
-    print('🔐 Biometric available: $available, enabled: $enabled');
+    debugPrint('🔐 Biometric available: $available, enabled: $enabled');
     if (mounted) setState(() => _biometricAvailable = available && enabled);
   }
 
   Future<void> _loginWithBiometric() async {
-    print('🔐 Attempting biometric auth...');
+    debugPrint('🔐 Attempting biometric auth...');
     final success = await BiometricService.authenticate();
-    print('🔐 Biometric result: $success');
+    debugPrint('🔐 Biometric result: $success');
     if (!success) return;
     setState(() { _loading = true; _error = null; });
     try {
@@ -128,9 +128,9 @@ class _LoginScreenState extends State<LoginScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.danger.withOpacity(0.08),
+                color: AppColors.danger.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.danger.withOpacity(0.25)),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
               ),
               child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
             ),

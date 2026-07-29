@@ -141,8 +141,8 @@ class _MutualFundsScreenState extends State<MutualFundsScreen> {
                                       height: 52,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: selected ? color : color.withOpacity(0.12),
-                                        border: selected ? null : Border.all(color: color.withOpacity(0.3)),
+                                        color: selected ? color : color.withValues(alpha: 0.12),
+                                        border: selected ? null : Border.all(color: color.withValues(alpha: 0.3)),
                                       ),
                                       child: Icon(_categoryIcon(cat), color: selected ? Colors.white : color, size: 22),
                                     ),
@@ -247,7 +247,7 @@ class _FundCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -258,7 +258,7 @@ class _FundCard extends StatelessWidget {
                 Container(
                   width: 42,
                   height: 42,
-                  decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
                   child: Center(child: Text(initial, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18))),
                 ),
                 const SizedBox(width: 12),
@@ -292,7 +292,7 @@ class _FundCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                   child: Text(
                     fund['category'] ?? '',
                     style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),

@@ -130,7 +130,7 @@ class _TradebookScreenState extends State<TradebookScreen> {
                             Container(
                               width: 40, height: 40,
                               decoration: BoxDecoration(
-                                color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.1),
+                                color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -151,7 +151,7 @@ class _TradebookScreenState extends State<TradebookScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.15),
+                                          color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.15),
                                           borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: Text(

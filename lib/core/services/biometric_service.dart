@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -10,7 +11,7 @@ class BiometricService {
     try {
       return await _auth.canCheckBiometrics && await _auth.isDeviceSupported();
     } catch (e) {
-      print('🔐 Biometric error: $e');
+      debugPrint('🔐 Biometric error: $e');
       return false;
     }
   }
@@ -34,7 +35,7 @@ class BiometricService {
         ),
       );
     } catch (e) {
-      print('🔐 Biometric error: $e');
+      debugPrint('🔐 Biometric error: $e');
       return false;
     }
   }

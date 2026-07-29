@@ -120,7 +120,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                     width: 32, height: 32,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.12),
+                      color: AppColors.primary.withValues(alpha: 0.12),
                     ),
                     child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
                   ),
@@ -152,7 +152,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, spreadRadius: 2)],
+                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2)],
               ),
               child: const Icon(Icons.auto_awesome, color: Colors.white, size: 34),
             ),
@@ -280,7 +280,7 @@ class _MessageBubble extends StatelessWidget {
               width: 32, height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.12),
+                color: AppColors.primary.withValues(alpha: 0.12),
               ),
               child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
             ),
@@ -345,7 +345,7 @@ class _TypingIndicatorState extends State<_TypingIndicator> with SingleTickerPro
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) => Row(
+      builder: (_, _) => Row(
         children: List.generate(3, (i) {
           final t = (_ctrl.value + i * 0.2) % 1.0;
           final opacity = 0.3 + 0.7 * (t < 0.5 ? t * 2 : (1 - t) * 2);
@@ -355,7 +355,7 @@ class _TypingIndicatorState extends State<_TypingIndicator> with SingleTickerPro
               width: 8, height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(opacity),
+                color: AppColors.primary.withValues(alpha: opacity),
               ),
             ),
           );

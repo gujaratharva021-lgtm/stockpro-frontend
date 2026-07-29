@@ -274,7 +274,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                           children: [
                             Container(
                               width: 44, height: 44,
-                              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                               alignment: Alignment.center,
                               child: Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',

@@ -95,7 +95,7 @@ class StockLogo extends StatelessWidget {
     final fallback = Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: radius),
+      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: radius),
       child: Center(
         child: Text(letter, style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: size * 0.42)),
       ),
@@ -111,7 +111,7 @@ class StockLogo extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => fallback,
+        errorBuilder: (_, _, _) => fallback,
         loadingBuilder: (context, child, progress) => progress == null ? child : fallback,
       ),
     );

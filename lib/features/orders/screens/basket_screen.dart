@@ -55,7 +55,12 @@ class _BasketScreenState extends State<BasketScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Buy ${basket.items.length} stocks for ₹${basket.totalValue.toStringAsFixed(2)}?'),
+            Text('Buy ${basket.items.length} stocks for approximately ?${basket.totalValue.toStringAsFixed(2)}?'),
+            const SizedBox(height: 6),
+            const Text(
+              'Prices shown are estimates from when items were added. Actual execution price for each stock may differ slightly at the time of order placement.',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+            ),
             const SizedBox(height: 12),
             ...basket.items.map((item) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 3),
@@ -86,9 +91,34 @@ class _BasketScreenState extends State<BasketScreen> {
     int success = 0;
     int failed = 0;
 
-    for (final item in basket.items) {
+    // Fetch all fresh quotes concurrently -- this was previously one
+    // sequential network round-trip per item, which made a large basket
+    // slow and meant a single slow/failed quote blocked every item after it.
+    final quotes = await Future.wait(
+      basket.items.map((item) async {
+        try {
+          return await ApiService.getQuote(item.symbol);
+        } catch (_) {
+          return null;
+        }
+      }),
+    );
+
+    for (var i = 0; i < basket.items.length; i++) {
+      final item = basket.items[i];
+      final freshQuote = quotes[i];
       try {
-        await ApiService.placeOrder(item.stockId, 'BUY', item.quantity, item.price);
+        if (freshQuote == null) {
+          failed++;
+          continue;
+        }
+        final rawPrice = freshQuote['price'];
+        if (rawPrice is! num) {
+          failed++;
+          continue;
+        }
+        final freshPrice = rawPrice.toDouble();
+        await ApiService.placeOrder(item.stockId, 'BUY', item.quantity, freshPrice);
         success++;
       } catch (_) {
         failed++;
@@ -162,7 +192,7 @@ class _BasketScreenState extends State<BasketScreen> {
                             children: [
                               Container(
                                 width: 36, height: 36,
-                                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
                                 child: const Icon(Icons.shopping_basket_outlined, color: AppColors.primaryDark, size: 18),
                               ),
                               const SizedBox(width: 10),
@@ -193,7 +223,7 @@ class _BasketScreenState extends State<BasketScreen> {
                               children: [
                                 Container(
                                   width: 28, height: 28,
-                                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                                   child: Center(child: Text(item.symbol[0], style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 12))),
                                 ),
                                 const SizedBox(width: 10),

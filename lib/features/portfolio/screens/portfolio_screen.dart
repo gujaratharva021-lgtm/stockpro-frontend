@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
-import 'package:stock_app/core/utils/export_helper.dart';
-import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/portfolio/screens/family_screen.dart';
 
@@ -20,11 +18,13 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   int _tab = 0; // 0=Holdings, 1=Positions, 2=Mutual Funds
 
   List<dynamic> _holdings = [];
-  Map<String, Map<String, dynamic>> _quotes = {};
-  Map<String, List<double>> _history = {};
+  final Map<String, Map<String, dynamic>> _quotes = {};
+  final Map<String, List<double>> _history = {};
+  // ignore: unused_field
   List<dynamic> _transactions = [];
 
   List<dynamic> _mtfPositions = [];
+  List<dynamic> _unsettledPositions = [];
   List<dynamic> _futures = [];
   List<dynamic> _options = [];
 
@@ -74,6 +74,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         ApiService.getMyFunds().catchError((_) => []),
         ApiService.getMyETFs().catchError((_) => []),
         ApiService.getMTFPositions().catchError((_) => []),
+        ApiService.getPositions().catchError((_) => []),
         ApiService.getFutures().catchError((_) => []),
         ApiService.getOptions().catchError((_) => []),
       ]);
@@ -84,6 +85,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       final myFunds = results[3] as List<dynamic>;
       final myEtfs = results[4] as List<dynamic>;
       final mtfPositions = results[5] as List<dynamic>;
+      final unsettledPositions = results[6] as List<dynamic>;
       final futures = results[6] as List<dynamic>;
       final options = results[7] as List<dynamic>;
 
@@ -94,6 +96,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         _myFunds = myFunds;
         _myEtfs = myEtfs;
         _mtfPositions = mtfPositions;
+        _unsettledPositions = unsettledPositions;
         _futures = futures;
         _options = options;
       });
@@ -148,6 +151,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   double get _totalCurrentValue => _stocksCurrent + _mfInvested + _etfInvested + _balance;
   double get _totalInvested => _stocksInvested + _mfInvested + _etfInvested;
   double get _totalReturns => _stocksCurrent - _stocksInvested; // MF/ETF current==invested (no live NAV yet)
+  // ignore: unused_element
   double get _totalReturnsPct => _totalInvested > 0 ? (_totalReturns / _totalInvested) * 100 : 0;
 
   double get _todayReturns => _holdings.fold(0.0, (sum, h) {
@@ -157,6 +161,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     return sum + qty * changePerShare;
   });
 
+  // ignore: unused_element
   double get _todayReturnsPct => _stocksCurrent > 0 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
 
   int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.length + _options.length;
@@ -229,12 +234,14 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     return list;
   }
 
+  // ignore: unused_element
   List<dynamic> get _topGainers {
     final list = List<dynamic>.from(_holdings);
     list.sort((a, b) => _pnlPctOf(b).compareTo(_pnlPctOf(a)));
     return list.take(3).toList();
   }
 
+  // ignore: unused_element
   List<dynamic> get _topLosers {
     final list = List<dynamic>.from(_holdings);
     list.sort((a, b) => _pnlPctOf(a).compareTo(_pnlPctOf(b)));
@@ -463,8 +470,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   }
 
   List<Widget> _buildHoldingsTab() {
-    final isUp = _totalReturns >= 0;
-    final isTodayUp = _todayReturns >= 0;
     return [
 
 
@@ -535,6 +540,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     ];
   }
 
+  // ignore: unused_element
   List<PieChartSectionData> _allocationSections() {
     final total = _totalCurrentValue;
     if (total <= 0) {
@@ -552,6 +558,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         .toList();
   }
 
+  // ignore: unused_element
   Widget _allocRow(String label, Color color, double value) {
     final pct = _totalCurrentValue > 0 ? (value / _totalCurrentValue) * 100 : 0;
     return Padding(
@@ -567,6 +574,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _moverColumn(String title, List<dynamic> items, bool isGain) {
     if (items.isEmpty) {
       return Column(
@@ -574,7 +582,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         children: [
           Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('â€”', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          const Text('—', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       );
     }
@@ -600,6 +608,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _bottomAction(IconData icon, String label, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
@@ -615,6 +624,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     );
   }
 
+  // ignore: unused_element
   Future<void> _showImportHoldings() async {
     showModalBottomSheet(
       context: context,
@@ -659,7 +669,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             Container(
               width: 34,
               height: 34,
-              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
               child: Center(child: Text((symbol ?? '?').toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 14))),
             ),
             const SizedBox(width: 10),
@@ -683,7 +693,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                   const SizedBox(height: 2),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                     child: Text('${isUp ? '+' : ''}${returnsPct.toStringAsFixed(2)}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 10, fontWeight: FontWeight.w600)),
                   ),
                   Text('${isUp ? '+' : ''}₹${returns.toStringAsFixed(2)}', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 10)),
@@ -719,6 +729,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   List<Widget> _buildPositionsTab() {
     final allPositions = [
+      ..._unsettledPositions.map((p) => {'type': 'Regular', 'data': p}),
       ..._mtfPositions.where((p) => p['status'] == 'open').map((p) => {'type': 'MTF', 'data': p}),
       ..._futures.map((p) => {'type': 'Futures', 'data': p}),
       ..._options.map((p) => {'type': 'Options', 'data': p}),
@@ -765,14 +776,16 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         Text(data['symbol']?.toString() ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
                           child: Text(type, style: const TextStyle(color: AppColors.primaryDark, fontSize: 10, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      type == 'MTF'
+                      type == 'Regular'
+                          ? 'Qty: ${data['quantity']} � Avg ?${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
+                          : type == 'MTF'
                           ? 'Qty: ${data['quantity']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'Futures'
                           ? '${data['position_type'] ?? ''} • Lot: ${data['lot_size']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
@@ -790,6 +803,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     ];
   }
 
+  // ignore: unused_element
   List<Widget> _buildMutualFundsTab() {
     if (_myFunds.isEmpty) {
       return [

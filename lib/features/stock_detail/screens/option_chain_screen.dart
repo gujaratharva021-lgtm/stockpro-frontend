@@ -404,7 +404,7 @@ class _OptionChainScreenState extends State<OptionChainScreen> {
               Expanded(
                 child: ListView.separated(
                   itemCount: _optionChain.length,
-                  separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 1),
+                  separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
                   itemBuilder: (context, index) {
                     final row = _optionChain[index];
                     final call = row['call_option'];
@@ -440,7 +440,7 @@ class _OptionChainScreenState extends State<OptionChainScreen> {
                               alignment: Alignment.center,
                               padding: const EdgeInsets.symmetric(vertical: 6),
                               decoration: BoxDecoration(
-                                color: atm ? AppColors.textPrimary : AppColors.primary.withOpacity(0.08),
+                                color: atm ? AppColors.textPrimary : AppColors.primary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(strike.toString(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: atm ? Colors.white : AppColors.textPrimary)),

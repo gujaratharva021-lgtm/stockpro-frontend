@@ -165,7 +165,7 @@ class _ConnectedAppsScreenState extends State<ConnectedAppsScreen> {
                               children: [
                                 Container(
                                   width: 40, height: 40,
-                                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                                   child: Icon(_iconFor(app['app_icon']), color: AppColors.primary, size: 20),
                                 ),
                                 const SizedBox(width: 12),

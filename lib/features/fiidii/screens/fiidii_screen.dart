@@ -142,7 +142,7 @@ class _FiiDiiScreenState extends State<FiiDiiScreen> with SingleTickerProviderSt
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: _accent.withOpacity(0.08),
+                color: _accent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Row(
@@ -156,7 +156,7 @@ class _FiiDiiScreenState extends State<FiiDiiScreen> with SingleTickerProviderSt
             ),
             const SizedBox(height: 8),
             // Rows
-            ...data.map((e) => _buildRow(e)).toList(),
+            ...data.map((e) => _buildRow(e)),
           ],
         ),
       ),
@@ -187,7 +187,7 @@ class _FiiDiiScreenState extends State<FiiDiiScreen> with SingleTickerProviderSt
           color: _card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _cardBorder),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Column(children: [
           Text(label, style: const TextStyle(color: _textSub, fontSize: 10)),

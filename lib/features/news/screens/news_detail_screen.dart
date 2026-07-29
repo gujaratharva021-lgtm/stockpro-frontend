@@ -52,12 +52,12 @@ class NewsDetailScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           width: double.infinity,
-                          color: AppColors.border.withOpacity(0.3),
+                          color: AppColors.border.withValues(alpha: 0.3),
                           child: Image.memory(
                             _decodeImage(item['image_url']),
                             width: double.infinity,
                             fit: BoxFit.fitWidth,
-                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
                           ),
                         ),
                       ),

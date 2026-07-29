@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
 import 'package:intl/intl.dart';
-import 'package:dio/dio.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
-import 'package:stock_app/features/news/screens/news_detail_screen.dart';
 import 'package:stock_app/shared/widgets/stock_logo.dart';
 import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
@@ -37,7 +35,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
   String? _aboutText;
   List<dynamic> _peers = [];
   final Map<String, dynamic> _peerQuotes = {};
+  // ignore: unused_field
   List<dynamic> _stockNews = [];
+  // ignore: unused_field
   bool _loadingNews = true;
 
   late TabController _tabController;
@@ -99,7 +99,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     setState(() { _loadingOptionChain = true; _optionChainError = null; });
     try {
       final chain = await ApiService.getOptionChain(widget.stock['symbol'], _selectedExpiry);
-      print('OPTION_CHAIN_DEBUG: $chain');
+      debugPrint('OPTION_CHAIN_DEBUG: $chain');
       setState(() => _optionChain = chain);
     } catch (e) {
       setState(() => _optionChainError = 'Option chain unavailable right now');
@@ -204,7 +204,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
       }
       setState(() => _inWatchlist = !_inWatchlist);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not update watchlist')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not update watchlist')));
+      }
     } finally { if (mounted) setState(() => _watchlistLoading = false); }
   }
 
@@ -347,9 +349,22 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
           avgBuyPrice: _avgBuyPrice,
           calcBrokerage: _calcBrokerage,
           calcTaxes: _calcTaxes,
-          onSubmit: ({required String orderType, required double qty, required double price}) async {
+          onSubmit: ({required String orderType, required double qty, required double price, double? marketProtectionPercent, String productType = 'REGULAR'}) async {
             if (orderType == 'MARKET') {
-              await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
+              // Re-fetch the price right before submitting -- the price
+              // captured when the order sheet opened may be stale by the
+              // time the user actually confirms the trade.
+              final freshQuote = await ApiService.getQuote(widget.stock['symbol']);
+              final rawPrice = freshQuote['price'];
+              if (rawPrice is! num) throw Exception('Could not get a live price for this order');
+              final freshPrice = rawPrice.toDouble();
+              if (marketProtectionPercent != null && currentPrice > 0) {
+                final deviation = ((freshPrice - currentPrice).abs() / currentPrice) * 100;
+                if (deviation > marketProtectionPercent) {
+                  throw Exception('Price moved ${deviation.toStringAsFixed(1)}% since you opened this order, beyond your ${marketProtectionPercent.toStringAsFixed(1)}% protection limit. Order not placed.');
+                }
+              }
+              await ApiService.placeOrder(widget.stock['id'], buySell.toUpperCase(), qty.toInt(), freshPrice, productType: productType);
               return 'Executed';
             } else {
               await ApiService.createPendingOrder(widget.stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
@@ -375,47 +390,50 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
   void _showOrderConfirmation({required String buySell, required double qty, required String orderType, required String status}) {
     final isBuy = buySell == 'buy';
     final orderId = _generateOrderId();
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 64, height: 64, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.success.withOpacity(0.12)), child: const Icon(Icons.check_circle, color: AppColors.success, size: 38)),
-            const SizedBox(height: 16),
-            const Text('Order Placed Successfully', style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text('${isBuy ? 'BUY' : 'SELL'} Order', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
-              child: Column(children: [
-                _confirmRow('Stock', widget.stock['symbol'] ?? ''),
-                _confirmRow('Qty', qty.toStringAsFixed(0)),
-                _confirmRow('Price', orderType == 'MARKET' ? 'Market' : 'Limit'),
-                _confirmRow('Status', status, valueColor: status == 'Executed' ? AppColors.success : AppColors.primary),
-                _confirmRow('Order ID', orderId),
-              ]),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(sheetContext);
-                  Navigator.pop(context);
-                },
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Done', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 64, height: 64, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.success.withValues(alpha: 0.12)), child: const Icon(Icons.check_circle, color: AppColors.success, size: 38)),
+              const SizedBox(height: 16),
+              const Text('Order Placed Successfully', style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              const SizedBox(height: 6),
+              Text('${isBuy ? 'BUY' : 'SELL'} Order', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+                child: Column(children: [
+                  _confirmRow('Stock', widget.stock['symbol'] ?? ''),
+                  _confirmRow('Qty', qty.toStringAsFixed(0)),
+                  _confirmRow('Price', orderType == 'MARKET' ? 'Market' : 'Limit'),
+                  _confirmRow('Status', status, valueColor: status == 'Executed' ? AppColors.success : AppColors.primary),
+                  _confirmRow('Order ID', orderId),
+                ]),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    Navigator.pop(context);
+                  },
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: const Text('Done', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -434,6 +452,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 
+  // ignore: unused_element
   Widget _chargeRow(String label, double value, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -447,12 +466,13 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 
+  // ignore: unused_element
   Widget _radioChip(String label, bool active, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(color: active ? AppColors.primary.withOpacity(0.1) : AppColors.cardBackground, borderRadius: BorderRadius.circular(12), border: Border.all(color: active ? AppColors.primary : AppColors.border)),
+        decoration: BoxDecoration(color: active ? AppColors.primary.withValues(alpha: 0.1) : AppColors.cardBackground, borderRadius: BorderRadius.circular(12), border: Border.all(color: active ? AppColors.primary : AppColors.border)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -483,6 +503,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 
+  // ignore: unused_element
   Color _avatarColor(String symbol) {
     final colors = [
       const Color(0xFF5E35B1), const Color(0xFF00897B), const Color(0xFFD81B60),
@@ -638,7 +659,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
           Expanded(
             child: ListView.separated(
               itemCount: _optionChain.length,
-              separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 1),
+              separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
               itemBuilder: (context, index) {
                 final row = _optionChain[index];
                 final call = row['call_option'];
@@ -664,7 +685,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           decoration: BoxDecoration(
-                            color: atm ? AppColors.textPrimary : AppColors.primary.withOpacity(0.08),
+                            color: atm ? AppColors.textPrimary : AppColors.primary.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text('$strike', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: atm ? Colors.white : AppColors.textPrimary)),
@@ -858,7 +879,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
                   child: Text('${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600, fontSize: 12)),
                 ),
               ]),
@@ -984,9 +1005,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: holdingPnl >= 0 ? AppColors.success.withOpacity(0.05) : AppColors.danger.withOpacity(0.05),
+                color: holdingPnl >= 0 ? AppColors.success.withValues(alpha: 0.05) : AppColors.danger.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: holdingPnl >= 0 ? AppColors.success.withOpacity(0.3) : AppColors.danger.withOpacity(0.3)),
+                border: Border.all(color: holdingPnl >= 0 ? AppColors.success.withValues(alpha: 0.3) : AppColors.danger.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1045,7 +1066,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                   const Text('Financials', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: AppColors.border.withOpacity(0.5), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: AppColors.border.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(6)),
                     child: const Text('Coming Soon', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
                   ),
                 ]),
@@ -1067,7 +1088,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                   const Text('Top Mutual Funds Invested', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: AppColors.border.withOpacity(0.5), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: AppColors.border.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(6)),
                     child: const Text('Coming Soon', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
                   ),
                 ]),

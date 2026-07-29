@@ -285,7 +285,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
             children: [
               Container(
                 width: 40, height: 40,
-                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                 alignment: Alignment.center,
                 child: const Icon(Icons.card_giftcard, color: AppColors.primary, size: 20),
               ),
@@ -303,7 +303,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: _statusColor(status).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                 child: Text(status[0].toUpperCase() + status.substring(1),
                     style: TextStyle(color: _statusColor(status), fontSize: 11, fontWeight: FontWeight.bold)),
               ),

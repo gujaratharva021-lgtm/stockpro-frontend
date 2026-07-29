@@ -85,7 +85,7 @@ class _LinkWebSessionScreenState extends State<LinkWebSessionScreen> {
         Container(
           width: 56,
           height: 56,
-          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
           child: const Icon(Icons.desktop_windows_outlined, color: AppColors.primary, size: 28),
         ),
         const SizedBox(height: 18),
@@ -141,7 +141,7 @@ class _LinkWebSessionScreenState extends State<LinkWebSessionScreen> {
           Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(color: AppColors.success.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 34),
           ),
           const SizedBox(height: 18),

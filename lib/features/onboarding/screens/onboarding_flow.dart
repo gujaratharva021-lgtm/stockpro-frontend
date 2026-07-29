@@ -179,7 +179,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 24, offset: const Offset(0, 8))],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8))],
               ),
               child: inner,
             ),
@@ -214,7 +214,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: enabled ? AppColors.cardBackground : AppColors.border.withOpacity(0.3),
+            color: enabled ? AppColors.cardBackground : AppColors.border.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.border),
           ),
@@ -304,7 +304,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       ] else
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: AppColors.success.withOpacity(0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.success.withOpacity(0.3))),
+          decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.success.withValues(alpha: 0.3))),
           child: Row(children: [
             const Icon(Icons.check_circle, color: AppColors.success, size: 24),
             const SizedBox(width: 12),
@@ -379,7 +379,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       ] else
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: AppColors.success.withOpacity(0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.success.withOpacity(0.3))),
+          decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.success.withValues(alpha: 0.3))),
           child: const Row(children: [
             Icon(Icons.check_circle, color: AppColors.success, size: 24),
             SizedBox(width: 12),
@@ -390,7 +390,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       const SizedBox(height: 16),
       Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.primary.withOpacity(0.2))),
+        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.primary.withValues(alpha: 0.2))),
         child: const Row(children: [
           Icon(Icons.lock_outline, color: AppColors.primary, size: 18),
           SizedBox(width: 10),
@@ -432,7 +432,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _incomeProofType == type ? AppColors.primary.withOpacity(0.08) : AppColors.cardBackground,
+            color: _incomeProofType == type ? AppColors.primary.withValues(alpha: 0.08) : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _incomeProofType == type ? AppColors.primary : AppColors.border),
           ),
@@ -451,7 +451,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _incomeProofFile != null ? AppColors.success.withOpacity(0.05) : AppColors.cardBackground,
+            color: _incomeProofFile != null ? AppColors.success.withValues(alpha: 0.05) : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: _incomeProofFile != null ? AppColors.success : AppColors.border, width: _incomeProofFile != null ? 1.5 : 1),
           ),
@@ -480,7 +480,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           width: 140, height: 140,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             border: Border.all(color: AppColors.primary, width: 2),
             image: _selfieFile != null ? DecorationImage(image: FileImage(_selfieFile!), fit: BoxFit.cover) : null,
           ),
@@ -538,7 +538,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _riskAccepted ? AppColors.success.withOpacity(0.08) : AppColors.cardBackground,
+            color: _riskAccepted ? AppColors.success.withValues(alpha: 0.08) : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _riskAccepted ? AppColors.success : AppColors.border),
           ),
@@ -555,7 +555,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _termsAccepted ? AppColors.success.withOpacity(0.08) : AppColors.cardBackground,
+            color: _termsAccepted ? AppColors.success.withValues(alpha: 0.08) : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _termsAccepted ? AppColors.success : AppColors.border),
           ),
@@ -601,7 +601,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       const SizedBox(height: 16),
       Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: AppColors.success.withOpacity(0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.success.withOpacity(0.3))),
+        decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.success.withValues(alpha: 0.3))),
         child: const Row(children: [
           Icon(Icons.info_outline, color: AppColors.success, size: 18),
           SizedBox(width: 10),

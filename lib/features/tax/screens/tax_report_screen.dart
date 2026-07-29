@@ -157,7 +157,7 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -202,7 +202,7 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isLtcg ? AppColors.success.withOpacity(0.12) : AppColors.primary.withOpacity(0.12),
+                      color: isLtcg ? AppColors.success.withValues(alpha: 0.12) : AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

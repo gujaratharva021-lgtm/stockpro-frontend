@@ -230,7 +230,7 @@ class _FundamentalsScreenState extends State<FundamentalsScreen> {
                               color: periodIsUp ? AppColors.success : AppColors.danger,
                               barWidth: 2,
                               dotData: const FlDotData(show: false),
-                              belowBarData: BarAreaData(show: true, color: (periodIsUp ? AppColors.success : AppColors.danger).withOpacity(0.08)),
+                              belowBarData: BarAreaData(show: true, color: (periodIsUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.08)),
                             ),
                           ],
                         ),

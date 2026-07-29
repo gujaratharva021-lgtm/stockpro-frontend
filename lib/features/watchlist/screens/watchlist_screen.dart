@@ -18,12 +18,16 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
   List<dynamic> _watchlist = [];
   Map<String, String> _exchangeBySymbol = {};
-  Map<String, Map<String, dynamic>> _quotes = {};
+  final Map<String, Map<String, dynamic>> _quotes = {};
   bool _loading = true;
   String? _error;
   List<String> _listNames = ['My Watchlist'];
   String _selectedList = 'My Watchlist';
   bool _seedAttempted = false;
+  double _portfolioValue = 0;
+  double _portfolioChangePercent = 0;
+  double _portfolioChangeAbs = 0;
+  final Map<String, Map<String, dynamic>> _indexQuotes = {};
 
   static const List<String> _demoSymbols = ['HDFCBANK', 'INFY', 'TCS', 'ONGC', 'HINDUNILVR'];
 
@@ -33,6 +37,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     _loadListNames();
     _load().then((_) => _seedDemoStocksIfMissing());
     _loadExchanges();
+    _loadPortfolioAndIndices();
   }
 
   Future<void> _loadExchanges() async {
@@ -278,7 +283,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: _kiteBlue.withOpacity(0.12),
+                        color: _kiteBlue.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       child: Stack(
@@ -310,7 +315,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 3))],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 3))],
             ),
             child: Row(
               children: [
@@ -371,6 +376,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           onRefresh: _load,
           child: CustomScrollView(
             slivers: [
+              SliverToBoxAdapter(
+                child: _buildPortfolioSummaryBlock(),
+              ),
               // ===== Gray header + floating search bar + New group link (combined) =====
               SliverToBoxAdapter(
                 child: Padding(
@@ -485,7 +493,244 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     childCount: _watchlist.length,
                   ),
                 ),
+              SliverToBoxAdapter(child: _buildAddToWatchlistBanner()),
               const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadPortfolioAndIndices() async {
+    try {
+      final results = await Future.wait([
+        ApiService.getHoldings().catchError((_) => []),
+        ApiService.getMe().catchError((_) => <String, dynamic>{}),
+      ]);
+      final holdings = results[0] as List<dynamic>;
+      final me = results[1] as Map<String, dynamic>;
+      final balance = (me['user']?['balance'] as num?)?.toDouble() ?? 0;
+
+      double invested = 0;
+      double current = 0;
+      for (final h in holdings) {
+        final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+        final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+        invested += qty * avg;
+        try {
+          final q = await ApiService.getQuote(h['symbol']);
+          final price = (q['price'] as num?)?.toDouble() ?? avg;
+          current += qty * price;
+        } catch (_) {
+          current += qty * avg;
+        }
+      }
+      final totalValue = balance + current;
+      final changeAbs = current - invested;
+      final changePercent = invested > 0 ? (changeAbs / invested) * 100 : 0.0;
+
+      if (mounted) {
+        setState(() {
+          _portfolioValue = totalValue;
+          _portfolioChangeAbs = changeAbs;
+          _portfolioChangePercent = changePercent;
+        });
+      }
+    } catch (_) {}
+
+    for (final sym in ['NIFTY50', 'SENSEX', 'BANKNIFTY', 'INDIAVIX']) {
+      try {
+        final q = await ApiService.getQuote(sym);
+        if (mounted) setState(() => _indexQuotes[sym] = q);
+      } catch (_) {}
+    }
+  }
+
+  Widget _buildPortfolioSummaryBlock() {
+    final isUp = _portfolioChangeAbs >= 0;
+    final indexMeta = [
+      {'key': 'NIFTY50', 'label': 'NIFTY 50'},
+      {'key': 'SENSEX', 'label': 'SENSEX'},
+      {'key': 'BANKNIFTY', 'label': 'BANK NIFTY'},
+      {'key': 'INDIAVIX', 'label': 'INDIA VIX'},
+    ];
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0B1220), Color(0xFF10241C)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Portfolio Value', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    Row(
+                      children: const [
+                        Text('All Time', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 16),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '\u20b9${_portfolioValue.toStringAsFixed(2)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward,
+                        color: isUp ? const Color(0xFF4ADE80) : const Color(0xFFF87171), size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      '\u20b9${_portfolioChangeAbs.abs().toStringAsFixed(2)} (${_portfolioChangePercent.abs().toStringAsFixed(2)}%)',
+                      style: TextStyle(
+                        color: isUp ? const Color(0xFF4ADE80) : const Color(0xFFF87171),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Quick Watch', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
+              Text('View All', style: TextStyle(color: _kiteBlue, fontSize: 13, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: indexMeta.map((meta) {
+              final key = meta['key']!;
+              final label = meta['label']!;
+              final q = _indexQuotes[key];
+              final price = q != null ? (q['price'] as num?)?.toDouble() : null;
+              final changePercent = q != null ? (q['change_percent'] as num?)?.toDouble() : null;
+              final change = q != null ? (q['change'] as num?)?.toDouble() : null;
+              final up = (changePercent ?? 0) >= 0;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: meta == indexMeta.last ? 0 : 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: up ? const Color(0xFFE8F8EE) : const Color(0xFFFDEAEA),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(label,
+                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w600),
+                                  overflow: TextOverflow.ellipsis),
+                            ),
+                            Icon(up ? Icons.trending_up : Icons.trending_down,
+                                color: up ? const Color(0xFF16A34A) : const Color(0xFFDC2626), size: 12),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          price != null ? price.toStringAsFixed(2) : '--',
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          change != null && changePercent != null
+                              ? '${up ? '+' : ''}${change.toStringAsFixed(2)}\n(${up ? '+' : ''}${changePercent.toStringAsFixed(2)}%)'
+                              : '--',
+                          style: TextStyle(
+                            color: up ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddToWatchlistBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+      child: GestureDetector(
+        onTap: _addStock,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1B1030), Color(0xFF241645)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Add to Watchlist', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    const Text('Quickly add stocks to your watchlist',
+                        style: TextStyle(color: Colors.white60, fontSize: 11)),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: Colors.white54, size: 16),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text('Search & add stocks', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(color: _kiteBlue, shape: BoxShape.circle),
+                            child: const Icon(Icons.arrow_forward, color: Colors.white, size: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

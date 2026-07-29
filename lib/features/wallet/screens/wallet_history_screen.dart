@@ -122,7 +122,7 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
                             Container(
                               width: 40, height: 40,
                               decoration: BoxDecoration(
-                                color: (isCredit ? AppColors.success : AppColors.danger).withOpacity(0.1),
+                                color: (isCredit ? AppColors.success : AppColors.danger).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(

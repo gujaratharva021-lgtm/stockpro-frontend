@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:stock_app/core/services/api_service.dart';
 
 const _bg = Color(0xFFF5F6FA);
 const _card = Color(0xFFFFFFFF);
@@ -237,7 +236,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                     color: _card,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: _cardBorder),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +247,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: Color(sc['color'] as int).withOpacity(0.15),
+                              color: Color(sc['color'] as int).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(Icons.auto_graph, color: Color(sc['color'] as int), size: 22),
@@ -322,7 +321,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: _riskColor(risk).withOpacity(0.12),
+        color: _riskColor(risk).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(risk, style: TextStyle(color: _riskColor(risk), fontSize: 10, fontWeight: FontWeight.w600)),
@@ -426,9 +425,9 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: _accent.withOpacity(0.08),
+            color: _accent.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _accent.withOpacity(0.3)),
+            border: Border.all(color: _accent.withValues(alpha: 0.3)),
           ),
           child: Text(label, textAlign: TextAlign.center, style: const TextStyle(color: _accent, fontWeight: FontWeight.w600, fontSize: 12)),
         ),

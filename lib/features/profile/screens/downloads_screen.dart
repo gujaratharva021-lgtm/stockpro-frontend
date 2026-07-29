@@ -44,7 +44,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       final hh = d.hour.toString().padLeft(2, '0');
       final mm = d.minute.toString().padLeft(2, '0');
-      return '${d.day} ${months[d.month - 1]} ${d.year} ${hh}:${mm}';
+      return '${d.day} ${months[d.month - 1]} ${d.year} $hh:$mm';
     } catch (_) {
       return '-';
     }
@@ -557,7 +557,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             children: [
               Container(
                 width: 44, height: 44,
-                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                 child: Icon(icon, color: AppColors.primary),
               ),
               const SizedBox(width: 14),

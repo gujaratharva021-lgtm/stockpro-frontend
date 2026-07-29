@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
-import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class FundDetailScreen extends StatefulWidget {
@@ -56,14 +55,18 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
         );
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment done but SIP setup failed. Contact support.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment done but SIP setup failed. Contact support.')));
+      }
     }
   }
 
   void _onSIPPaymentError(PaymentFailureResponse response) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Payment failed: ${response.message ?? 'Unknown error'}'), backgroundColor: AppColors.danger),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment failed: ${response.message ?? 'Unknown error'}'), backgroundColor: AppColors.danger),
+      );
+    }
   }
 
   Future<void> _load() async {
@@ -128,7 +131,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                 children: [
                   Container(
                     width: 40, height: 40,
-                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.repeat, color: AppColors.primary, size: 20),
                   ),
                   const SizedBox(width: 12),
@@ -156,7 +159,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: amountController.text == amt.toString() ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+                        color: amountController.text == amt.toString() ? AppColors.primary.withValues(alpha: 0.1) : AppColors.background,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: amountController.text == amt.toString() ? AppColors.primary : AppColors.border),
                       ),
@@ -252,6 +255,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                       _pendingSIPDate = '${nextDate.year}-${nextDate.month.toString().padLeft(2, '0')}-${nextDate.day.toString().padLeft(2, '0')}';
 
                       final order = await ApiService.createPaymentOrder(amount);
+                      if (!ctx.mounted) return;
                       Navigator.pop(ctx);
 
                       final options = {
@@ -266,6 +270,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                       };
                       _razorpay.open(options);
                     } catch (_) {
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start SIP. Please try again.')));
                     }
                   },
@@ -303,7 +308,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+            color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.background,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
           ),

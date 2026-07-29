@@ -91,7 +91,7 @@ class _SipScreenState extends State<SipScreen> {
                       children: [
                         Container(
                           width: 80, height: 80,
-                          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                           child: const Icon(Icons.savings_outlined, color: AppColors.primary, size: 40),
                         ),
                         const SizedBox(height: 16),
@@ -134,7 +134,7 @@ class _SipScreenState extends State<SipScreen> {
                               ),
                               Container(
                                 width: 56, height: 56,
-                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
                                 child: const Icon(Icons.repeat, color: Colors.white, size: 28),
                               ),
                             ],
@@ -214,8 +214,8 @@ class _SipScreenState extends State<SipScreen> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isActive ? AppColors.success.withOpacity(0.3) : AppColors.border),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: isActive ? AppColors.success.withValues(alpha: 0.3) : AppColors.border),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         children: [
@@ -229,7 +229,7 @@ class _SipScreenState extends State<SipScreen> {
                     Container(
                       width: 44, height: 44,
                       decoration: BoxDecoration(
-                        color: isActive ? AppColors.success.withOpacity(0.1) : AppColors.border,
+                        color: isActive ? AppColors.success.withValues(alpha: 0.1) : AppColors.border,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(child: Text(initial, style: TextStyle(color: isActive ? AppColors.success : AppColors.textMuted, fontWeight: FontWeight.bold, fontSize: 18))),
@@ -244,7 +244,7 @@ class _SipScreenState extends State<SipScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: isActive ? AppColors.success.withOpacity(0.12) : AppColors.border,
+                              color: isActive ? AppColors.success.withValues(alpha: 0.12) : AppColors.border,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(

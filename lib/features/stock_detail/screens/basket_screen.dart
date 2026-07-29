@@ -162,7 +162,7 @@ class _BasketScreenState extends State<BasketScreen> {
                             children: [
                               Container(
                                 width: 36, height: 36,
-                                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
                                 child: const Icon(Icons.shopping_basket_outlined, color: AppColors.primaryDark, size: 18),
                               ),
                               const SizedBox(width: 10),
@@ -193,7 +193,7 @@ class _BasketScreenState extends State<BasketScreen> {
                               children: [
                                 Container(
                                   width: 28, height: 28,
-                                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                                   child: Center(child: Text(item.symbol[0], style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 12))),
                                 ),
                                 const SizedBox(width: 10),

@@ -56,7 +56,7 @@ class _SetAlertScreenState extends State<SetAlertScreen> {
             width: 64,
             padding: const EdgeInsets.symmetric(vertical: 14),
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppColors.border.withOpacity(0.3), borderRadius: const BorderRadius.horizontal(left: Radius.circular(10))),
+            decoration: BoxDecoration(color: AppColors.border.withValues(alpha: 0.3), borderRadius: const BorderRadius.horizontal(left: Radius.circular(10))),
             child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ),
           Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), child: content)),

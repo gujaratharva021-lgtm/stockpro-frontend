@@ -68,7 +68,7 @@ class _GttScreenState extends State<GttScreen> {
           decoration: BoxDecoration(
             border: Border.all(color: selected ? AppColors.primary : AppColors.border),
             borderRadius: BorderRadius.circular(8),
-            color: disabled ? AppColors.border.withOpacity(0.15) : Colors.transparent,
+            color: disabled ? AppColors.border.withValues(alpha: 0.15) : Colors.transparent,
           ),
           child: Text(label, style: TextStyle(color: disabled ? AppColors.textMuted : (selected ? AppColors.primary : AppColors.textPrimary), fontWeight: FontWeight.w600)),
         ),

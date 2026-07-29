@@ -147,7 +147,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                       Container(
                         width: 40,
                         height: 40,
-                        decoration: BoxDecoration(color: bankColor.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(color: bankColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
                         child: Center(
                           child: Text(
                             (p['bank_name'] as String).substring(0, 1),
@@ -172,7 +172,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.12),
+                            color: AppColors.success.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('Tax Saving', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w600)),
@@ -274,7 +274,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (isActive ? AppColors.success : AppColors.textMuted).withOpacity(0.12),
+                          color: (isActive ? AppColors.success : AppColors.textMuted).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

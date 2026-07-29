@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -98,48 +98,61 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
-            const SizedBox(height: 16),
-            Text('Modify Order - ' + (order['symbol'] ?? ''), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-            const SizedBox(height: 20),
-            const Text('Quantity', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: qtyController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+      builder: (sheetContext) {
+        String? modifyError;
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) => Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
+                const SizedBox(height: 16),
+                Text('Modify Order - ' + (order['symbol'] ?? ''), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                const SizedBox(height: 20),
+                const Text('Quantity', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: qtyController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                ),
+                const SizedBox(height: 16),
+                const Text('Price', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: priceController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                ),
+                if (modifyError != null) ...[
+                  const SizedBox(height: 10),
+                  Text(modifyError!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final price = double.tryParse(priceController.text);
+                      final qty = double.tryParse(qtyController.text)?.toInt();
+                      if (price == null || price <= 0 || qty == null || qty <= 0) {
+                        setSheetState(() => modifyError = 'Enter a valid price and quantity');
+                        return;
+                      }
+                      _modifyOrder(order['id'], price, qty);
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    child: const Text('MODIFY ORDER', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text('Price', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: priceController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  final price = double.tryParse(priceController.text) ?? 0;
-                  final qty = int.tryParse(qtyController.text) ?? 0;
-                  _modifyOrder(order['id'], price, qty);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                child: const Text('MODIFY ORDER', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
   void _showOrderDetail(Map<String, dynamic> order) {
@@ -174,13 +187,13 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               Row(children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                   child: Text(order['buy_sell'] ?? '', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 11)),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: statusColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                   child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11)),
                 ),
               ]),
@@ -188,7 +201,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                 const SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: AppColors.danger.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: AppColors.danger.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
                   child: const Text(
                     'Order rejected: insufficient funds or shares at the time of execution.',
                     style: TextStyle(color: AppColors.danger, fontSize: 13),
@@ -264,9 +277,21 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           avgBuyPrice: 0,
           calcBrokerage: (value, product) => product == 'INTRADAY' ? (value * 0.0003).clamp(0, 20) : 0,
           calcTaxes: (value, bs) => value * (bs == 'buy' ? 0.00127 : 0.00134),
-          onSubmit: ({required String orderType, required double qty, required double price}) async {
+          onSubmit: ({required String orderType, required double qty, required double price, double? marketProtectionPercent, String productType = 'REGULAR'}) async {
             if (orderType == 'MARKET') {
-              await ApiService.placeOrder(stock['id'], buySell.toUpperCase(), qty.toInt(), currentPrice);
+              // Re-fetch the price right before submitting -- the price
+              // captured when the order sheet opened may be stale.
+              final freshQuote = await ApiService.getQuote(stock['symbol']);
+              final rawPrice = freshQuote['price'];
+              if (rawPrice is! num) throw Exception('Could not get a live price for this order');
+              final freshPrice = rawPrice.toDouble();
+              if (marketProtectionPercent != null && currentPrice > 0) {
+                final deviation = ((freshPrice - currentPrice).abs() / currentPrice) * 100;
+                if (deviation > marketProtectionPercent) {
+                  throw Exception('Price moved ${deviation.toStringAsFixed(1)}% since you opened this order, beyond your ${marketProtectionPercent.toStringAsFixed(1)}% protection limit. Order not placed.');
+                }
+              }
+              await ApiService.placeOrder(stock['id'], buySell.toUpperCase(), qty.toInt(), freshPrice, productType: productType);
               return 'Executed';
             } else {
               await ApiService.createPendingOrder(stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
@@ -276,7 +301,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         ),
       ));
 
-      if (result != null) _loadAll();
+      if (result != null) { _loadAll(); _showOrderConfirmation(buySell: result['buySell'] as String, qty: result['qty'] as double, orderType: result['orderType'] as String, status: result['status'] as String); }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not repeat order')));
     }
@@ -307,65 +332,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _orderCard(Map<String, dynamic> order) {
-    final isBuy = order['buy_sell'] == 'BUY';
-    final status = order['status'] ?? '';
-    final statusColor = status == 'REJECTED'
-        ? AppColors.danger
-        : status == 'EXECUTED'
-            ? AppColors.success
-            : AppColors.textMuted;
-    return GestureDetector(
-      onTap: () => _showOrderDetail(order),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
-                  child: Text(order['buy_sell'] ?? '', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 11)),
-                ),
-                const SizedBox(width: 8),
-                Text(order['symbol'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const Spacer(),
-                Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Qty: ' + (order['quantity'] ?? '-').toString(), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                Text('Trigger: ' + (order['trigger_price'] ?? '-').toString(), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              ],
-            ),
-            if (status == 'PENDING') ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => _showModifyOrder(order),
-                    child: const Text('Modify', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
-                  ),
-                  TextButton(
-                    onPressed: () => _cancelOrder(order['id']),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12)),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildOrdersList(String filterStatus) {
     if (_loading) return const Center(child: CircularProgressIndicator());
@@ -397,8 +363,11 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       onRefresh: _loadAll,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: filtered.length,
-        itemBuilder: (context, i) => _orderCard(filtered[i]),
+        itemCount: filtered.length + (filterStatus == 'PENDING' ? 1 : 0),
+        itemBuilder: (context, i) {
+          if (i == filtered.length) return _smartTrackingBanner();
+          return _orderCardV2(filtered[i]);
+        },
       ),
     );
   }
@@ -488,7 +457,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: (triggered ? AppColors.success : AppColors.primary).withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: (triggered ? AppColors.success : AppColors.primary).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                 child: Text(triggered ? 'Triggered' : 'Active', style: TextStyle(color: triggered ? AppColors.success : AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
               ),
             ],
@@ -548,6 +517,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                 ],
               ),
             ),
+            _buildStatsBar(),
+            const SizedBox(height: 12),
             const Divider(height: 1, color: AppColors.border),
             Expanded(
               child: TabBarView(
@@ -565,6 +536,270 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           ],
         ),
       ),
+      ),
+    );
+
+  }
+  String _generateOrderId() {
+    final now = DateTime.now();
+    return 'TRD${DateFormat('yyyyMMdd').format(now)}${now.millisecondsSinceEpoch % 100000}';
+  }
+
+  void _showOrderConfirmation({required String buySell, required double qty, required String orderType, required String status}) {
+    final isBuy = buySell == 'buy';
+    final orderId = _generateOrderId();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 64, height: 64, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.success.withValues(alpha: 0.12)), child: const Icon(Icons.check_circle, color: AppColors.success, size: 38)),
+              const SizedBox(height: 16),
+              const Text('Order Placed Successfully', style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              const SizedBox(height: 6),
+              Text('${isBuy ? 'BUY' : 'SELL'} Order', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+                child: Column(children: [
+                  _confirmRow('Qty', qty.toStringAsFixed(0)),
+                  _confirmRow('Price', orderType == 'MARKET' ? 'Market' : 'Limit'),
+                  _confirmRow('Status', status, valueColor: status == 'Executed' ? AppColors.success : AppColors.primary),
+                  _confirmRow('Order ID', orderId),
+                ]),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: const Text('Done', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _confirmRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  int get _openOrdersCount => _pendingOrders.length;
+  double get _openOrdersValue => _pendingOrders
+      .fold(0.0, (sum, o) => sum + ((o['quantity'] as num?)?.toDouble() ?? 0) * ((o['trigger_price'] as num?)?.toDouble() ?? 0));
+  int get _pendingCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
+  int get _partialCount => _pendingOrders.where((o) => o['status'] == 'PARTIAL').length;
+
+  Widget _buildStatsBar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _statItem(_openOrdersCount.toString(), 'Total Orders', AppColors.primary)),
+          Expanded(child: _statItem('\u20b9${_openOrdersValue.toStringAsFixed(0)}', 'Total Value', AppColors.success)),
+          Expanded(child: _statItem(_pendingCount.toString(), 'Pending', const Color(0xFFF59E0B))),
+          Expanded(child: _statItem(_partialCount.toString(), 'Partial', const Color(0xFF7C3AED))),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String value, String label, Color color) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+      ],
+    );
+  }
+
+  String _formatOrderTime(String? createdAt) {
+    if (createdAt == null) return '-';
+    try {
+      final dt = DateTime.parse(createdAt).toLocal();
+      return DateFormat('h:mm a').format(dt);
+    } catch (_) {
+      return '-';
+    }
+  }
+
+  Widget _orderCardV2(Map<String, dynamic> order) {
+    final isBuy = order['buy_sell'] == 'BUY';
+    final status = order['status'] ?? '';
+    final accentColor = isBuy ? AppColors.success : AppColors.danger;
+    final symbol = (order['symbol'] ?? '').toString();
+    final initial = symbol.isNotEmpty ? symbol[0] : '?';
+    final orderType = (order['order_type'] ?? '-').toString();
+    return GestureDetector(
+      onTap: () => _showOrderDetail(order),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: accentColor.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border(left: BorderSide(color: accentColor, width: 4)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.cardBackground,
+                    child: Text(initial, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                    child: Text(order['buy_sell'] ?? '', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 11)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), overflow: TextOverflow.ellipsis),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                    child: Text(status, style: TextStyle(color: accentColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Qty', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        Text((order['quantity'] ?? '-').toString(), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Trigger', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        Text('\u20b9${(order['trigger_price'] ?? '-').toString()}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Order Type', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        Text(orderType, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Time', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        Text(_formatOrderTime(order['created_at']?.toString()), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Text('Order ID', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        const SizedBox(width: 6),
+                        Text('#${(order['id'] ?? '').toString().substring(0, (order['id'] ?? '').toString().length > 6 ? 6 : (order['id'] ?? '').toString().length)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                  if (status == 'PENDING') ...[
+                    TextButton(
+                      onPressed: () => _showModifyOrder(order),
+                      style: TextButton.styleFrom(backgroundColor: AppColors.primary.withValues(alpha: 0.1), padding: const EdgeInsets.symmetric(horizontal: 10)),
+                      child: const Text('Modify', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                    const SizedBox(width: 6),
+                    TextButton(
+                      onPressed: () => _cancelOrder(order['id']),
+                      style: TextButton.styleFrom(backgroundColor: AppColors.danger.withValues(alpha: 0.1), padding: const EdgeInsets.symmetric(horizontal: 10)),
+                      child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _smartTrackingBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.track_changes, color: AppColors.primary, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Smart order tracking', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 2),
+                const Text('Get real-time updates and never miss an execution.', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

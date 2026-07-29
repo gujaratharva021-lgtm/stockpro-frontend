@@ -89,7 +89,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(Icons.phonelink_lock_outlined, color: AppColors.primary, size: 28),

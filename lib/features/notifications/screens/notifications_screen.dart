@@ -104,12 +104,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: isRead ? AppColors.cardBackground : AppColors.primary.withOpacity(0.06),
+                                color: isRead ? AppColors.cardBackground : AppColors.primary.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: isRead ? AppColors.border : AppColors.primary.withOpacity(0.3)),
+                                border: Border.all(color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.3)),
                               ),
                               child: Row(children: [
-                                Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12), shape: BoxShape.circle),
+                                Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), shape: BoxShape.circle),
                                   child: const Icon(Icons.notifications_outlined, color: AppColors.primaryDark, size: 16)),
                                 const SizedBox(width: 10),
                                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -136,9 +136,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: isRead ? AppColors.cardBackground : AppColors.primary.withOpacity(0.06),
+                          color: isRead ? AppColors.cardBackground : AppColors.primary.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: isRead ? AppColors.border : AppColors.primary.withOpacity(0.3)),
+                          border: Border.all(color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +147,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.12),
+                                color: AppColors.primary.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.notifications_outlined, color: AppColors.primaryDark, size: 18),

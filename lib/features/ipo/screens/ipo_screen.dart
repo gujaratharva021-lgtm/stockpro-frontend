@@ -177,7 +177,7 @@ class _IpoScreenState extends State<IpoScreen> {
               const SizedBox(width: 5),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: active ? AppColors.primary.withOpacity(0.15) : AppColors.border, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: active ? AppColors.primary.withValues(alpha: 0.15) : AppColors.border, borderRadius: BorderRadius.circular(10)),
                 child: Text('$count', style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -225,7 +225,7 @@ class _IpoCard extends StatelessWidget {
                     children: [
                       Container(
                         width: 42, height: 42,
-                        decoration: BoxDecoration(color: statusColor.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
                         child: Center(child: Text(initial, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 18))),
                       ),
                       const SizedBox(width: 12),
@@ -245,7 +245,7 @@ class _IpoCard extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: statusColor.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+                                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
                                   child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
                                 ),
                               ],

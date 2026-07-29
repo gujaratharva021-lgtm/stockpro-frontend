@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -9,7 +9,6 @@ import 'package:stock_app/features/auth/screens/login_screen.dart';
 import 'package:stock_app/features/auth/screens/signup_screen.dart';
 import 'package:stock_app/features/watchlist/screens/watchlist_screen.dart';
 import 'package:stock_app/features/dashboard/screens/dashboard_screen.dart';
-import 'package:stock_app/features/ipo/screens/ipo_screen.dart';
 import 'package:stock_app/features/ipo/screens/bids_screen.dart';
 import 'package:stock_app/features/profile/screens/app_code_screen.dart';
 import 'package:stock_app/features/auth/screens/code_login_screen.dart';
@@ -26,7 +25,6 @@ import 'package:stock_app/features/profile/screens/profile_screen.dart';
 import 'package:stock_app/features/compare/screens/compare_screen.dart';
 import 'package:stock_app/features/heatmap/screens/heatmap_screen.dart';
 import 'package:stock_app/features/tax/screens/tax_report_screen.dart';
-import 'package:stock_app/features/orders/screens/pending_orders_screen.dart';
 import 'package:stock_app/features/orders/screens/orders_screen.dart';
 import 'package:stock_app/features/calculator/screens/brokerage_calculator_screen.dart';
 import 'package:stock_app/features/screener/screens/screener_screen.dart';
@@ -53,7 +51,7 @@ void main() async {
       return true;
     };
   } catch (e) {
-    print('Firebase init failed: $e');
+    debugPrint('Firebase init failed: $e');
   }
   runApp(
     ChangeNotifierProvider(

@@ -87,9 +87,9 @@ class _SignupScreenState extends State<SignupScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.danger.withOpacity(0.08),
+                color: AppColors.danger.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.danger.withOpacity(0.25)),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
               ),
               child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
             ),

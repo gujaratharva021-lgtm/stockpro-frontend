@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
@@ -146,6 +146,12 @@ class ApiService {
     return res.data['holdings'] ?? [];
   }
 
+  static Future<List<dynamic>> getPositions() async {
+    final dio = await _authDio();
+    final res = await dio.get('/portfolio/positions');
+    return res.data['positions'] ?? [];
+  }
+
   static Future<List<dynamic>> getTransactions() async {
     final dio = await _authDio();
     final res = await dio.get('/portfolio/transactions');
@@ -170,13 +176,14 @@ class ApiService {
     return res.data;
   }
 
-  static Future<Map<String, dynamic>> placeOrder(String stockId, String buySell, int quantity, double price) async {
+  static Future<Map<String, dynamic>> placeOrder(String stockId, String buySell, int quantity, double price, {String productType = 'REGULAR'}) async {
     final dio = await _authDio();
     final res = await dio.post('/portfolio/orders', data: {
       'stock_id': stockId,
       'buy_sell': buySell,
       'quantity': quantity,
       'price': price,
+      'product_type': productType,
     });
     return res.data;
   }

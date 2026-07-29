@@ -131,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen>
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _lineController,
-              builder: (_, __) => CustomPaint(
+              builder: (_, _) => CustomPaint(
                 painter: _BreakoutLinePainter(
                   progress: _lineController.value,
                   lineColor: AppColors.primary,
@@ -231,7 +231,7 @@ class _SplashScreenState extends State<SplashScreen>
           height: 180,
           child: AnimatedBuilder(
             animation: Listenable.merge([_orbitController, _introController]),
-            builder: (_, __) {
+            builder: (_, _) {
               final introT = _introController.value.clamp(0.0, 1.0);
               final scale = Curves.elasticOut.transform(introT);
               final fade = _eased(introT, 0.0, 0.45, Curves.easeIn);
@@ -259,7 +259,7 @@ class _SplashScreenState extends State<SplashScreen>
                             color: AppColors.primary,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.7),
+                                color: AppColors.primary.withValues(alpha: 0.7),
                                 blurRadius: 10,
                                 spreadRadius: 1,
                               ),
@@ -298,7 +298,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.45),
+                              color: AppColors.primary.withValues(alpha: 0.45),
                               blurRadius: 30,
                               spreadRadius: 4,
                             ),
@@ -317,7 +317,7 @@ class _SplashScreenState extends State<SplashScreen>
         const SizedBox(height: 18),
         AnimatedBuilder(
           animation: _introController,
-          builder: (_, __) {
+          builder: (_, _) {
             final t = _introController.value.clamp(0.0, 1.0);
             final ev = _eased(t, 0.25, 0.6, Curves.easeOutCubic);
             return Opacity(
@@ -346,7 +346,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildDotsLoader() {
     return AnimatedBuilder(
       animation: _dotsController,
-      builder: (_, __) {
+      builder: (_, _) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {
@@ -362,7 +362,7 @@ class _SplashScreenState extends State<SplashScreen>
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primary.withOpacity(opacity.clamp(0.4, 1.0)),
+                    color: AppColors.primary.withValues(alpha: opacity.clamp(0.4, 1.0)),
                   ),
                 ),
               ),
@@ -412,7 +412,7 @@ class _BreakoutLinePainter extends CustomPainter {
     }
 
     final glowPaint = Paint()
-      ..color = lineColor.withOpacity(0.3)
+      ..color = lineColor.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8
       ..strokeCap = StrokeCap.round
@@ -420,7 +420,7 @@ class _BreakoutLinePainter extends CustomPainter {
     canvas.drawPath(revealPath, glowPaint);
 
     final linePaint = Paint()
-      ..color = lineColor.withOpacity(0.85)
+      ..color = lineColor.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.4
       ..strokeCap = StrokeCap.round;
@@ -434,7 +434,7 @@ class _BreakoutLinePainter extends CustomPainter {
         final dotPaint = Paint()..color = lineColor;
         canvas.drawCircle(tangent.position, 4, dotPaint);
         final dotGlow = Paint()
-          ..color = lineColor.withOpacity(0.5)
+          ..color = lineColor.withValues(alpha: 0.5)
           ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 8);
         canvas.drawCircle(tangent.position, 8, dotGlow);
       }

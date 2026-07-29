@@ -198,9 +198,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withOpacity(0.08),
+                    color: AppColors.danger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.danger.withOpacity(0.25)),
+                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
                   ),
                   child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
                 ),
@@ -210,9 +210,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.08),
+                    color: Colors.green.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.green.withOpacity(0.25)),
+                    border: Border.all(color: Colors.green.withValues(alpha: 0.25)),
                   ),
                   child: Text(_success!, style: const TextStyle(color: Colors.green, fontSize: 13)),
                 ),
@@ -265,7 +265,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: enabled ? AppColors.cardBackground : AppColors.cardBackground.withOpacity(0.5),
+        color: enabled ? AppColors.cardBackground : AppColors.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),

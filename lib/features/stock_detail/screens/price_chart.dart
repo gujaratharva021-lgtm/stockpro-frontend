@@ -92,7 +92,7 @@ class _PriceChartState extends State<PriceChart> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _isCandlestick ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
+                    color: _isCandlestick ? AppColors.primary.withValues(alpha: 0.12) : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: _isCandlestick ? AppColors.primary : AppColors.border),
                   ),
@@ -157,7 +157,7 @@ class _PriceChartState extends State<PriceChart> {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: (_maxY - _minY) / 4,
-          getDrawingHorizontalLine: (_) => FlLine(color: AppColors.border.withOpacity(0.5), strokeWidth: 0.5),
+          getDrawingHorizontalLine: (_) => FlLine(color: AppColors.border.withValues(alpha: 0.5), strokeWidth: 0.5),
         ),
         titlesData: FlTitlesData(
           leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -208,7 +208,7 @@ class _PriceChartState extends State<PriceChart> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [_chartColor.withOpacity(0.2), _chartColor.withOpacity(0.0)],
+                colors: [_chartColor.withValues(alpha: 0.2), _chartColor.withValues(alpha: 0.0)],
               ),
             ),
           ),
@@ -337,7 +337,7 @@ class _CandlestickPainter extends CustomPainter {
 
       // Highlight
       if (highlightIndex == i) {
-        final hlPaint = Paint()..color = color.withOpacity(0.15)..style = PaintingStyle.fill;
+        final hlPaint = Paint()..color = color.withValues(alpha: 0.15)..style = PaintingStyle.fill;
         canvas.drawRect(Rect.fromLTWH(x - spacing / 2, 0, spacing, size.height), hlPaint);
       }
     }

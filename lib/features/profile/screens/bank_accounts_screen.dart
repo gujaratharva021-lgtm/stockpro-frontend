@@ -260,7 +260,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                           children: [
                             Container(
                               width: 44, height: 44,
-                              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                               child: const Icon(Icons.account_balance, color: AppColors.primary),
                             ),
                             const SizedBox(width: 14),
@@ -275,7 +275,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                                         const SizedBox(width: 6),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(color: AppColors.success.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                                          decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                                           child: const Text('Primary', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.bold)),
                                         ),
                                       ],

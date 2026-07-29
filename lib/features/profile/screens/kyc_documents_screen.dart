@@ -68,7 +68,7 @@ class _KycDocumentsScreenState extends State<KycDocumentsScreen> {
                           children: [
                             Container(
                               width: 52, height: 52,
-                              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
                               child: Icon(_kycDone ? Icons.verified : Icons.pending_outlined, color: Colors.white, size: 28),
                             ),
                             const SizedBox(width: 16),
@@ -124,13 +124,13 @@ class _KycDocumentsScreenState extends State<KycDocumentsScreen> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: verified ? AppColors.success.withOpacity(0.3) : AppColors.border),
+        border: Border.all(color: verified ? AppColors.success.withValues(alpha: 0.3) : AppColors.border),
       ),
       child: Row(
         children: [
           Container(
             width: 44, height: 44,
-            decoration: BoxDecoration(color: verified ? AppColors.success.withOpacity(0.1) : AppColors.border, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: verified ? AppColors.success.withValues(alpha: 0.1) : AppColors.border, borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, color: verified ? AppColors.success : AppColors.textMuted, size: 22),
           ),
           const SizedBox(width: 14),
@@ -146,7 +146,7 @@ class _KycDocumentsScreenState extends State<KycDocumentsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: verified ? AppColors.success.withOpacity(0.1) : AppColors.primary.withOpacity(0.1),
+              color: verified ? AppColors.success.withValues(alpha: 0.1) : AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

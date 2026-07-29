@@ -175,7 +175,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
                             child: ListView.separated(
                               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                               itemCount: _holdings.length,
-                              separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 1),
+                              separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
                               itemBuilder: (context, index) {
                                 final h = _holdings[index];
                                 final name = (h['name'] ?? h['commodity_name'] ?? '-').toString();
@@ -239,7 +239,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
                         : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       itemCount: _filteredCommodities.length,
-                      separatorBuilder: (_, __) => const Divider(color: AppColors.border, height: 1),
+                      separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
                       itemBuilder: (context, index) {
                         final c = _filteredCommodities[index];
                         final detail = _details[c['id']];
@@ -265,7 +265,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
                                     children: [
                                       Container(
                                         width: 34, height: 34,
-                                        decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                                        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
                                         child: Icon(icon, color: color, size: 16),
                                       ),
                                       const SizedBox(width: 10),

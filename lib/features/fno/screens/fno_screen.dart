@@ -48,6 +48,7 @@ class _FnOScreenState extends State<FnOScreen> {
       await ApiService.closeFutures(position['id'], position['symbol']);
       _load();
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not close position')));
     }
   }
@@ -57,6 +58,7 @@ class _FnOScreenState extends State<FnOScreen> {
       await ApiService.closeOption(position['id'], position['symbol']);
       _load();
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not close position')));
     }
   }
@@ -236,7 +238,7 @@ class _FnOScreenState extends State<FnOScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: (isLong ? AppColors.success : AppColors.danger).withOpacity(0.12),
+                      color: (isLong ? AppColors.success : AppColors.danger).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(p['position_type'] ?? '', style: TextStyle(color: isLong ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -301,7 +303,7 @@ class _FnOScreenState extends State<FnOScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: (isCall ? AppColors.success : AppColors.danger).withOpacity(0.12),
+                      color: (isCall ? AppColors.success : AppColors.danger).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(p['option_type'] ?? '', style: TextStyle(color: isCall ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -533,7 +535,7 @@ class _NewPositionSheetState extends State<_NewPositionSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withOpacity(0.08),
+                    color: AppColors.danger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
@@ -569,7 +571,7 @@ class _NewPositionSheetState extends State<_NewPositionSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.12) : AppColors.background,
+          color: selected ? color.withValues(alpha: 0.12) : AppColors.background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: selected ? color : AppColors.border),
         ),
