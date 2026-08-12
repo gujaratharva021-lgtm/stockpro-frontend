@@ -1,0 +1,112 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
+import 'package:go_router/go_router.dart';
+import 'package:stock_app/features/auth/screens/splash_screen.dart';
+import 'package:stock_app/features/auth/screens/login_screen.dart';
+import 'package:stock_app/features/auth/screens/signup_screen.dart';
+import 'package:stock_app/features/watchlist/screens/watchlist_screen.dart';
+import 'package:stock_app/features/dashboard/screens/dashboard_screen.dart';
+import 'package:stock_app/features/ipo/screens/bids_screen.dart';
+import 'package:stock_app/features/profile/screens/app_code_screen.dart';
+import 'package:stock_app/features/auth/screens/code_login_screen.dart';
+import 'package:stock_app/features/profile/screens/link_web_session_screen.dart';
+import 'package:stock_app/features/portfolio/screens/portfolio_screen.dart';
+import 'package:stock_app/features/news/screens/news_screen.dart';
+
+import 'package:provider/provider.dart';
+import 'package:stock_app/core/theme/app_theme.dart';
+import 'package:stock_app/core/theme/theme_provider.dart';
+import 'package:stock_app/features/onboarding/screens/onboarding_flow.dart';
+import 'package:stock_app/features/onboarding/screens/kyc_success_screen.dart';
+import 'package:stock_app/features/profile/screens/profile_screen.dart';
+import 'package:stock_app/features/compare/screens/compare_screen.dart';
+import 'package:stock_app/features/heatmap/screens/heatmap_screen.dart';
+import 'package:stock_app/features/tax/screens/tax_report_screen.dart';
+import 'package:stock_app/features/orders/screens/orders_screen.dart';
+import 'package:stock_app/features/calculator/screens/brokerage_calculator_screen.dart';
+import 'package:stock_app/features/screener/screens/screener_screen.dart';
+import 'package:stock_app/features/portfolio/screens/performance_screen.dart';
+import 'package:stock_app/features/assistant/screens/assistant_screen.dart';
+import 'package:stock_app/features/auth/screens/forgot_password_screen.dart';
+import 'package:stock_app/features/fiidii/screens/fiidii_screen.dart';
+import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
+import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    debugPrint('Firebase init failed: $e');
+  }
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+final _router = GoRouter(
+  initialLocation: '/splash',
+  routes: [
+    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
+    GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
+    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+    GoRoute(path: '/ipo', builder: (context, state) => const BidsScreen()),
+    GoRoute(path: '/app-code', builder: (context, state) => const AppCodeScreen()),
+    GoRoute(path: '/code-login', builder: (context, state) => const CodeLoginScreen()),
+    GoRoute(path: '/link-web-session', builder: (context, state) => const LinkWebSessionScreen()),
+    GoRoute(path: '/portfolio', builder: (context, state) => const PortfolioScreen()),
+    GoRoute(path: '/news', builder: (context, state) => const NewsScreen()),
+    GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingFlow()),
+    GoRoute(path: '/kyc-success', builder: (context, state) => const KycSuccessScreen()),
+    GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+    GoRoute(path: '/compare', builder: (context, state) => const CompareScreen()),
+    GoRoute(path: '/heatmap', builder: (context, state) => const HeatmapScreen()),
+    GoRoute(path: '/tax-report', builder: (context, state) => const TaxReportScreen()),
+    GoRoute(path: '/pending-orders', builder: (context, state) => const OrdersScreen()),
+    GoRoute(path: '/brokerage-calculator', builder: (context, state) => const BrokerageCalculatorScreen()),
+    GoRoute(path: '/screener', builder: (context, state) => const ScreenerScreen()),
+    GoRoute(path: '/performance', builder: (context, state) => const PerformanceScreen()),
+    GoRoute(path: '/assistant', builder: (context, state) => const AssistantScreen()),
+    GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
+    GoRoute(path: '/fii-dii', builder: (context, state) => const FiiDiiScreen()),
+    GoRoute(path: '/smallcase', builder: (context, state) => const SmallcaseScreen()),
+    GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
+    GoRoute(path: '/sip', builder: (context, state) => const SipScreen()),
+  ],
+);
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'OneInvest',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light().copyWith(
+        textTheme: GoogleFonts.notoSansTextTheme(AppTheme.light().textTheme),
+      ),
+      routerConfig: _router,
+    );
+  }
+}
+
