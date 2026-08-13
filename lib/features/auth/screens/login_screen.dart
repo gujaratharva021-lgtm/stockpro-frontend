@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = await storage.read(key: 'auth_token');
       if (token != null && mounted) {
         WebSocketService.connect();
-        context.go('/watchlist');
+        context.go('/dashboard');
       } else {
         setState(() => _error = 'No saved session. Please login with password first.');
       }
@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       const storage = FlutterSecureStorage();
       await storage.write(key: 'auth_token', value: res['token']);
       WebSocketService.connect();
-      if (mounted) context.go(kIsWeb ? '/dashboard' : '/watchlist');
+      if (mounted) context.go('/dashboard');
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error']?.toString() ?? 'Login failed');
     } catch (e) {

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -108,6 +108,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+    final outerPad = isMobile ? 16.0 : 32.0;
+
     return MainShell(
       currentIndex: 5,
       child: Scaffold(
@@ -118,9 +122,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _headerBanner(),
+                    _headerBanner(isMobile),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                      padding: EdgeInsets.fromLTRB(outerPad, 0, outerPad, 32),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -129,21 +133,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Row(
                               children: [
                                 Expanded(child: _marginCard('Equity', _balance, Icons.account_balance_wallet_rounded, const Color(0xFF6366F1))),
-                                const SizedBox(width: 20),
+                                const SizedBox(width: 16),
                                 Expanded(child: _marginCard('Commodity', 0, Icons.local_fire_department_rounded, const Color(0xFFF59E0B))),
                               ],
                             ),
                           ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(flex: 2, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
-                              const SizedBox(width: 20),
-                              Expanded(flex: 2, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
-                              const SizedBox(width: 20),
-                              Expanded(flex: 2, child: _iposCard()),
-                            ],
-                          ),
+                          if (isMobile)
+                            _moversRowMobile()
+                          else
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(flex: 2, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
+                                const SizedBox(width: 20),
+                                Expanded(flex: 2, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
+                                const SizedBox(width: 20),
+                                Expanded(flex: 2, child: _iposCard()),
+                              ],
+                            ),
                           const SizedBox(height: 20),
                           _marketOverviewCard(),
                         ],
@@ -156,10 +163,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _headerBanner() {
+  // Mobile: three cards side-by-side get too narrow and their numbers
+  // overflow, so on small screens they scroll horizontally as fixed-width
+  // cards instead of being squeezed into equal thirds.
+  Widget _moversRowMobile() {
+    const cardWidth = 240.0;
+    return SizedBox(
+      height: 268,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        children: [
+          SizedBox(width: cardWidth, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
+          const SizedBox(width: 14),
+          SizedBox(width: cardWidth, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
+          const SizedBox(width: 14),
+          SizedBox(width: cardWidth, child: _iposCard()),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerBanner(bool isMobile) {
+    final pad = isMobile ? 20.0 : 32.0;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(32, 40, 32, 90),
+      padding: EdgeInsets.fromLTRB(pad, 40, pad, 90),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -168,18 +197,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$_greeting, $_userName',
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 6),
-              Text('Here\'s what\'s happening in the markets today',
-                  style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$_greeting, $_userName',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: isMobile ? 22 : 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 6),
+                Text('Here\'s what\'s happening in the markets today',
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
+              ],
+            ),
           ),
+          const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(14)),
@@ -192,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _marginCard(String title, double amount, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -209,36 +243,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 12),
-              Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w500)),
+              Expanded(
+                child: Text(title,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w500)),
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          Text(amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          // FittedBox shrinks the number to fit the card instead of
+          // overflowing when the balance has many digits.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2),
+                maxLines: 1,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          ),
           const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Margins used', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              const Text('0', style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
-            ],
-          ),
+          _statRow('Margins used', '0'),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Opening balance', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              Text(amount.toStringAsFixed(0), style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
-            ],
-          ),
+          _statRow('Opening balance', amount.toStringAsFixed(0)),
         ],
       ),
     );
   }
 
+  Widget _statRow(String label, String value) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(value,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
+  }
+
   Widget _moversCard(String title, List<dynamic> list, IconData icon, Color accent) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -251,7 +302,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Icon(icon, color: accent, size: 18),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+              Expanded(
+                child: Text(title,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -269,28 +324,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   children: [
                     Container(
-                      width: 30,
-                      height: 30,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(color: _avatarColor(symbol), shape: BoxShape.circle),
                       child: Center(
                         child: Text(symbol.isNotEmpty ? symbol[0] : '?',
                             style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(symbol, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                      child: Text(symbol, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
+                    const SizedBox(width: 6),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(price?.toStringAsFixed(2) ?? '-', style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                        Text(price?.toStringAsFixed(2) ?? '-',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                         Container(
                           margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                          child: Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%', style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+                          child: Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -305,7 +369,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _iposCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -318,7 +382,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               const Icon(Icons.rocket_launch_rounded, color: Color(0xFF7C3AED), size: 18),
               const SizedBox(width: 8),
-              const Text('Upcoming IPOs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+              const Expanded(
+                child: Text('Upcoming IPOs',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -334,16 +402,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Expanded(
                       child: Text((ipo['company_name'] ?? ipo['name'] ?? '-').toString(),
-                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
+                    const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
                         color: (isOpen ? AppColors.success : const Color(0xFFF59E0B)).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(status, style: TextStyle(fontSize: 10, color: isOpen ? AppColors.success : const Color(0xFFF59E0B), fontWeight: FontWeight.w600)),
+                      child: Text(status,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 9.5, color: isOpen ? AppColors.success : const Color(0xFFF59E0B), fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),

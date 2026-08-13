@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -90,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen>
       context.go('/login');
     } else {
       WebSocketService.connect(); // fire-and-forget: order/price updates start flowing in the background
-      context.go('/watchlist');
+      context.go('/dashboard');
     }
   }
 
