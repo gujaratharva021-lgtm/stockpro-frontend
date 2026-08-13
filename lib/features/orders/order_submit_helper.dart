@@ -1,4 +1,4 @@
-import 'package:stock_app/core/models/order.dart';
+﻿import 'package:stock_app/core/models/order.dart';
 import 'package:stock_app/core/services/order_service.dart';
 import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
@@ -21,13 +21,54 @@ Future<OrderSubmitResult> submitMarketOrderAndTrack({
   required String side, // BUY | SELL
   required double quantity,
   String productType = 'REGULAR',
+}) {
+  return _submitAndTrack(
+    stockId: stockId,
+    side: side,
+    orderType: 'MARKET',
+    quantity: quantity,
+    productType: productType,
+  );
+}
+
+/// Places a LIMIT order through the real order engine and waits for it to
+/// reach a terminal status (or times out) before returning, mirroring
+/// [submitMarketOrderAndTrack]. A LIMIT order that is still OPEN (resting
+/// on the book, not yet matched) when tracking gives up is reported with
+/// its actual status label rather than a blanket "Pending" -- it genuinely
+/// is open, not just unconfirmed.
+Future<OrderSubmitResult> submitLimitOrderThroughEngine({
+  required String stockId,
+  required String side, // BUY | SELL
+  required double quantity,
+  required double limitPrice,
+  String productType = 'REGULAR',
+}) {
+  return _submitAndTrack(
+    stockId: stockId,
+    side: side,
+    orderType: 'LIMIT',
+    quantity: quantity,
+    limitPrice: limitPrice,
+    productType: productType,
+  );
+}
+
+Future<OrderSubmitResult> _submitAndTrack({
+  required String stockId,
+  required String side,
+  required String orderType,
+  required double quantity,
+  double? limitPrice,
+  String productType = 'REGULAR',
 }) async {
   final placed = await OrderService.submit(
     stockId: stockId,
     side: side,
-    orderType: 'MARKET',
+    orderType: orderType,
     productType: productType,
     quantity: quantity,
+    limitPrice: limitPrice,
   );
 
   Order finalOrder = placed;

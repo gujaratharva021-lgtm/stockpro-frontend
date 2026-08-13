@@ -406,35 +406,49 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Portfolio', style: TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
-                      Row(
-                        children: [
-                          GestureDetector(onTap: () => showOverviewSheet(context), child: const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary)),
-                        ],
+                      GestureDetector(
+                        onTap: () => showOverviewSheet(context),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Portfolio', style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                            Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary),
+                          ],
+                        ),
+                      ),
+                      _toolbarIcon(Icons.menu, onTap: _showFilterSheet),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(child: _buildSummaryCard()),
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 1))),
+                  child: Row(
+                    children: [
+                      _tabChip('Holdings', _holdings.length, 0),
+                      const SizedBox(width: 24),
+                      _tabChip('Positions', _positionsCount, 1),
+                      const SizedBox(width: 24),
+                      GestureDetector(
+                        onTap: () => context.push('/performance'),
+                        child: const Padding(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text('Performance', style: TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w500)),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      _tabChip('Holdings', _holdings.length, 0),
-                      const SizedBox(width: 20),
-                      _tabChip('Positions', _positionsCount, 1),
-                    ],
-                  ),
-                ),
-              ),
               SliverToBoxAdapter(child: _buildToolbarRow()),
-              const SliverToBoxAdapter(child: Divider(color: AppColors.border, height: 24)),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
               if (_loading)
                 const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
@@ -455,15 +469,62 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     final active = _tab == index;
     return GestureDetector(
       onTap: () => setState(() => _tab = index),
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 9),
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: active ? AppColors.primary : Colors.transparent, width: 2))),
+        child: Text(label, style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textSecondary, fontSize: 14, fontWeight: active ? FontWeight.bold : FontWeight.w500)),
+      ),
+    );
+  }
+
+  Widget _summaryStatRow(String label, double value, double pct, {String? trailingLabel}) {
+    final isUp = value >= 0;
+    final color = isUp ? AppColors.success : AppColors.danger;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                const SizedBox(height: 2),
+                Text(
+                  '${isUp ? '+' : ''}₹${value.toStringAsFixed(2)} (${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%)',
+                  style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          if (trailingLabel != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: GestureDetector(
+                onTap: () => showOverviewSheet(context),
+                child: Text(trailingLabel, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(label, style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textSecondary, fontSize: 14, fontWeight: active ? FontWeight.bold : FontWeight.w500)),
-            ],
+          const Text('Net Liquidation Value', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(
+            '₹${_totalCurrentValue.toStringAsFixed(2)}',
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold),
           ),
-          if (active) Container(margin: const EdgeInsets.only(top: 6), height: 2, width: 24, color: AppColors.primary),
+          _summaryStatRow('Day P&L', _todayReturns, _todayReturnsPct, trailingLabel: 'Details'),
+          _summaryStatRow('Unrealized P&L', _totalReturns, _totalReturnsPct),
         ],
       ),
     );
@@ -523,7 +584,19 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             ),
           ),
         )
-      else
+      else ...[
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+            child: Row(
+              children: const [
+                Expanded(child: Text('Instrument', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                SizedBox(width: 90, child: Text('Last', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                SizedBox(width: 90, child: Text('P&L', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+              ],
+            ),
+          ),
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           sliver: SliverList(
@@ -533,6 +606,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             ),
           ),
         ),
+      ],
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
@@ -665,38 +739,30 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 0.6))),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text((symbol ?? '?').toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 14))),
-            ),
-            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(h['company_name'] ?? symbol ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text('$qty shares • Avg ₹${avg.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  Text(symbol ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(h['company_name'] ?? symbol ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                 ],
               ),
             ),
-            SizedBox(width: 44, height: 28, child: _sparkline(_history[symbol], isUp)),
-            const SizedBox(width: 8),
+            SizedBox(
+              width: 90,
+              child: Text('₹${current.toStringAsFixed(2)}', textAlign: TextAlign.right, maxLines: 1, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
             SizedBox(
               width: 90,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('₹${current.toStringAsFixed(2)}', maxLines: 1, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text('${isUp ? '+' : ''}${returns.toStringAsFixed(3)}', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                    child: Text('${isUp ? '+' : ''}${returnsPct.toStringAsFixed(2)}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 10, fontWeight: FontWeight.w600)),
-                  ),
-                  Text('${isUp ? '+' : ''}₹${returns.toStringAsFixed(2)}', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 10)),
+                  Text('${isUp ? '+' : ''}${returnsPct.toStringAsFixed(2)}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 11)),
                 ],
               ),
             ),
@@ -706,6 +772,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _sparkline(List<double>? closes, bool isUp) {
     if (closes == null || closes.length < 2) return const SizedBox(width: 44, height: 28);
     final spots = [for (int i = 0; i < closes.length; i++) FlSpot(i.toDouble(), closes[i])];

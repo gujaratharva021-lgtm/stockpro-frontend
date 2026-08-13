@@ -17,12 +17,10 @@ class OrderSubmitResult {
   const OrderSubmitResult({required this.status, this.orderId});
 }
 
-/// Full-screen order ticket matching the Kite-style Buy/Sell layout.
-/// All calculation and order-placement logic is passed in from the caller
-/// (stock_detail_screen.dart) so the real backend behaviour is unchanged.
-/// Itemized real-world Indian equity charges (SEBI turnover fee, NSE
-/// transaction charge, stamp duty, STT, GST, brokerage) for display purposes.
-/// The backend does not deduct these separately from balance today — this is
+/// Real, publicly documented Indian equity charge formulas (SEBI/NSE/GST
+/// rates as published on exchange/broker charges pages). This is a genuine
+/// itemized calculation, not a fabricated split of an arbitrary total. The
+/// backend does not deduct these separately from balance today -- this is
 /// an accurate informational estimate using published rates.
 class _ChargeBreakdown {
   final double brokerage;
@@ -44,6 +42,12 @@ class _ChargeBreakdown {
   double get total => brokerage + sebiFee + exchangeFee + stampDuty + stt + gst;
 }
 
+/// Order-entry screen laid out as a stacked list of rows (Account / Order
+/// Type / Limit Price / Quantity / Time-in-Force), matching a professional
+/// broker-app ticket, with a Preview (Amount + Buying Power Impact) block
+/// above the submit button. All calculation and order-placement logic is
+/// passed in from the caller (stock_detail_screen.dart) so the real backend
+/// behaviour is unchanged from before this redesign.
 class OrderTicketScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
   final String buySell; // 'buy' or 'sell'
@@ -80,11 +84,9 @@ class OrderTicketScreen extends StatefulWidget {
 
 class _OrderTicketScreenState extends State<OrderTicketScreen> {
   late bool isBuy;
-  String _productTab = 'REGULAR'; // REGULAR | MTF | ICEBERG
   String _orderType = 'MARKET'; // MARKET | LIMIT
   String _product = 'DELIVERY'; // DELIVERY (Longterm) | INTRADAY
-  String _validity = 'DAY'; // DAY | IOC
-  bool _useSecondaryExchange = false;
+  String _validity = 'DAY'; // DAY | IOC  (Time-in-Force)
 
   // Advanced order options: stoploss (a trigger price that fires a market/
   // limit sell once the price falls to protect against loss), GTT (Good
@@ -92,6 +94,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   // is hit, unlike a regular order which expires same-day), and Market
   // Protection (caps the worst price a MARKET order can fill at, so a
   // sudden price gap doesn't execute far away from the quoted price).
+  bool _showMoreOptions = false;
   bool _stoplossEnabled = false;
   bool _gttEnabled = false;
   bool _marketProtectionEnabled = false;
@@ -102,13 +105,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   late TextEditingController _qtyController;
   late TextEditingController _priceController;
 
-  bool _showMore = false;
   bool _submitting = false;
   String? _errorMsg;
-  double _swipeProgress = 0.0;
   double? _availableBalance;
-
-  late TextEditingController _legsController;
+  String? _accountEmail;
 
   @override
   void initState() {
@@ -116,10 +116,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     isBuy = widget.buySell == 'buy';
     _qtyController = TextEditingController(text: '1');
     _priceController = TextEditingController(text: widget.currentPrice.toStringAsFixed(2));
-    _legsController = TextEditingController(text: '2');
     _stoplossController = TextEditingController();
     _gttTargetController = TextEditingController();
     _loadBalance();
+    _loadAccount();
   }
 
   Future<void> _loadBalance() async {
@@ -131,36 +131,26 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     }
   }
 
+  Future<void> _loadAccount() async {
+    try {
+      final me = await ApiService.getMe();
+      final email = me['user']?['email'] as String?;
+      if (mounted) setState(() => _accountEmail = email);
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _qtyController.dispose();
     _priceController.dispose();
-    _legsController.dispose();
-    
     _stoplossController.dispose();
     _gttTargetController.dispose();
     super.dispose();
   }
 
-  int get _numberOfLegs {
-    final legs = int.tryParse(_legsController.text) ?? 1;
-    return legs < 1 ? 1 : legs;
-  }
-
-  double get _qtyPerLeg => _numberOfLegs == 0 ? 0 : _qty / _numberOfLegs;
-
-  // NOTE: There is no live feed for the second exchange in this app.
-  // This value is a display-only estimate so the BSE/NSE toggle has
-  // something to show. Real order execution always uses widget.currentPrice
-  // or the entered Limit price below — never this estimate.
-  double get _secondaryExchangePrice => widget.currentPrice - 0.15;
-
   // Buy screens use the app's primary blue; Sell screens switch every
-  // interactive accent (radios, tabs, steppers, swipe button) to red.
+  // interactive accent (dropdown values, toggle, submit button) to red.
   Color get _accentColor => isBuy ? AppColors.primary : AppColors.danger;
-
-  String get _primaryExchangeLabel => (widget.stock['exchange'] ?? 'NSE').toString();
-  String get _secondaryExchangeLabel => _primaryExchangeLabel == 'BSE' ? 'NSE' : 'BSE';
 
   void _adjustQty(int delta) {
     final current = int.tryParse(_qtyController.text) ?? 1;
@@ -171,10 +161,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   void _adjustPrice(double delta) {
     final current = double.tryParse(_priceController.text) ?? widget.currentPrice;
     final updated = (current + delta).clamp(0.05, double.infinity);
-    setState(() {
-      _priceController.text = updated.toStringAsFixed(2);
-      _orderType = 'LIMIT';
-    });
+    setState(() => _priceController.text = updated.toStringAsFixed(2));
   }
 
   double get _qty => double.tryParse(_qtyController.text) ?? 0;
@@ -182,9 +169,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       ? widget.currentPrice
       : (double.tryParse(_priceController.text) ?? widget.currentPrice);
   double get _stockValue => _qty * _price;
-  // Real, publicly documented Indian equity charge formulas (SEBI/NSE/GST
-  // rates as published on exchange/broker charges pages). This is a genuine
-  // itemized calculation, not a fabricated split of an arbitrary total.
+
   _ChargeBreakdown get _charges {
     final turnover = _stockValue;
     final isIntraday = _product == 'INTRADAY';
@@ -210,38 +195,19 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   double get _taxes => _charges.total - _charges.brokerage;
   double get _total => isBuy ? _stockValue + _brokerage + _taxes : _stockValue - _brokerage - _taxes;
 
-  bool get _canSubmit => (_productTab == 'REGULAR' || (_productTab == 'MTF' && isBuy)) && !_submitting;
-
-  double get _marginRequired => _stockValue * 0.20;
+  // Buying power moves down on a BUY (cash leaves) and up on a SELL (cash
+  // comes in) -- shown with an explicit sign so it reads the way a
+  // brokerage statement would.
+  double get _buyingPowerImpact => isBuy ? -_total : _total;
 
   Future<void> _handleSubmit() async {
     if (_submitting) return; // guard against duplicate rapid-fire submissions
-    if (_productTab == 'ICEBERG') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Iceberg orders are coming soon')),
-      );
-      setState(() => _swipeProgress = 0.0);
-      return;
-    }
-    if (_productTab == 'MTF' && !isBuy) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('MTF is only available for buy orders. Close positions from Portfolio.')),
-      );
-      setState(() => _swipeProgress = 0.0);
-      return;
-    }
     if (_qty <= 0) {
-      setState(() {
-        _errorMsg = 'Enter a valid quantity';
-        _swipeProgress = 0.0;
-      });
+      setState(() => _errorMsg = 'Enter a valid quantity');
       return;
     }
-    if (_productTab == 'REGULAR' && _price <= 0) {
-      setState(() {
-        _errorMsg = 'Enter a valid price';
-        _swipeProgress = 0.0;
-      });
+    if (_orderType == 'LIMIT' && _price <= 0) {
+      setState(() => _errorMsg = 'Enter a valid limit price');
       return;
     }
     setState(() {
@@ -249,78 +215,38 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       _errorMsg = null;
     });
 
-    if (_productTab == 'MTF') {
-      try {
-        final symbol = (widget.stock['symbol'] ?? '').toString();
-        await ApiService.mtfOpenPosition(widget.stock['id'], symbol, _qty);
-        if (mounted) {
-          Navigator.pop(context, {
-            'buySell': widget.buySell,
-            'qty': _qty,
-            'orderType': 'MTF',
-            'status': 'Executed',
-            'orderId': null,
-          });
-        }
-      } catch (e) {
-        setState(() {
-          _submitting = false;
-          _swipeProgress = 0.0;
-          _errorMsg = e.toString().contains('insufficient')
-              ? 'Insufficient balance for margin'
-              : 'MTF order failed: ' + (e is DioException ? (e.response?.data?.toString() ?? e.toString()) : e.toString());
-        });
-      }
-      return;
-    }
-
     try {
-      final submitResult = await widget.onSubmit(orderType: _orderType, qty: _qty, price: _price, marketProtectionPercent: (_orderType == 'MARKET' && _marketProtectionEnabled) ? _marketProtectionPercent : null, productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR');
-      // If the user enabled Stoploss and/or GTT alongside a Regular order,
-      // place them as separate pending orders once the main order succeeds
-      // -- these are protective/target orders that trigger independently,
-      // not part of the immediate buy/sell itself.
-      if (_productTab == 'REGULAR') {
-        if (_stoplossEnabled) {
-          final slPrice = double.tryParse(_stoplossController.text);
-          if (slPrice != null && slPrice > 0) {
-            try {
-              await ApiService.createPendingOrder(
-                widget.stock['id'],
-                'SELL',
-                'STOP_LOSS',
-                _qty,
-                slPrice,
+      final submitResult = await widget.onSubmit(
+        orderType: _orderType,
+        qty: _qty,
+        price: _price,
+        marketProtectionPercent: (_orderType == 'MARKET' && _marketProtectionEnabled) ? _marketProtectionPercent : null,
+        productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR',
+      );
+      if (_stoplossEnabled) {
+        final slPrice = double.tryParse(_stoplossController.text);
+        if (slPrice != null && slPrice > 0) {
+          try {
+            await ApiService.createPendingOrder(widget.stock['id'], 'SELL', 'STOP_LOSS', _qty, slPrice);
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order placed, but Stoploss could not be set. Add it from Orders.')),
               );
-            } catch (_) {
-              // Main order already succeeded -- surface a soft warning
-              // rather than treating the whole submission as failed.
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Order placed, but Stoploss could not be set. Add it from Orders.')),
-                );
-              }
             }
           }
         }
-        if (_gttEnabled) {
-          final gttPrice = double.tryParse(_gttTargetController.text);
-          if (gttPrice != null && gttPrice > 0) {
-            try {
-              await ApiService.createPendingOrder(
-                widget.stock['id'],
-                widget.buySell.toUpperCase(),
-                'LIMIT',
-                _qty,
-                gttPrice,
-                isGtt: true,
+      }
+      if (_gttEnabled) {
+        final gttPrice = double.tryParse(_gttTargetController.text);
+        if (gttPrice != null && gttPrice > 0) {
+          try {
+            await ApiService.createPendingOrder(widget.stock['id'], widget.buySell.toUpperCase(), 'LIMIT', _qty, gttPrice, isGtt: true);
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order placed, but GTT could not be set. Add it from Orders.')),
               );
-            } catch (_) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Order placed, but GTT could not be set. Add it from Orders.')),
-                );
-              }
             }
           }
         }
@@ -337,7 +263,6 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     } catch (e) {
       setState(() {
         _submitting = false;
-        _swipeProgress = 0.0;
         _errorMsg = e.toString().contains('insufficient shares')
             ? 'You don\'t have enough shares to sell'
             : e.toString().contains('insufficient')
@@ -347,183 +272,221 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     }
   }
 
+  void _pickOrderType() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _sheetTile('Market', 'MARKET', _orderType, (v) {
+              setState(() {
+                _orderType = v;
+                _priceController.text = widget.currentPrice.toStringAsFixed(2);
+              });
+            }),
+            _sheetTile('Limit', 'LIMIT', _orderType, (v) => setState(() => _orderType = v)),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _pickTimeInForce() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _sheetTile('Day', 'DAY', _validity, (v) => setState(() => _validity = v)),
+            _sheetTile('Immediate or Cancel (IOC)', 'IOC', _validity, (v) => setState(() => _validity = v)),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _pickProduct() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _sheetTile('Longterm (Delivery)', 'DELIVERY', _product, (v) => setState(() => _product = v)),
+            _sheetTile('Intraday', 'INTRADAY', _product, (v) => setState(() => _product = v)),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetTile(String label, String value, String groupValue, ValueChanged<String> onPick) {
+    final selected = value == groupValue;
+    return ListTile(
+      title: Text(label, style: TextStyle(color: selected ? _accentColor : AppColors.textPrimary, fontWeight: selected ? FontWeight.w700 : FontWeight.normal)),
+      trailing: selected ? Icon(Icons.check, color: _accentColor) : null,
+      onTap: () {
+        onPick(value);
+        Navigator.pop(context);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final symbol = widget.stock['symbol'] ?? '';
+    final companyName = widget.stock['company_name'] ?? '';
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: Text(symbol,
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 18)),
-        actions: [IconButton(icon: const Icon(Icons.more_vert), onPressed: () {})],
+        titleSpacing: 0,
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (companyName.toString().isNotEmpty)
+                    Text(companyName.toString(), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('₹${widget.currentPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+                Text('${widget.changePercent >= 0 ? '+' : ''}${widget.changePercent.toStringAsFixed(2)}%',
+                    style: TextStyle(color: widget.changePercent >= 0 ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(width: 12),
+          ],
+        ),
       ),
       body: Column(
         children: [
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            color: AppColors.cardBackground,
-            child: Row(children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: (isBuy ? AppColors.success : AppColors.danger).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(isBuy ? 'BUY' : 'SELL',
-                    style: TextStyle(
-                        color: isBuy ? AppColors.success : AppColors.danger,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
-              ),
-              const SizedBox(width: 8),
-              Text('${widget.changePercent >= 0 ? '+' : ''}${widget.changePercent.toStringAsFixed(2)}%',
-                  style: TextStyle(
-                      color: widget.changePercent >= 0 ? AppColors.success : AppColors.danger,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600)),
-            ]),
-          ),
-          Container(
-            color: AppColors.cardBackground,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(children: [
-              Expanded(
-                child: _exchangeTile(
-                  label: _primaryExchangeLabel,
-                  price: widget.currentPrice,
-                  selected: !_useSecondaryExchange,
-                  onTap: () => setState(() => _useSecondaryExchange = false),
-                ),
-              ),
-              Expanded(
-                child: _exchangeTile(
-                  label: _secondaryExchangeLabel,
-                  price: _secondaryExchangePrice,
-                  selected: _useSecondaryExchange,
-                  onTap: () => setState(() => _useSecondaryExchange = true),
-                ),
-              ),
-            ]),
-          ),
-          Container(
-            color: AppColors.cardBackground,
-            padding: const EdgeInsets.only(left: 16, top: 8),
-            child: Row(children: [
-              _productTabWidget('Regular', 'REGULAR'),
-              const SizedBox(width: 24),
-              _productTabWidget('MTF', 'MTF'),
-              const SizedBox(width: 24),
-              _productTabWidget('Iceberg', 'ICEBERG'),
-            ]),
-          ),
-          if (_productTab == 'ICEBERG' || (_productTab == 'MTF' && !isBuy))
-            Container(
-              width: double.infinity,
-              color: AppColors.primary.withValues(alpha: 0.08),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                _productTab == 'ICEBERG'
-                    ? 'Iceberg orders are coming soon. Switch to Regular to place an order.'
-                    : 'MTF is only available for buy orders. Close positions from your Portfolio.',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
+            color: Colors.white,
+            child: Row(
+              children: [
+                Expanded(child: _buySellTab('Buy Order', true)),
+                Expanded(child: _buySellTab('Sell Order', false)),
+              ],
             ),
-          if (_productTab == 'MTF' && isBuy)
-            Container(
-              width: double.infinity,
-              color: AppColors.success.withValues(alpha: 0.08),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: const Text(
-                'You pay 20% margin upfront. The rest is funded by the broker at 18% p.a. interest.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-            ),
+          ),
+          const Divider(height: 1, color: AppColors.border),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!isBuy && widget.holdingQty > 0) ...[
-                    Text(
-                        'Holding: ${widget.holdingQty.toStringAsFixed(0)} Shares • Avg ₹${widget.avgBuyPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                    const SizedBox(height: 16),
-                  ],
-                  const Text('Quantity',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary)),
-                  const SizedBox(height: 8),
-                  _stepperField(
+                  if (!isBuy && widget.holdingQty > 0)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Text('Holding: ${widget.holdingQty.toStringAsFixed(0)} shares • Avg ₹${widget.avgBuyPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                    ),
+
+                  _infoRow('Account', _accountEmail ?? '…'),
+                  _infoRow('Product', _product == 'DELIVERY' ? 'Longterm' : 'Intraday', onTap: _pickProduct),
+                  _infoRow('Order Type', _orderType == 'MARKET' ? 'Market' : 'Limit', onTap: _pickOrderType),
+
+                  if (_orderType == 'LIMIT')
+                    _stepperRow(
+                      label: 'Limit Price',
+                      controller: _priceController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+                      onIncrement: () => _adjustPrice(0.05),
+                      onDecrement: () => _adjustPrice(-0.05),
+                    ),
+
+                  _stepperRow(
+                    label: 'Quantity',
                     controller: _qtyController,
                     keyboardType: TextInputType.number,
                     onIncrement: () => _adjustQty(1),
                     onDecrement: () => _adjustQty(-1),
                   ),
-                  const SizedBox(height: 20),
-                  Row(children: [
-                    const Text('Limit',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary)),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () => setState(() => _priceController.text = widget.currentPrice.toStringAsFixed(2)),
-                      child: Icon(Icons.colorize, size: 16, color: _accentColor),
-                    ),
-                  ]),
-                  const SizedBox(height: 8),
-                  _stepperField(
-                    controller: _priceController,
-                    enabled: true,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
-                    onIncrement: () => _adjustPrice(0.05),
-                    onDecrement: () => _adjustPrice(-0.05),
-                    onChanged: (_) {
-                      if (_orderType != 'LIMIT') {
-                        setState(() => _orderType = 'LIMIT');
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  if (_productTab == 'REGULAR') ...[
-                    _advancedOrderOptions(),
-                    const SizedBox(height: 16),
-                  ],
-                  const SizedBox(height: 16),
-                  if (_productTab == 'ICEBERG') ...[
-                    _icebergLegsSection(),
-                    const SizedBox(height: 16),
-                  ],
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(10)),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-                      _radioOption('Intraday', _product == 'INTRADAY', () => setState(() => _product = 'INTRADAY')),
-                      _radioOption('Longterm', _product == 'DELIVERY', () => setState(() => _product = 'DELIVERY')),
-                    ]),
-                  ),
-                  const SizedBox(height: 20),
+
+                  _infoRow('Time-in-Force', _validity == 'DAY' ? 'Day' : 'Immediate or Cancel', onTap: _pickTimeInForce),
+
+                  const SizedBox(height: 4),
                   Center(
                     child: GestureDetector(
-                      onTap: () => setState(() => _showMore = !_showMore),
-                      child: Column(children: [
-                        const Text('More', style: TextStyle(color: AppColors.textPrimary)),
-                        Icon(_showMore ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                            color: AppColors.textMuted),
-                      ]),
+                      onTap: () => setState(() => _showMoreOptions = !_showMoreOptions),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('More Options', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                            Icon(_showMoreOptions ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: AppColors.textMuted, size: 18),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  if (_showMore) ...[
-                    const SizedBox(height: 16),
-                    _moreSection(),
+                  if (_showMoreOptions) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: _advancedOrderOptions(),
+                    ),
                   ],
-                  if (_errorMsg != null) ...[
-                    const SizedBox(height: 12),
-                    Text(_errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
-                  ],
+
+                  const SizedBox(height: 12),
+                  Container(height: 8, color: const Color(0xFFF7F8FA)),
+                  const SizedBox(height: 4),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: Text('Preview', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                  ),
+                  _infoRow('Amount', '₹${_stockValue.toStringAsFixed(2)}'),
+                  _infoRow(
+                    'Buying Power Impact',
+                    '${_buyingPowerImpact >= 0 ? '+' : '-'}₹${_buyingPowerImpact.abs().toStringAsFixed(2)}',
+                    valueColor: _buyingPowerImpact >= 0 ? AppColors.success : AppColors.danger,
+                  ),
+                  GestureDetector(
+                    onTap: _showChargesDialog,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                      child: Row(
+                        children: [
+                          Text('Available: ${_availableBalance == null ? '…' : '₹${_availableBalance!.toStringAsFixed(2)}'}',
+                              style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  if (_errorMsg != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Text(_errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                    ),
                 ],
               ),
             ),
@@ -534,411 +497,95 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     );
   }
 
-  Widget _exchangeTile(
-      {required String label, required double price, required bool selected, required VoidCallback onTap}) {
+  Widget _buySellTab(String label, bool forBuy) {
+    final selected = isBuy == forBuy;
+    return GestureDetector(
+      onTap: () => setState(() => isBuy = forBuy),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: selected ? (forBuy ? AppColors.primary : AppColors.danger) : Colors.transparent, width: 2)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? (forBuy ? AppColors.primary : AppColors.danger) : AppColors.textMuted,
+            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value, {VoidCallback? onTap, Color? valueColor}) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(children: [
-          Radio<bool>(
-              value: true,
-              groupValue: selected, // ignore: deprecated_member_use
-              onChanged: (_) => onTap(), // ignore: deprecated_member_use
-              activeColor: _accentColor,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
-          Text(label,
-              style: TextStyle(
-                  color: selected ? AppColors.textPrimary : AppColors.textMuted, fontWeight: FontWeight.w500)),
-          const SizedBox(width: 6),
-          Text('₹${price.toStringAsFixed(2)}',
-              style: TextStyle(
-                  color: selected ? AppColors.textPrimary : AppColors.textMuted, fontWeight: FontWeight.w600)),
-        ]),
-      ),
-    );
-  }
-
-  void _handleProductTabTap(String tab) {
-    if (tab == 'MTF') {
-      _showMtfInfoDialog();
-    } else {
-      setState(() => _productTab = tab);
-    }
-  }
-
-  void _showMtfInfoDialog() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Margin Trading Facility (MTF)'),
-        content: Text(
-          'MTF lets you buy shares by paying only 20% of the total cost upfront. '
-          'The remaining 80% is funded by the broker, and interest (18% p.a.) is '
-          'charged on that borrowed amount until you close the position.'
-          '${isBuy ? '' : '\n\nMTF is only available for buy orders. Existing positions are closed from your Portfolio.'}',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 1))),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            Row(
+              children: [
+                Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
+                if (onTap != null) const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              setState(() => _productTab = 'MTF');
-            },
-            child: const Text('Continue'),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _productTabWidget(String label, String tab) {
-    final selected = _productTab == tab;
-    return GestureDetector(
-      onTap: () => _handleProductTabTap(tab),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
-            style: TextStyle(
-                color: selected ? _accentColor : AppColors.textMuted,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                fontSize: 15)),
-        const SizedBox(height: 6),
-        Container(height: 2, width: 40, color: selected ? _accentColor : Colors.transparent),
-      ]),
-    );
-  }
-
-  Widget _stepperField({
+  Widget _stepperRow({
+    required String label,
     required TextEditingController controller,
     required TextInputType keyboardType,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
-    bool enabled = true,
     List<TextInputFormatter>? inputFormatters,
-    ValueChanged<String>? onChanged,
   }) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)),
-      child: Row(children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            enabled: enabled,
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            onChanged: (v) {
-              setState(() {});
-              onChanged?.call(v);
-            },
-            style: const TextStyle(fontSize: 20, color: AppColors.textPrimary),
-            decoration: const InputDecoration(
-                border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14)),
-          ),
-        ),
-        Container(width: 1, height: 44, color: AppColors.border),
-        Column(mainAxisSize: MainAxisSize.min, children: [
-          InkWell(
-              onTap: enabled ? onIncrement : null,
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  child: Icon(Icons.arrow_forward, size: 18, color: enabled ? _accentColor : AppColors.textMuted))),
-          InkWell(
-              onTap: enabled ? onDecrement : null,
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  child: Icon(Icons.arrow_back, size: 18, color: enabled ? _accentColor : AppColors.textMuted))),
-        ]),
-      ]),
-    );
-  }
-
-  Widget _radioOption(String label, bool selected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Radio<bool>(
-            value: true,
-            groupValue: selected, // ignore: deprecated_member_use
-            onChanged: (_) => onTap(), // ignore: deprecated_member_use
-            activeColor: _accentColor,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
-        Text(label,
-            style: TextStyle(
-                color: selected ? AppColors.textPrimary : AppColors.textMuted, fontWeight: FontWeight.w500)),
-      ]),
-    );
-  }
-
-  Widget _moreSection() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(10)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Order Type', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(
-              child: _chipOption(
-                  'Market',
-                  _orderType == 'MARKET',
-                  () => setState(() {
-                        _orderType = 'MARKET';
-                        _priceController.text = widget.currentPrice.toStringAsFixed(2);
-                      }))),
-          const SizedBox(width: 10),
-          Expanded(child: _chipOption('Limit', _orderType == 'LIMIT', () => setState(() => _orderType = 'LIMIT'))),
-        ]),
-        const SizedBox(height: 14),
-        const Text('Validity', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(child: _chipOption('Day', _validity == 'DAY', () => setState(() => _validity = 'DAY'))),
-          const SizedBox(width: 10),
-          Expanded(child: _chipOption('IOC', _validity == 'IOC', () => setState(() => _validity = 'IOC'))),
-        ]),
-      ]),
-    );
-  }
-
-  Widget _chipOption(String label, bool selected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? _accentColor.withValues(alpha: 0.12) : Colors.transparent,
-          border: Border.all(color: selected ? _accentColor : AppColors.border),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(label,
-            style:
-                TextStyle(color: selected ? _accentColor : AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 13)),
-      ),
-    );
-  }
-
-  Widget _icebergLegsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Number of legs',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary)),
-              GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Iceberg orders'),
-                      content: const Text(
-                          'An iceberg order splits your total quantity into smaller, equal-sized legs so the full order size isn\'t visible in the market depth at once.'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Got it')),
-                      ],
-                    ),
-                  );
-                },
-                child: Icon(Icons.info_outline, size: 18, color: _accentColor),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)),
-            child: TextField(
-              controller: _legsController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onChanged: (_) => setState(() {}),
-              style: const TextStyle(fontSize: 20, color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                  border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14)),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text('${_qtyPerLeg.toStringAsFixed(_qtyPerLeg == _qtyPerLeg.roundToDouble() ? 0 : 2)} qty. per leg',
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  void _showChargesDialog() {
-    final c = _charges;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Charges & taxes'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Statutory charges', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              const Text('(Govt. & Exchange fees)', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-              const SizedBox(height: 8),
-              _chargeLine('SEBI turnover fee', c.sebiFee),
-              _chargeLine('Exchange turnover fee', c.exchangeFee),
-              _chargeLine('Stamp duty', c.stampDuty),
-              _chargeLine('Transaction tax (STT)', c.stt),
-              _chargeLine('GST', c.gst),
-              const Divider(height: 20),
-              const Text('Brokerage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 8),
-              _chargeLine('Brokerage', c.brokerage),
-              const Divider(height: 20),
-              _chargeLine('Total charges', c.total, bold: true),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
-        ],
-      ),
-    );
-  }
-
-  Widget _chargeLine(String label, double amount, {bool bold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 1))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: bold ? AppColors.textPrimary : AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
-          Text('₹${amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                  color: AppColors.textPrimary, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w600)),
+          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          Row(
+            children: [
+              InkWell(onTap: onDecrement, child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.remove, size: 18, color: _accentColor))),
+              SizedBox(
+                width: 70,
+                child: TextField(
+                  controller: controller,
+                  keyboardType: keyboardType,
+                  inputFormatters: inputFormatters,
+                  textAlign: TextAlign.center,
+                  onChanged: (_) => setState(() {}),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
+                  decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 8)),
+                ),
+              ),
+              InkWell(onTap: onIncrement, child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.add, size: 18, color: _accentColor))),
+            ],
+          ),
         ],
       ),
     );
-  }
-
-  Widget _bottomBar() {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(color: AppColors.background, border: Border(top: BorderSide(color: AppColors.border))),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            Expanded(
-              child: RichText(
-                text: TextSpan(style: const TextStyle(fontSize: 13, color: AppColors.textMuted), children: [
-                  const TextSpan(text: 'Amount  '),
-                  TextSpan(
-                      text: '₹${_stockValue.toStringAsFixed(2)}',
-                      style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
-                  const TextSpan(text: '  +  '),
-                  TextSpan(
-                      text: '₹${(_brokerage + _taxes).toStringAsFixed(2)}',
-                      style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
-                  const TextSpan(text: '   Avail.  '),
-                  TextSpan(
-                      text: _availableBalance == null ? '…' : '₹${_availableBalance!.toStringAsFixed(2)}',
-                      style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
-                ]),
-              ),
-            ),
-            GestureDetector(
-              onTap: _showChargesDialog,
-              child: const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: Icon(Icons.info_outline, size: 16, color: AppColors.textMuted),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 4),
-          Row(children: [
-            Text(_productTab == 'MTF' ? 'Margin Required (20%)' : (isBuy ? 'Total Payable' : 'Net Receivable'),
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            const Spacer(),
-            Text('₹${(_productTab == 'MTF' ? _marginRequired : _total).toStringAsFixed(2)}',
-                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
-          ]),
-          const SizedBox(height: 12),
-          _swipeButton(),
-        ]),
-      ),
-    );
-  }
-
-  Widget _swipeButton() {
-    final label = isBuy ? 'SWIPE TO BUY' : 'SWIPE TO SELL';
-    final color = _accentColor;
-    return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      const thumbSize = 48.0;
-      final maxDrag = width - thumbSize - 4;
-      return Container(
-        height: 56,
-        decoration: BoxDecoration(color: _canSubmit ? color : AppColors.border, borderRadius: BorderRadius.circular(28)),
-        child: Stack(alignment: Alignment.center, children: [
-          Center(
-              child: Text(label,
-                  style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, letterSpacing: 1.2))),
-          AnimatedPositioned(
-            duration: _submitting ? Duration.zero : const Duration(milliseconds: 150),
-            left: 2 + (_swipeProgress * maxDrag),
-            top: 4,
-            child: GestureDetector(
-              onHorizontalDragUpdate: (details) {
-                if (_submitting) return;
-                setState(() {
-                  _swipeProgress = (_swipeProgress + details.delta.dx / maxDrag).clamp(0.0, 1.0);
-                });
-              },
-              onHorizontalDragEnd: (details) {
-                if (_submitting) return;
-                if (_swipeProgress > 0.85) {
-                  setState(() => _swipeProgress = 1.0);
-                  _handleSubmit();
-                } else {
-                  setState(() => _swipeProgress = 0.0);
-                }
-              },
-              child: Container(
-                width: thumbSize,
-                height: thumbSize,
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: _submitting
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(color)))
-                    : Icon(Icons.chevron_right, color: color),
-              ),
-            ),
-          ),
-        ]),
-      );
-    });
   }
 
   Widget _advancedOrderOptions() {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: const Color(0xFFF7F8FA), borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Advanced Options', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary)),
-          const SizedBox(height: 10),
           _advancedOptionRow(
             label: 'Stoploss',
             subtitle: 'Auto-sell if price falls to protect against loss',
@@ -947,10 +594,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           ),
           if (_stoplossEnabled) ...[
             const SizedBox(height: 8),
-            _stepperField(
+            _inlineStepper(
               controller: _stoplossController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\\d*\\.?\\d{0,2}'))],
               onIncrement: () {
                 final current = double.tryParse(_stoplossController.text) ?? widget.currentPrice;
                 setState(() => _stoplossController.text = (current + 0.05).toStringAsFixed(2));
@@ -970,10 +615,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           ),
           if (_gttEnabled) ...[
             const SizedBox(height: 8),
-            _stepperField(
+            _inlineStepper(
               controller: _gttTargetController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\\d*\\.?\\d{0,2}'))],
               onIncrement: () {
                 final current = double.tryParse(_gttTargetController.text) ?? widget.currentPrice;
                 setState(() => _gttTargetController.text = (current + 0.05).toStringAsFixed(2));
@@ -1018,12 +661,27 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     );
   }
 
-  Widget _advancedOptionRow({
-    required String label,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
+  Widget _inlineStepper({required TextEditingController controller, required VoidCallback onIncrement, required VoidCallback onDecrement}) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)),
+      child: Row(children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+            onChanged: (_) => setState(() {}),
+            style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+            decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+          ),
+        ),
+        InkWell(onTap: onDecrement, child: Padding(padding: const EdgeInsets.all(10), child: Icon(Icons.remove, size: 16, color: _accentColor))),
+        InkWell(onTap: onIncrement, child: Padding(padding: const EdgeInsets.all(10), child: Icon(Icons.add, size: 16, color: _accentColor))),
+      ]),
+    );
+  }
+
+  Widget _advancedOptionRow({required String label, required String subtitle, required bool value, required ValueChanged<bool> onChanged}) {
     return Row(
       children: [
         Expanded(
@@ -1037,6 +695,79 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         ),
         Switch(value: value, onChanged: onChanged, activeThumbColor: _accentColor),
       ],
+    );
+  }
+
+  void _showChargesDialog() {
+    final c = _charges;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Charges & taxes'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Statutory charges', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text('(Govt. & Exchange fees)', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+              const SizedBox(height: 8),
+              _chargeLine('SEBI turnover fee', c.sebiFee),
+              _chargeLine('Exchange turnover fee', c.exchangeFee),
+              _chargeLine('Stamp duty', c.stampDuty),
+              _chargeLine('Transaction tax (STT)', c.stt),
+              _chargeLine('GST', c.gst),
+              const Divider(height: 20),
+              const Text('Brokerage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 8),
+              _chargeLine('Brokerage', c.brokerage),
+              const Divider(height: 20),
+              _chargeLine('Total charges', c.total, bold: true),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Widget _chargeLine(String label, double amount, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: bold ? AppColors.textPrimary : AppColors.textSecondary, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text('₹${amount.toStringAsFixed(2)}', style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _bottomBar() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: AppColors.border))),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _submitting ? null : _handleSubmit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accentColor,
+              disabledBackgroundColor: _accentColor.withValues(alpha: 0.6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: _submitting
+                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                : Text('Submit ${isBuy ? 'Buy' : 'Sell'} Order', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
+        ),
+      ),
     );
   }
 }
