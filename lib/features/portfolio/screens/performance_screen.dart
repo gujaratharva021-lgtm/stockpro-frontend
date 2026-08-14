@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:stock_app/shared/widgets/main_shell.dart';
 
 class PerformanceScreen extends StatefulWidget {
-  const PerformanceScreen({super.key});
+  final int? navIndex;
+  const PerformanceScreen({super.key, this.navIndex});
   @override
   State<PerformanceScreen> createState() => _PerformanceScreenState();
 }
@@ -35,6 +38,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         _loading = false;
       });
     } catch (e) {
+      debugPrint('Performance load error: $e');
       setState(() { _error = 'Failed to load performance'; _loading = false; });
     }
   }
@@ -82,14 +86,20 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     final returnPct = beginningValue != 0 ? (netChange / beginningValue) * 100 : 0.0;
     final isUp = netChange >= 0;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
+        automaticallyImplyLeading: widget.navIndex == null,
         title: const Text('Performance', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 17)),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         elevation: 0,
         actions: [
+          if (widget.navIndex != null)
+            TextButton(
+              onPressed: () => context.push('/portfolio/holdings'),
+              child: const Text('Holdings', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+            ),
           IconButton(icon: const Icon(Icons.menu, color: AppColors.textMuted), onPressed: () {}),
         ],
       ),
@@ -198,6 +208,10 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                       ],
                     ),
     );
+    if (widget.navIndex != null) {
+      return MainShell(currentIndex: widget.navIndex!, child: scaffold);
+    }
+    return scaffold;
   }
 
   Widget _detailRow(String label, String value, {Color? color, bool last = false}) {

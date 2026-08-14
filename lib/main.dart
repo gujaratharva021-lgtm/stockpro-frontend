@@ -13,6 +13,7 @@ import 'package:stock_app/features/profile/screens/app_code_screen.dart';
 import 'package:stock_app/features/auth/screens/code_login_screen.dart';
 import 'package:stock_app/features/profile/screens/link_web_session_screen.dart';
 import 'features/portfolio/screens/portfolio_screen.dart';
+import 'package:stock_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:stock_app/features/news/screens/news_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stock_app/core/theme/app_theme.dart';
@@ -64,7 +65,7 @@ final _router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
     GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
-    GoRoute(path: '/dashboard', builder: (context, state) => const PortfolioScreen(navIndex: 5)),
+    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
     GoRoute(path: '/ipo', builder: (context, state) => const BidsScreen()),
     GoRoute(path: '/app-code', builder: (context, state) => const AppCodeScreen()),
     GoRoute(path: '/code-login', builder: (context, state) => const CodeLoginScreen()),
