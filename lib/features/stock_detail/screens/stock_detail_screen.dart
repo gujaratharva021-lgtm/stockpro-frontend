@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
@@ -1025,7 +1025,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                     ])),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       const Text('P&L', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                      Text('${holdingPnl >= 0 ? '+' : ''}?${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('${holdingPnl >= 0 ? '+' : ''}₹${holdingPnl.toStringAsFixed(2)}', style: TextStyle(color: holdingPnl >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13)),
                     ])),
                   ]),
                 ],

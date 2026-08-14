@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +9,8 @@ import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/portfolio/screens/family_screen.dart';
 
 class PortfolioScreen extends StatefulWidget {
-  const PortfolioScreen({super.key});
+  final int navIndex;
+  const PortfolioScreen({super.key, this.navIndex = 2});
   @override
   State<PortfolioScreen> createState() => _PortfolioScreenState();
 }
@@ -396,7 +397,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   @override
   Widget build(BuildContext context) {
     return MainShell(
-      currentIndex: 2,
+      currentIndex: widget.navIndex,
       child: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
@@ -656,7 +657,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         children: [
           Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('—', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       );
     }
@@ -851,7 +852,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                     const SizedBox(height: 6),
                     Text(
                       type == 'Regular'
-                          ? 'Qty: ${data['quantity']} � Avg ?${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} ? Avg ₹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'MTF'
                           ? 'Qty: ${data['quantity']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'Futures'

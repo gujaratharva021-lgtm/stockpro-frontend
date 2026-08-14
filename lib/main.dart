@@ -8,14 +8,12 @@ import 'package:stock_app/features/auth/screens/splash_screen.dart';
 import 'package:stock_app/features/auth/screens/login_screen.dart';
 import 'package:stock_app/features/auth/screens/signup_screen.dart';
 import 'package:stock_app/features/watchlist/screens/watchlist_screen.dart';
-import 'package:stock_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:stock_app/features/ipo/screens/bids_screen.dart';
 import 'package:stock_app/features/profile/screens/app_code_screen.dart';
 import 'package:stock_app/features/auth/screens/code_login_screen.dart';
 import 'package:stock_app/features/profile/screens/link_web_session_screen.dart';
-import 'package:stock_app/features/portfolio/screens/portfolio_screen.dart';
+import 'features/portfolio/screens/portfolio_screen.dart';
 import 'package:stock_app/features/news/screens/news_screen.dart';
-
 import 'package:provider/provider.dart';
 import 'package:stock_app/core/theme/app_theme.dart';
 import 'package:stock_app/core/theme/theme_provider.dart';
@@ -36,7 +34,6 @@ import 'package:stock_app/features/notifications/screens/notifications_screen.da
 import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -60,7 +57,6 @@ void main() async {
     ),
   );
 }
-
 final _router = GoRouter(
   initialLocation: '/splash',
   routes: [
@@ -68,7 +64,7 @@ final _router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
     GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
-    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+    GoRoute(path: '/dashboard', builder: (context, state) => const PortfolioScreen(navIndex: 5)),
     GoRoute(path: '/ipo', builder: (context, state) => const BidsScreen()),
     GoRoute(path: '/app-code', builder: (context, state) => const AppCodeScreen()),
     GoRoute(path: '/code-login', builder: (context, state) => const CodeLoginScreen()),
@@ -93,10 +89,8 @@ final _router = GoRouter(
     GoRoute(path: '/sip', builder: (context, state) => const SipScreen()),
   ],
 );
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
@@ -109,4 +103,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

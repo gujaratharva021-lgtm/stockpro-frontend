@@ -57,7 +57,7 @@ class _BasketScreenState extends State<BasketScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Buy ${basket.items.length} stocks for approximately ?${basket.totalValue.toStringAsFixed(2)}?'),
+            Text('Buy ${basket.items.length} stocks for approximately ₹${basket.totalValue.toStringAsFixed(2)}?'),
             const SizedBox(height: 6),
             const Text(
               'Prices shown are estimates from when items were added. Actual execution price for each stock may differ slightly at the time of order placement.',
