@@ -281,7 +281,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Filter', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Filter', style: AppTypography.screenTitle),
                     TextButton(
                       onPressed: () {
                         setState(() { _sortBy = 'default'; _searchQuery = ''; _searchController.clear(); });

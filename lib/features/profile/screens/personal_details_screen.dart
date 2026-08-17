@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/profile/screens/bank_accounts_screen.dart';
 import 'package:stock_app/features/profile/screens/kyc_documents_screen.dart';
 import 'package:dio/dio.dart';
@@ -80,7 +81,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('Personal Details', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('Personal Details', style: AppTypography.screenTitle)),
                   if (!_editing)
                     TextButton(
                       onPressed: () => setState(() => _editing = true),

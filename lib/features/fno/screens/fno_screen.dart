@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class FnOScreen extends StatefulWidget {
   const FnOScreen({super.key});
@@ -445,7 +446,7 @@ class _NewPositionSheetState extends State<_NewPositionSheet> {
               const SizedBox(height: 16),
               Text(
                 widget.isOptions ? 'Buy Option' : 'Open Futures Position',
-                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                style: AppTypography.screenTitle,
               ),
               const SizedBox(height: 16),
 

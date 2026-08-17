@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class FundDetailScreen extends StatefulWidget {
@@ -139,7 +140,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Start SIP', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                        const Text('Start SIP', style: AppTypography.screenTitle),
                         Text(_fund?['name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),

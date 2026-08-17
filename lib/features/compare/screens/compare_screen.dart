@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class CompareScreen extends StatefulWidget {
   const CompareScreen({super.key});
@@ -100,7 +101,7 @@ class _CompareScreenState extends State<CompareScreen> {
                   ),
                   const Text(
                     'Compare Stocks',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                 ],
               ),

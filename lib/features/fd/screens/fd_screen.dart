@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/fd/screens/fd_invest_screen.dart';
 
 class FdScreen extends StatefulWidget {
@@ -66,7 +67,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                   ),
                   const Text(
                     'Fixed Deposits',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                 ],
               ),
@@ -188,7 +189,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                         children: [
                           const Text('Interest Rate', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
                           Text('${rate.toStringAsFixed(2)}%',
-                              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                              style: AppTypography.screenTitle),
                         ],
                       ),
                       Column(

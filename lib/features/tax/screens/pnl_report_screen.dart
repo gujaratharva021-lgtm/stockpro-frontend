@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class PnLReportScreen extends StatefulWidget {
   const PnLReportScreen({super.key});
@@ -58,7 +59,7 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                   ),
                   const Text(
                     'P&L Report',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                 ],
               ),

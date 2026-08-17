@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/mutualfunds/screens/fund_detail_screen.dart';
 
 class MutualFundsScreen extends StatefulWidget {
@@ -87,7 +88,7 @@ class _MutualFundsScreenState extends State<MutualFundsScreen> {
                         icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const Expanded(child: Text('Mutual Funds', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                      const Expanded(child: Text('Mutual Funds', style: AppTypography.screenTitle)),
                     ],
                   ),
                 ),

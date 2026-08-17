@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class AssistantScreen extends StatefulWidget {
   const AssistantScreen({super.key});
@@ -160,7 +161,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
           const SizedBox(height: 16),
           const Center(
             child: Text('How can I help you today?',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: AppTypography.screenTitle),
           ),
           const SizedBox(height: 6),
           const Center(

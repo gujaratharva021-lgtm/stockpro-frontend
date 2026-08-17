@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
 import 'package:stock_app/features/mtf/screens/mtf_open_screen.dart';
 
@@ -79,7 +80,7 @@ class _MtfScreenState extends State<MtfScreen> {
                   ),
                   const Text(
                     'MTF',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                 ],
               ),

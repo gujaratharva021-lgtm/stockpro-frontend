@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -56,7 +57,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: const Icon(Icons.trending_up, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 10),
-              const Text('OneInvest', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('OneInvest', style: AppTypography.screenTitle),
             ],
           ),
           const SizedBox(height: 32),

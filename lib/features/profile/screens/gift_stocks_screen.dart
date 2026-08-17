@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class GiftStocksScreen extends StatefulWidget {
   const GiftStocksScreen({super.key});
@@ -156,7 +157,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Gift a Stock', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Text('Gift a Stock', style: AppTypography.screenTitle),
                   const SizedBox(height: 16),
                   TextField(
                     controller: emailCtrl,
@@ -390,7 +391,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('Gift Stocks', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('Gift Stocks', style: AppTypography.screenTitle)),
                   IconButton(icon: const Icon(Icons.add_circle_outline, color: AppColors.primary), onPressed: _showSendSheet),
                 ],
               ),

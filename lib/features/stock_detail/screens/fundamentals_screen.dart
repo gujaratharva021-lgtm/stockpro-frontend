@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class FundamentalsScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -141,7 +142,7 @@ class _FundamentalsScreenState extends State<FundamentalsScreen> {
                   if (price != null)
                     Row(
                       children: [
-                        Text(price.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(price.toStringAsFixed(2), style: AppTypography.screenTitle),
                         const SizedBox(width: 8),
                         Text('(${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%)', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
                       ],
