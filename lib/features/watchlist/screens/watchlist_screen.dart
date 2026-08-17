@@ -8,6 +8,7 @@ import 'package:stock_app/features/search/screens/search_screen.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
 import 'package:stock_app/shared/widgets/empty_state.dart';
 import 'package:stock_app/shared/widgets/error_state.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class WatchlistScreen extends StatefulWidget {
   const WatchlistScreen({super.key});
@@ -131,7 +132,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           children: [
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('Switch Watchlist', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+              child: Text('Switch Watchlist', style: AppTypography.titleMedium),
             ),
             ..._listNames.map((name) {
               final isActive = name == _selectedList;
@@ -216,7 +217,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(item['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+              child: Text(item['symbol'] ?? '', style: AppTypography.titleMedium),
             ),
             ListTile(
               leading: const Icon(Icons.bar_chart_outlined, color: AppColors.textSecondary),
@@ -265,7 +266,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_selectedList, style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.bold)),
+            Text(_selectedList, style: AppTypography.titleLarge),
             const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary, size: 22),
           ],
         ),
@@ -336,13 +337,13 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
+                  Text(item['symbol'] ?? '', style: AppTypography.priceMedium),
                   const SizedBox(height: 2),
                   Text(
                     item['company_name'] ?? '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: AppTypography.bodySecondary,
                   ),
                 ],
               ),
@@ -352,7 +353,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               child: Text(
                 price != null ? price.toStringAsFixed(2) : '--',
                 textAlign: TextAlign.right,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500),
+                style: AppTypography.body,
               ),
             ),
             SizedBox(
