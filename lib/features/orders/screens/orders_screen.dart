@@ -3,6 +3,9 @@ import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/shared/widgets/status_badge.dart';
+import 'package:stock_app/shared/widgets/app_card.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
 import 'package:stock_app/features/profile/screens/tradebook_screen.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
@@ -159,11 +162,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   void _showOrderDetail(Map<String, dynamic> order) {
     final isBuy = order['buy_sell'] == 'BUY';
     final status = order['status'] ?? '';
-    final statusColor = status == 'REJECTED'
-        ? AppColors.danger
-        : status == 'EXECUTED'
-            ? AppColors.success
-            : AppColors.textMuted;
     final qty = order['quantity'] ?? 0;
     final filledQty = status == 'EXECUTED' ? qty : 0;
     final createdAt = order['created_at'] != null ? DateTime.tryParse(order['created_at']) : null;
@@ -183,7 +181,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
-              Text(order['symbol'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary)),
+              Text(order['symbol'] ?? '', style: AppTypography.titleLarge.copyWith(fontSize: 18)),
               const SizedBox(height: 6),
               Row(children: [
                 Container(
@@ -192,11 +190,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                   child: Text(order['buy_sell'] ?? '', style: TextStyle(color: isBuy ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 11)),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11)),
-                ),
+                StatusBadge(label: status, tone: _statusTone(status)),
               ]),
               if (status == 'REJECTED') ...[
                 const SizedBox(height: 14),
@@ -605,24 +599,31 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   double get _openOrdersValue => _pendingOrders
       .fold(0.0, (sum, o) => sum + ((o['quantity'] as num?)?.toDouble() ?? 0) * ((o['trigger_price'] as num?)?.toDouble() ?? 0));
   int get _pendingCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
+
+  // Bug fix: order status color must reflect the order's actual status
+  // (rejected/executed/pending), not which side (buy/sell) it was on --
+  // a rejected BUY order should never render in "success" green just
+  // because buy-side happens to use green elsewhere.
+  AppStatusTone _statusTone(String status) {
+    if (status == 'REJECTED') return AppStatusTone.error;
+    if (status == 'EXECUTED') return AppStatusTone.positive;
+    return AppStatusTone.warning;
+  }
   int get _partialCount => _pendingOrders.where((o) => o['status'] == 'PARTIAL').length;
 
   Widget _buildStatsBar() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: AppCard(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Row(
         children: [
           Expanded(child: _statItem(_openOrdersCount.toString(), 'Total Orders', AppColors.primary)),
           Expanded(child: _statItem('\u20b9${_openOrdersValue.toStringAsFixed(0)}', 'Total Value', AppColors.success)),
-          Expanded(child: _statItem(_pendingCount.toString(), 'Pending', const Color(0xFFF59E0B))),
+          Expanded(child: _statItem(_pendingCount.toString(), 'Pending', AppColors.warning)),
           Expanded(child: _statItem(_partialCount.toString(), 'Partial', const Color(0xFF7C3AED))),
         ],
+      ),
       ),
     );
   }
@@ -685,11 +686,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                   Expanded(
                     child: Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), overflow: TextOverflow.ellipsis),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                    child: Text(status, style: TextStyle(color: accentColor, fontSize: 11, fontWeight: FontWeight.w600)),
-                  ),
+                  StatusBadge(label: status, tone: _statusTone(status)),
                 ],
               ),
               const SizedBox(height: 10),
