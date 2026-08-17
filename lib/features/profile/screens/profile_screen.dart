@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/profile/screens/personal_details_screen.dart';
 import 'package:stock_app/features/profile/screens/funds_screen.dart';
 import 'package:stock_app/features/assistant/screens/assistant_screen.dart';
@@ -22,7 +23,7 @@ import 'package:stock_app/core/services/privacy_mode_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 
 const Color _kPurple = Color(0xFF7C6FF0);
-const Color _kOrange = Color(0xFFF59E0B);
+const Color _kOrange = AppColors.warning;
 const Color _kTeal = Color(0xFF14B8A6);
 const Color _kDarkBanner = Color(0xFF0F241C);
 
@@ -490,7 +491,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Quick Access', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                            const Text('Quick Access', style: AppTypography.screenTitle),
                             const SizedBox(height: 14),
                             GridView.count(
                               crossAxisCount: 4,

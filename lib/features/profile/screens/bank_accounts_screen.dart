@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class BankAccountsScreen extends StatefulWidget {
   const BankAccountsScreen({super.key});
@@ -117,7 +118,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Add Bank Account', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                const Text('Add Bank Account', style: AppTypography.screenTitle),
                 const SizedBox(height: 16),
                 _input('Bank Name', bankNameCtrl),
                 const SizedBox(height: 12),
@@ -212,7 +213,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('Bank Accounts', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('Bank Accounts', style: AppTypography.screenTitle)),
                   IconButton(icon: const Icon(Icons.add_circle_outline, color: AppColors.primary), onPressed: _showAddSheet),
                 ],
               ),

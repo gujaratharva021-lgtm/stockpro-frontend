@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:dio/dio.dart';
 
 class SecurityScreen extends StatefulWidget {
@@ -32,7 +33,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
-              const Text('Change Password', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+              const Text('Change Password', style: AppTypography.screenTitle),
               const SizedBox(height: 20),
               _passField('Current Password', currentController, showCurrent, () => setS(() => showCurrent = !showCurrent)),
               const SizedBox(height: 14),
@@ -123,7 +124,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('Security', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('Security', style: AppTypography.screenTitle)),
                 ],
               ),
             ),
