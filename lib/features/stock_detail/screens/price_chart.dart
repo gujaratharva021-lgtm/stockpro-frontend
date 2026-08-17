@@ -2,6 +2,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/services/api_service.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class PriceChart extends StatefulWidget {
   final List<dynamic> history;
@@ -133,7 +134,7 @@ class _PriceChartState extends State<PriceChart> {
           child: _loadingIntraday
               ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
               : _isIntraday && _intradayData.isEmpty
-              ? const Center(child: Text('No intraday data available', style: TextStyle(color: AppColors.textMuted, fontSize: 12)))
+              ? const Center(child: Text('No intraday data available', style: AppTypography.bodySecondary))
               : spots.isEmpty
               ? const Center(child: Text('No data', style: TextStyle(color: AppColors.textMuted)))
               : _isCandlestick
@@ -315,7 +316,7 @@ class _CandlestickPainter extends CustomPainter {
       if (close == 0) continue;
 
       final isUp = close >= open;
-      final color = isUp ? const Color(0xFF16A34A) : const Color(0xFFEF4444);
+      final color = isUp ? AppColors.success : AppColors.danger;
       final paint = Paint()..color = color..style = PaintingStyle.fill;
       final wickPaint = Paint()..color = color..strokeWidth = 1.0;
 
