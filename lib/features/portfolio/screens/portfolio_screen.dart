@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/shared/widgets/error_state.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/portfolio/screens/family_screen.dart';
 
@@ -87,8 +88,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       final myEtfs = results[4] as List<dynamic>;
       final mtfPositions = results[5] as List<dynamic>;
       final unsettledPositions = results[6] as List<dynamic>;
-      final futures = results[6] as List<dynamic>;
-      final options = results[7] as List<dynamic>;
+      final futures = results[7] as List<dynamic>;
+      final options = results[8] as List<dynamic>;
 
       setState(() {
         _holdings = holdings;
@@ -252,7 +253,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
@@ -401,7 +402,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       child: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.cardBackground,
           onRefresh: _loadAll,
           child: CustomScrollView(
             slivers: [
@@ -454,7 +455,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               if (_loading)
                 const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
               else if (_error != null)
-                SliverFillRemaining(child: Center(child: Text(_error!, style: const TextStyle(color: AppColors.textSecondary))))
+                SliverFillRemaining(child: ErrorState(message: _error!, onRetry: _loadAll))
               else ...[
                   if (_tab == 0) ..._buildHoldingsTab(),
                   if (_tab == 1) ..._buildPositionsTab(),
@@ -703,7 +704,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   Future<void> _showImportHoldings() async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => DraggableScrollableSheet(
