@@ -10,6 +10,7 @@ import 'package:stock_app/shared/widgets/app_card.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
 import 'package:stock_app/shared/widgets/section_header.dart';
 import 'package:stock_app/shared/widgets/error_state.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class MarketsScreen extends StatefulWidget {
   const MarketsScreen({super.key});
@@ -204,7 +205,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Market Indices', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                      const Text('Market Indices', style: AppTypography.titleMedium),
                       GestureDetector(onTap: () {}, child: const Text('View All >', style: TextStyle(color: AppColors.primaryDark, fontSize: 12))),
                     ],
                   ),
@@ -260,10 +261,10 @@ class _MarketsScreenState extends State<MarketsScreen> {
 
   Widget _indexCard(String label, Map<String, dynamic> data, List<double>? spots) {
     final isUp = data['isUp'] == true;
-    return Container(
+    return SizedBox(
       width: 150,
+      child: AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
       child: Row(
         children: [
           Expanded(
@@ -302,6 +303,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
             ),
         ],
       ),
+      ),
     );
   }
 
@@ -337,7 +339,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(stock['company_name'] ?? stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                            Text(stock['company_name'] ?? stock['symbol'] ?? '', style: AppTypography.titleMedium),
                             Text('₹${price.toStringAsFixed(2)} / share', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                           ],
                         ),
@@ -373,7 +375,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total Amount', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                        Text('₹${total.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('₹${total.toStringAsFixed(2)}', style: AppTypography.titleMedium),
                       ],
                     ),
                   ),
