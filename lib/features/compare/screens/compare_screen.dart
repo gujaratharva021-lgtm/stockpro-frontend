@@ -37,7 +37,7 @@ class _CompareScreenState extends State<CompareScreen> {
   Future<void> _pickStock(bool isA) async {
     final selected = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -487,7 +487,7 @@ class _StockPickerSheetState extends State<_StockPickerSheet> {
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: AppColors.primaryLight,
-                    child: Text((s['symbol'] ?? '?').toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
+                    child: Text((s['symbol'] == null || s['symbol'].toString().isEmpty) ? '?' : s['symbol'].toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
                   ),
                   title: Text(s['symbol'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(s['company_name'] ?? ''),

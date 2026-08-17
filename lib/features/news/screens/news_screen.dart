@@ -43,7 +43,7 @@ class _NewsScreenState extends State<NewsScreen> {
       child: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.cardBackground,
           onRefresh: _load,
           child: CustomScrollView(
             slivers: [
