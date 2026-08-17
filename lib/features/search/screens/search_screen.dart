@@ -7,6 +7,7 @@ import 'package:stock_app/shared/widgets/stock_logo.dart';
 import 'package:stock_app/shared/widgets/app_card.dart';
 import 'package:stock_app/shared/widgets/empty_state.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class SearchScreen extends StatefulWidget {
   final bool selectMode;
@@ -105,7 +106,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         controller: _controller,
                         autofocus: true,
                         onChanged: _onChanged,
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                        style: AppTypography.body,
                         decoration: InputDecoration(
                           hintText: 'Search stocks by name or symbol',
                           hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
@@ -215,7 +216,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                                  Text(stock['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                  Text(stock['company_name'] ?? '', style: AppTypography.bodySecondary),
                                 ],
                               ),
                             ),
