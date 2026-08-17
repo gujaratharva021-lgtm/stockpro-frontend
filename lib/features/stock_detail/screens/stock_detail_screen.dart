@@ -9,6 +9,7 @@ import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
 import 'package:stock_app/shared/widgets/stock_logo.dart';
 import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 import 'package:stock_app/features/orders/order_submit_helper.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -245,7 +246,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
-              const Text('Add to Basket', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Add to Basket', style: AppTypography.titleMedium),
               const SizedBox(height: 4),
               Text('${widget.stock['symbol']} • ₹${currentPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 16),
@@ -757,7 +758,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(stock['symbol'] ?? '', style: AppTypography.titleMedium),
                       Text(stock['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ]),
                   ),
@@ -865,7 +866,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
               ]),
             )
           else ...[
-              Text('₹${price?.toStringAsFixed(2) ?? '--'}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 32, fontWeight: FontWeight.bold)),
+              Text('₹${price?.toStringAsFixed(2) ?? '--'}', style: AppTypography.priceHero),
               const SizedBox(height: 4),
               Row(children: [
                 Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, color: isUp ? AppColors.success : AppColors.danger, size: 14),
