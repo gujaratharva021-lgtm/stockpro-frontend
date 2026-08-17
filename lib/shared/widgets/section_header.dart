@@ -6,12 +6,16 @@ import 'package:stock_app/core/theme/app_colors.dart';
 /// "See all" link.
 class SectionHeader extends StatelessWidget {
   final String title;
+  final IconData? icon;
+  final Color? iconColor;
   final String? actionLabel;
   final VoidCallback? onAction;
 
   const SectionHeader({
     super.key,
     required this.title,
+    this.icon,
+    this.iconColor,
     this.actionLabel,
     this.onAction,
   });
@@ -21,12 +25,25 @@ class SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+        Expanded(
+          child: Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 18, color: iconColor ?? AppColors.primary),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         if (actionLabel != null)

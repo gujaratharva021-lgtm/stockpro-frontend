@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
+import 'package:stock_app/shared/widgets/app_card.dart';
+import 'package:stock_app/shared/widgets/price_change.dart';
+import 'package:stock_app/shared/widgets/section_header.dart';
+import 'package:stock_app/shared/widgets/status_badge.dart';
 import 'package:stock_app/core/constants/nifty_symbols.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
 import 'package:stock_app/features/wallet/screens/wallet_history_screen.dart';
@@ -17,13 +21,12 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Dark palette local to this screen only -- the rest of the app still
-  // uses the light AppColors theme, so these are scoped here rather than
-  // changed globally.
+  // Hero-gradient-specific colors only. Card surfaces/borders now come from
+  // AppCard/AppColors (Phase 2 design-system consolidation) -- these two
+  // remain screen-local because the hero section's gradient and its muted
+  // text tone are a deliberate one-off treatment, not reused elsewhere.
   static const _bgTop = Color(0xFF15303A);
   static const _bgBottom = Color(0xFF0A0E14);
-  static const _surface = Color(0xFF141B23);
-  static const _border = Color(0xFF232B36);
   static const _textMutedD = Color(0xFF8A93A3);
 
   bool _loading = true;
@@ -279,7 +282,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final change = ending - beginning;
     final changePct = beginning != 0 ? (change / beginning) * 100 : 0.0;
     final isUp = change >= 0;
-    final trendColor = isUp ? const Color(0xFF3DDC84) : const Color(0xFFFF6B6B);
+    final trendColor = isUp ? AppColors.success : AppColors.danger;
 
     final showingPerf = _valueTab == 'Performance';
     final rawSpots = <FlSpot>[
@@ -544,25 +547,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _topHoldingsCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.pie_chart_rounded, color: Color(0xFF4A9EFF), size: 18),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Top Holdings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-              ),
-              GestureDetector(
-                onTap: () => context.go('/portfolio'),
-                child: const Text('See all', style: TextStyle(fontSize: 12.5, color: Color(0xFF4A9EFF), fontWeight: FontWeight.w600)),
-              ),
-            ],
+          SectionHeader(
+            title: 'Top Holdings',
+            icon: Icons.pie_chart_rounded,
+            iconColor: const Color(0xFF4A9EFF),
+            actionLabel: 'See all',
+            onAction: () => context.go('/portfolio'),
           ),
           const SizedBox(height: 16),
           if (_holdings.isEmpty)
@@ -586,7 +581,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
               final ltp = _priceOf(symbol);
               final pct = _changePctOf(symbol);
-              final color = pct >= 0 ? const Color(0xFF3DDC84) : const Color(0xFFFF6B6B);
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
@@ -616,7 +610,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(ltp != null ? '\u20b9${ltp.toStringAsFixed(2)}' : '-',
                             style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
-                        Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%', style: TextStyle(fontSize: 11.5, color: color, fontWeight: FontWeight.w600)),
+                        PriceChange(change: pct, changePercent: pct, fontSize: 11.5, showParens: false),
                       ],
                     ),
                   ],
@@ -629,25 +623,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _watchlistStrip(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 18),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Watchlist', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-              ),
-              GestureDetector(
-                onTap: () => context.go('/watchlist'),
-                child: const Text('Show All', style: TextStyle(fontSize: 12.5, color: Color(0xFF4A9EFF), fontWeight: FontWeight.w600)),
-              ),
-            ],
+          SectionHeader(
+            title: 'Watchlist',
+            icon: Icons.star_rounded,
+            iconColor: const Color(0xFFF59E0B),
+            actionLabel: 'Show All',
+            onAction: () => context.go('/watchlist'),
           ),
           const SizedBox(height: 14),
           if (_watchlist.isEmpty)
@@ -664,7 +650,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final w = _watchlist[i];
                   final symbol = (w['symbol'] ?? '').toString();
                   final pct = _changePctOf(symbol);
-                  final color = pct >= 0 ? const Color(0xFF3DDC84) : const Color(0xFFFF6B6B);
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -682,8 +667,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontSize: 10.5, color: Colors.white, fontWeight: FontWeight.w500)),
-                      Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%',
-                          style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w600)),
+                      PriceChange(change: pct, changePercent: pct, fontSize: 9.5, showParens: false),
                     ],
                   );
                 },
@@ -702,9 +686,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         children: [
-          SizedBox(width: cardWidth, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, const Color(0xFF3DDC84))),
+          SizedBox(width: cardWidth, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
           const SizedBox(width: 14),
-          SizedBox(width: cardWidth, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, const Color(0xFFFF6B6B))),
+          SizedBox(width: cardWidth, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
           const SizedBox(width: 14),
           SizedBox(width: cardWidth, child: _iposCard()),
         ],
@@ -713,23 +697,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _moversCard(String title, List<dynamic> list, IconData icon, Color accent) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: accent, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(title,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-              ),
-            ],
-          ),
+          SectionHeader(title: title, icon: icon, iconColor: accent),
           const SizedBox(height: 14),
           if (list.isEmpty)
             Text('No data yet', style: TextStyle(color: _textMutedD, fontSize: 12))
@@ -738,7 +711,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final symbol = s['symbol'];
               final price = _priceOf(symbol);
               final pct = _changePctOf(symbol);
-              final color = pct >= 0 ? const Color(0xFF3DDC84) : const Color(0xFFFF6B6B);
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 7),
                 child: Row(
@@ -767,15 +739,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(color: color.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(6)),
-                          child: Text('${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w600)),
-                        ),
+                        const SizedBox(height: 2),
+                        PriceChange(change: pct, changePercent: pct, fontSize: 9.5, showParens: false),
                       ],
                     ),
                   ],
@@ -788,23 +753,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _iposCard() {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.rocket_launch_rounded, color: Color(0xFF7C3AED), size: 18),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Upcoming IPOs',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-              ),
-            ],
-          ),
+          const SectionHeader(title: 'Upcoming IPOs', icon: Icons.rocket_launch_rounded, iconColor: Color(0xFF7C3AED)),
           const SizedBox(height: 14),
           if (_ipos.isEmpty)
             Text('No IPOs right now', style: TextStyle(color: _textMutedD, fontSize: 12))
@@ -823,16 +777,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: (isOpen ? const Color(0xFF3DDC84) : const Color(0xFFF59E0B)).withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(status,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 9.5, color: isOpen ? const Color(0xFF3DDC84) : const Color(0xFFF59E0B), fontWeight: FontWeight.w600)),
+                    StatusBadge(
+                      label: status,
+                      tone: isOpen ? AppStatusTone.positive : AppStatusTone.warning,
                     ),
                   ],
                 ),
@@ -851,22 +798,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       spots.add(FlSpot(i.toDouble(), close));
     }
     final isUp = spots.length > 1 ? spots.last.y >= spots.first.y : true;
-    final trendColor = isUp ? const Color(0xFF3DDC84) : const Color(0xFFFF6B6B);
+    final trendColor = isUp ? AppColors.success : AppColors.danger;
 
-    return Container(
-      padding: const EdgeInsets.all(24),
+    return SizedBox(
       height: 340,
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
+      child: AppCard(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.show_chart_rounded, color: trendColor, size: 18),
-              const SizedBox(width: 8),
-              const Text('Market overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-            ],
-          ),
+          SectionHeader(title: 'Market overview', icon: Icons.show_chart_rounded, iconColor: trendColor),
           const SizedBox(height: 18),
           Expanded(
             child: spots.isEmpty
@@ -897,6 +838,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
           ),
         ],
+      ),
       ),
     );
   }
