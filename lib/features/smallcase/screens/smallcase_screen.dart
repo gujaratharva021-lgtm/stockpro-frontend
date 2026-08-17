@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
-
-const _bg = Color(0xFFF5F6FA);
-const _card = Color(0xFFFFFFFF);
-const _cardBorder = Color(0xFFE8EAF0);
-const _accent = Color(0xFF3B4FE8);
-const _textPrimary = Color(0xFF111827);
-const _textSub = Color(0xFF6B7280);
-const _green = Color(0xFF16A34A);
-const _red = Color(0xFFDC2626);
+import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class SmallcaseScreen extends StatefulWidget {
   const SmallcaseScreen({super.key});
@@ -126,28 +119,28 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
 
   Color _riskColor(String risk) {
     switch (risk) {
-      case 'Low': return _green;
-      case 'Medium': return const Color(0xFFF59E0B);
-      case 'High': return _red;
-      default: return _textSub;
+      case 'Low': return AppColors.success;
+      case 'Medium': return AppColors.warning;
+      case 'High': return AppColors.danger;
+      default: return AppColors.textMuted;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: _card,
+        backgroundColor: AppColors.cardBackground,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: _textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('smallcase', style: TextStyle(color: _textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('smallcase', style: AppTypography.screenTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: _textPrimary),
+            icon: const Icon(Icons.search, color: AppColors.textPrimary),
             onPressed: () {},
           ),
         ],
@@ -161,7 +154,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF3B4FE8), Color(0xFF8B5CF6)],
+                colors: [AppColors.primary, Color(0xFF8B5CF6)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -180,7 +173,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('Explore All', style: TextStyle(color: Color(0xFF3B4FE8), fontWeight: FontWeight.bold, fontSize: 13)),
+                  child: const Text('Explore All', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
               ],
             ),
@@ -201,14 +194,14 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? _accent : _card,
+                      color: selected ? AppColors.primary : AppColors.cardBackground,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: selected ? _accent : _cardBorder),
+                      border: Border.all(color: selected ? AppColors.primary : AppColors.border),
                     ),
                     child: Text(
                       _categories[index],
                       style: TextStyle(
-                        color: selected ? Colors.white : _textSub,
+                        color: selected ? Colors.white : AppColors.textMuted,
                         fontSize: 12,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                       ),
@@ -233,9 +226,9 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: _card,
+                    color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: AppColors.border),
                     boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
                   ),
                   child: Column(
@@ -257,22 +250,22 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(sc['name'], style: const TextStyle(color: _textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                                Text(sc['description'], style: const TextStyle(color: _textSub, fontSize: 11), overflow: TextOverflow.ellipsis),
+                                Text(sc['name'], style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                                Text(sc['description'], style: const TextStyle(color: AppColors.textMuted, fontSize: 11), overflow: TextOverflow.ellipsis),
                               ],
                             ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(sc['returns'], style: TextStyle(color: isUp ? _green : _red, fontWeight: FontWeight.bold, fontSize: 15)),
-                              Text('1Y returns', style: const TextStyle(color: _textSub, fontSize: 10)),
+                              Text(sc['returns'], style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 15)),
+                              Text('1Y returns', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
                             ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      const Divider(height: 1, color: Color(0xFFE8EAF0)),
+                      const Divider(height: 1, color: AppColors.border),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -289,7 +282,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                         child: ElevatedButton(
                           onPressed: () => _showInvestDialog(context, sc),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _accent,
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -311,9 +304,9 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
 
   Widget _infoChip(IconData icon, String label) {
     return Row(children: [
-      Icon(icon, color: _textSub, size: 13),
+      Icon(icon, color: AppColors.textMuted, size: 13),
       const SizedBox(width: 4),
-      Text(label, style: const TextStyle(color: _textSub, fontSize: 11)),
+      Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
     ]);
   }
 
@@ -330,9 +323,9 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
 
   Widget _ratingChip(double rating) {
     return Row(children: [
-      const Icon(Icons.star, color: Color(0xFFF59E0B), size: 13),
+      const Icon(Icons.star, color: AppColors.warning, size: 13),
       const SizedBox(width: 3),
-      Text(rating.toString(), style: const TextStyle(color: _textPrimary, fontSize: 11, fontWeight: FontWeight.w600)),
+      Text(rating.toString(), style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600)),
     ]);
   }
 
@@ -341,6 +334,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => Padding(
         padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
@@ -349,13 +343,13 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(sc['name'], style: const TextStyle(color: _textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
-              Text(sc['returns'], style: TextStyle(color: sc['isUp'] ? _green : _red, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(sc['name'], style: AppTypography.screenTitle),
+              Text(sc['returns'], style: TextStyle(color: sc['isUp'] ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 16)),
             ]),
             const SizedBox(height: 4),
-            Text('Min Investment: ${sc['minInvest']}', style: const TextStyle(color: _textSub, fontSize: 13)),
+            Text('Min Investment: ${sc['minInvest']}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
             const SizedBox(height: 20),
-            const Text('Enter Amount', style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+            const Text('Enter Amount', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 8),
             TextField(
               controller: amountController,
@@ -363,12 +357,12 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
               decoration: InputDecoration(
                 prefixText: '₹ ',
                 hintText: sc['minInvest'].toString().replaceAll('₹', '').replaceAll(',', ''),
-                hintStyle: const TextStyle(color: _textSub),
+                hintStyle: const TextStyle(color: AppColors.textMuted),
                 filled: true,
-                fillColor: const Color(0xFFF5F6FA),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE8EAF0))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE8EAF0))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _accent, width: 2)),
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
               ),
             ),
             const SizedBox(height: 12),
@@ -390,7 +384,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                   final amount = amountController.text.trim();
                   if (amount.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an amount'), backgroundColor: _red),
+                      const SnackBar(content: Text('Please enter an amount'), backgroundColor: AppColors.danger),
                     );
                     return;
                   }
@@ -398,13 +392,13 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('✅ ₹$amount invested in ${sc['name']}!'),
-                      backgroundColor: _green,
+                      backgroundColor: AppColors.success,
                       duration: const Duration(seconds: 3),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -425,11 +419,11 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: _accent.withValues(alpha: 0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _accent.withValues(alpha: 0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
-          child: Text(label, textAlign: TextAlign.center, style: const TextStyle(color: _accent, fontWeight: FontWeight.w600, fontSize: 12)),
+          child: Text(label, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
         ),
       ),
     );
