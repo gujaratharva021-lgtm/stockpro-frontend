@@ -15,9 +15,7 @@ import 'package:stock_app/features/profile/screens/link_web_session_screen.dart'
 import 'features/portfolio/screens/portfolio_screen.dart';
 import 'package:stock_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:stock_app/features/news/screens/news_screen.dart';
-import 'package:provider/provider.dart';
 import 'package:stock_app/core/theme/app_theme.dart';
-import 'package:stock_app/core/theme/theme_provider.dart';
 import 'package:stock_app/features/onboarding/screens/onboarding_flow.dart';
 import 'package:stock_app/features/onboarding/screens/kyc_success_screen.dart';
 import 'package:stock_app/features/profile/screens/profile_screen.dart';
@@ -51,12 +49,7 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init failed: $e');
   }
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 final _router = GoRouter(
   initialLocation: '/splash',
@@ -97,8 +90,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'OneInvest',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light().copyWith(
-        textTheme: GoogleFonts.notoSansTextTheme(AppTheme.light().textTheme),
+      theme: AppTheme.dark().copyWith(
+        textTheme: GoogleFonts.notoSansTextTheme(AppTheme.dark().textTheme),
       ),
       routerConfig: _router,
     );

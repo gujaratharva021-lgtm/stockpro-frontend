@@ -21,7 +21,6 @@ dependencies:
   web_socket_channel: ^3.0.3
   image_picker: ^1.2.2
   intl: ^0.20.2
-  provider: ^6.1.5+1
   candlesticks: ^2.1.0
   csv: ^6.0.0
   pdf: ^3.11.1
