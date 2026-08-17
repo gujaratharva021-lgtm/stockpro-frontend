@@ -6,6 +6,8 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/shared/widgets/error_state.dart';
+import 'package:stock_app/shared/widgets/empty_state.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/portfolio/screens/family_screen.dart';
 
@@ -491,11 +493,11 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                Text(label, style: AppTypography.label),
                 const SizedBox(height: 2),
                 Text(
                   '${isUp ? '+' : ''}₹${value.toStringAsFixed(2)} (${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%)',
-                  style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: AppTypography.changeText.copyWith(color: color),
                 ),
               ],
             ),
@@ -519,11 +521,11 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Net Liquidation Value', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          const Text('Net Liquidation Value', style: AppTypography.label),
           const SizedBox(height: 4),
           Text(
             '₹${_totalCurrentValue.toStringAsFixed(2)}',
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold),
+            style: AppTypography.priceHero,
           ),
           _summaryStatRow('Day P&L', _todayReturns, _todayReturnsPct, trailingLabel: 'Details'),
           _summaryStatRow('Unrealized P&L', _totalReturns, _totalReturnsPct),
@@ -534,16 +536,13 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   List<Widget> _buildHoldingsTab() {
     return [
-
-
-
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Holdings (${_sortedHoldings.length})', style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+              Text('Holdings (${_sortedHoldings.length})', style: AppTypography.titleMedium),
               PopupMenuButton<String>(
                 initialValue: _sortBy,
                 onSelected: (v) => setState(() => _sortBy = v),
@@ -575,14 +574,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.pie_chart_outline, color: AppColors.textMuted, size: 40),
-                  const SizedBox(height: 10),
-                  Text(_searchQuery.isNotEmpty ? 'No holdings match your search' : 'No holdings yet', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                ],
-              ),
+            child: EmptyState(
+              icon: Icons.pie_chart_outline,
+              message: _searchQuery.isNotEmpty ? 'No holdings match your search' : 'No holdings yet',
             ),
           ),
         )
@@ -807,17 +801,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     if (allPositions.isEmpty) {
       return [
         SliverFillRemaining(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.candlestick_chart_outlined, color: AppColors.textMuted, size: 40),
-                const SizedBox(height: 12),
-                const Text('No open positions', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                const SizedBox(height: 4),
-                const Text('MTF, Futures & Options positions appear here', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              ],
-            ),
+          child: EmptyState(
+            icon: Icons.candlestick_chart_outlined,
+            message: 'No open positions\nMTF, Futures & Options positions appear here',
           ),
         ),
       ];
