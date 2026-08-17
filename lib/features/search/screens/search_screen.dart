@@ -4,6 +4,9 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/shared/widgets/stock_logo.dart';
+import 'package:stock_app/shared/widgets/app_card.dart';
+import 'package:stock_app/shared/widgets/empty_state.dart';
+import 'package:stock_app/shared/widgets/price_change.dart';
 
 class SearchScreen extends StatefulWidget {
   final bool selectMode;
@@ -16,6 +19,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
   List<dynamic> _results = [];
   List<dynamic> _allStocks = [];
+  final Map<String, Map<String, dynamic>> _quotes = {};
 
   Timer? _debounce;
 
@@ -50,6 +54,22 @@ class _SearchScreenState extends State<SearchScreen> {
         return symbol.contains(lower) || name.contains(lower);
       }).toList();
     });
+    _loadQuotesForVisibleResults();
+  }
+
+  // Fetches LTP/change for whatever's currently on screen. Capped so a
+  // broad query (e.g. a single letter) can't fan out into dozens of quote
+  // requests -- only the results a user could actually see get fetched.
+  Future<void> _loadQuotesForVisibleResults() async {
+    final visible = _results.take(25);
+    for (final s in visible) {
+      final symbol = s['symbol'];
+      if (symbol == null || _quotes.containsKey(symbol)) continue;
+      try {
+        final quote = await ApiService.getQuote(symbol);
+        if (mounted) setState(() => _quotes[symbol] = quote);
+      } catch (_) {}
+    }
   }
 
   @override
@@ -110,29 +130,15 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             Expanded(
               child: _controller.text.isEmpty
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.search, color: AppColors.textMuted, size: 48),
-                    const SizedBox(height: 12),
-                    const Text('Search for stocks', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                    const SizedBox(height: 4),
-                    const Text('Try "AAPL" or "Reliance"', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  ],
-                ),
-              )
+                  ? const EmptyState(
+                      icon: Icons.search,
+                      message: 'Search for stocks\nTry "AAPL" or "Reliance"',
+                    )
                   : _results.isEmpty
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.search_off, color: AppColors.textMuted, size: 48),
-                    const SizedBox(height: 12),
-                    const Text('No stocks found', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                  ],
-                ),
-              )
+                  ? const EmptyState(
+                      icon: Icons.search_off,
+                      message: 'No stocks found',
+                    )
                   : MediaQuery.of(context).size.width > 768
                   ? GridView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -145,13 +151,16 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemCount: _results.length,
                       itemBuilder: (context, index) {
                         final stock = _results[index];
+                        final symbol = stock['symbol']?.toString();
+                        final quote = _quotes[symbol];
+                        final price = quote != null ? (quote['price'] as num?)?.toDouble() : null;
+                        final changePercent = quote != null ? (quote['change_percent'] as num?)?.toDouble() : null;
                         return GestureDetector(
                           onTap: () => widget.selectMode
                               ? Navigator.pop(context, stock)
                               : Navigator.push(context, MaterialPageRoute(builder: (_) => StockDetailScreen(stock: stock))),
-                          child: Container(
+                          child: AppCard(
                             padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
                             child: Row(children: [
                               StockLogo(symbol: stock['symbol']?.toString(), companyName: stock['company_name']?.toString(), size: 36),
                               const SizedBox(width: 10),
@@ -159,7 +168,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                 Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
                                 Text(stock['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11), overflow: TextOverflow.ellipsis),
                               ])),
-                              Text(stock['exchange'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(stock['exchange'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                                  if (price != null) Text(price.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600)),
+                                  if (changePercent != null) PriceChange(change: changePercent, changePercent: changePercent, fontSize: 9.5, showParens: false),
+                                ],
+                              ),
                             ]),
                           ),
                         );
@@ -170,6 +187,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 itemCount: _results.length,
                 itemBuilder: (context, index) {
                   final stock = _results[index];
+                  final symbol = stock['symbol']?.toString();
+                  final quote = _quotes[symbol];
+                  final price = quote != null ? (quote['price'] as num?)?.toDouble() : null;
+                  final changePercent = quote != null ? (quote['change_percent'] as num?)?.toDouble() : null;
                   return GestureDetector(
                     onTap: () {
                       if (widget.selectMode) {
@@ -183,27 +204,36 @@ class _SearchScreenState extends State<SearchScreen> {
                     },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          StockLogo(symbol: stock['symbol']?.toString(), companyName: stock['company_name']?.toString(), size: 40),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      child: AppCard(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            StockLogo(symbol: stock['symbol']?.toString(), companyName: stock['company_name']?.toString(), size: 40),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                                  Text(stock['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                                Text(stock['company_name'] ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                Text(stock['exchange'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                                if (price != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(price.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+                                ],
+                                if (changePercent != null)
+                                  PriceChange(change: changePercent, changePercent: changePercent, fontSize: 10.5, showParens: false),
                               ],
                             ),
-                          ),
-                          Text(stock['exchange'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
