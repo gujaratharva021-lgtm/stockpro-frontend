@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 
 class HeatmapScreen extends StatefulWidget {
@@ -84,7 +85,7 @@ class _HeatmapScreenState extends State<HeatmapScreen> {
                   ),
                   const Text(
                     'Market Heatmap',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                   const Spacer(),
                   IconButton(

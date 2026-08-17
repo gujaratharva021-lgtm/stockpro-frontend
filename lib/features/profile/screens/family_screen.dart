@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class FamilyScreen extends StatefulWidget {
   const FamilyScreen({super.key});
@@ -134,7 +135,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Add Family Member', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                const Text('Add Family Member', style: AppTypography.screenTitle),
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameCtrl,
@@ -225,7 +226,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('Family', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('Family', style: AppTypography.screenTitle)),
                   IconButton(icon: const Icon(Icons.add_circle_outline, color: AppColors.primary), onPressed: _showAddSheet),
                 ],
               ),

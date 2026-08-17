@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/core/utils/export_helper.dart';
 
 class TaxReportScreen extends StatefulWidget {
@@ -59,7 +60,7 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
                   ),
                   const Text(
                     'Tax P&L Report',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                   const Spacer(),
                   if (_report != null)

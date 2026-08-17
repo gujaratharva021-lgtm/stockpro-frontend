@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:candlesticks/candlesticks.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/core/constants/nifty_symbols.dart';
 
 class TechnicalsScreen extends StatefulWidget {
@@ -614,7 +615,7 @@ class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerPr
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 children: [
-                  Text(symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(symbol, style: AppTypography.screenTitle),
                 ],
               ),
             ),

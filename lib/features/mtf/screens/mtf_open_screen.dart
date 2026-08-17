@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class MtfOpenScreen extends StatefulWidget {
   final Map<String, dynamic> stock;
@@ -107,7 +108,7 @@ class _MtfOpenScreenState extends State<MtfOpenScreen> {
                   Expanded(
                     child: Text(
                       widget.stock['symbol'] ?? '',
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                      style: AppTypography.screenTitle,
                     ),
                   ),
                 ],

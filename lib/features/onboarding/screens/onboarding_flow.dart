@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/core/services/api_service.dart';
 
 class OnboardingFlow extends StatefulWidget {
@@ -242,7 +243,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.person_outline, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('Tell us about yourself', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Tell us about yourself', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('This helps us personalize your trading experience', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -257,7 +258,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.phone_android, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('Verify Mobile Number', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Verify Mobile Number', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       Text('OTP will be sent to +91 ${_phoneController.text}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -321,7 +322,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.badge_outlined, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('PAN Verification', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('PAN Verification', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('Required for regulatory compliance and tax reporting', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -343,7 +344,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.fingerprint, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('Aadhaar E-KYC', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Aadhaar E-KYC', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('OTP will be sent to your Aadhaar-linked mobile number', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -405,7 +406,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.account_balance_outlined, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('Link Bank Account', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Link Bank Account', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('Used to fund your trading wallet and withdrawals', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -419,7 +420,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.description_outlined, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('Income Proof', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Income Proof', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('Required for derivatives (F&O) trading', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -470,7 +471,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget _selfieStep() {
     return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
       const SizedBox(height: 10),
-      const Text('Selfie & IPV', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Selfie & IPV', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('Take a clear selfie for identity verification', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
@@ -509,7 +510,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.warning_amber_outlined, color: Color(0xFFF9A825), size: 40),
       const SizedBox(height: 16),
-      const Text('Risk Disclosure', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Risk Disclosure', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('Please read carefully before proceeding', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 20),
@@ -574,7 +575,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.edit_document, color: AppColors.primary, size: 40),
       const SizedBox(height: 16),
-      const Text('Review & Submit', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text('Review & Submit', style: AppTypography.screenTitle),
       const SizedBox(height: 6),
       const Text('Please verify your details before submitting', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 20),

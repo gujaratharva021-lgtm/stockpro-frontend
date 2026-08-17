@@ -160,7 +160,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                   child: Row(
                     children: [
                       IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                      const Expanded(child: Text('Stocks', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                      const Expanded(child: Text('Stocks', style: AppTypography.screenTitle)),
                       IconButton(
                         icon: const Icon(Icons.search, color: AppColors.textPrimary),
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
@@ -359,7 +359,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                         borderRadius: BorderRadius.circular(8),
                         child: Container(width: 36, height: 36, decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.remove, size: 16, color: AppColors.primary)),
                       ),
-                      Expanded(child: Center(child: Text('$qty', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)))),
+                      Expanded(child: Center(child: Text('$qty', style: AppTypography.screenTitle))),
                       InkWell(
                         onTap: () => setModalState(() => qty++),
                         borderRadius: BorderRadius.circular(8),

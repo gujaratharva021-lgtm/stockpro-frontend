@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
@@ -500,7 +501,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('Downloads', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('Downloads', style: AppTypography.screenTitle)),
                 ],
               ),
             ),

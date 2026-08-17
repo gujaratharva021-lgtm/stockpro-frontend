@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 
@@ -158,7 +159,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
               child: Row(
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                  const Expanded(child: Text('App Code', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                  const Expanded(child: Text('App Code', style: AppTypography.screenTitle)),
                 ],
               ),
             ),

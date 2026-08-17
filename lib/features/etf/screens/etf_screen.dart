@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/features/etf/screens/etf_detail_screen.dart';
 
 class EtfScreen extends StatefulWidget {
@@ -65,7 +66,7 @@ class _EtfScreenState extends State<EtfScreen> {
                   ),
                   const Text(
                     'ETFs',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: AppTypography.screenTitle,
                   ),
                 ],
               ),
