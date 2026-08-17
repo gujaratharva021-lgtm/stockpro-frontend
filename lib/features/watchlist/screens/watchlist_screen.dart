@@ -1,11 +1,11 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
-import 'package:stock_app/shared/widgets/price_change.dart';
 import 'package:stock_app/shared/widgets/empty_state.dart';
 import 'package:stock_app/shared/widgets/error_state.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
@@ -20,6 +20,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   List<dynamic> _watchlist = [];
   Map<String, String> _exchangeBySymbol = {};
   final Map<String, Map<String, dynamic>> _quotes = {};
+  final Map<String, List<double>> _sparklines = {};
   bool _loading = true;
   String? _error;
   List<String> _listNames = ['My Watchlist'];
@@ -181,6 +182,14 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           final quote = await ApiService.getQuote(symbol);
           if (mounted) setState(() => _quotes[symbol] = quote);
         } catch (_) {}
+        try {
+          final intraday = await ApiService.getIntraday(symbol, '15m');
+          final closes = intraday
+              .map((p) => (p['close'] as num?)?.toDouble() ?? (p['price'] as num?)?.toDouble())
+              .whereType<double>()
+              .toList();
+          if (mounted && closes.isNotEmpty) setState(() => _sparklines[symbol] = closes);
+        } catch (_) {}
       }
     } catch (e) {
       setState(() => _error = 'Could not load watchlist');
@@ -299,12 +308,12 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             child: Text('Instrument', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
           ),
           SizedBox(
-            width: 80,
-            child: Text('Last', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
+            width: 56,
+            child: Text('Intraday', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
           ),
           SizedBox(
-            width: 72,
-            child: Text('Chg %', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
+            width: 92,
+            child: Text('Change', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
           ),
         ],
       ),
@@ -316,6 +325,11 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     final quote = _quotes[symbol];
     final price = quote != null ? (quote['price'] as num?)?.toDouble() : null;
     final changePercent = quote != null ? (quote['change_percent'] as num?)?.toDouble() : null;
+    final change = quote != null ? (quote['change'] as num?)?.toDouble() : null;
+    final exchange = _exchangeBySymbol[symbol] ?? item['exchange'] ?? '';
+    final isUp = (changePercent ?? 0) >= 0;
+    final color = isUp ? AppColors.success : AppColors.danger;
+    final spark = _sparklines[symbol];
 
     return GestureDetector(
       onTap: () => showStockQuoteSheet(context, {
@@ -337,7 +351,15 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item['symbol'] ?? '', style: AppTypography.priceMedium),
+                  Row(
+                    children: [
+                      Flexible(child: Text(item['symbol'] ?? '', style: AppTypography.priceMedium, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      if (exchange.toString().isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Text(exchange.toString(), style: AppTypography.caption),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     item['company_name'] ?? '',
@@ -349,21 +371,53 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               ),
             ),
             SizedBox(
-              width: 80,
-              child: Text(
-                price != null ? price.toStringAsFixed(2) : '--',
-                textAlign: TextAlign.right,
-                style: AppTypography.body,
-              ),
+              width: 56,
+              height: 30,
+              child: (spark == null || spark.length < 2)
+                  ? const SizedBox.shrink()
+                  : LineChart(
+                      LineChartData(
+                        gridData: const FlGridData(show: false),
+                        titlesData: const FlTitlesData(show: false),
+                        borderData: FlBorderData(show: false),
+                        lineTouchData: const LineTouchData(enabled: false),
+                        minY: spark.reduce((a, b) => a < b ? a : b),
+                        maxY: spark.reduce((a, b) => a > b ? a : b),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: [for (var i = 0; i < spark.length; i++) FlSpot(i.toDouble(), spark[i])],
+                            isCurved: true,
+                            color: color,
+                            barWidth: 1.5,
+                            dotData: const FlDotData(show: false),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
+            const SizedBox(width: 8),
             SizedBox(
-              width: 72,
-              child: changePercent != null
-                  ? Align(
-                      alignment: Alignment.centerRight,
-                      child: PriceChange(change: changePercent, changePercent: changePercent, fontSize: 13, showParens: false),
-                    )
-                  : const Text('--', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+              width: 92,
+              child: price == null
+                  ? const Text('--', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 13))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
+                          child: Text(
+                            '${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%',
+                            style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${price.toStringAsFixed(2)}${change != null ? ' (${isUp ? '+' : ''}${change.toStringAsFixed(2)})' : ''}',
+                          style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),
