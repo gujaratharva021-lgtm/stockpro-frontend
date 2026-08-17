@@ -67,6 +67,17 @@ class AppTypography {
     color: AppColors.textPrimary,
   );
 
+  /// Standard sub-screen app-bar title. Captures a style that ~20 files
+  /// across the app (KYC, Bank Accounts, Security, Help & Support,
+  /// Family, Downloads, Tradebook, etc) already hand-typed identically
+  /// (fontSize: 18, bold, textPrimary) with no shared token -- this makes
+  /// that existing convention explicit rather than inventing a new size.
+  static const screenTitle = TextStyle(
+    fontSize: 18,
+    fontWeight: _weightBold,
+    color: AppColors.textPrimary,
+  );
+
   static const titleMedium = TextStyle(
     fontSize: 16,
     fontWeight: _weightBold,

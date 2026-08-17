@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -35,7 +36,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 child: Row(
                   children: [
                     IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                    const Expanded(child: Text('Help & Support', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
+                    const Expanded(child: Text('Help & Support', style: AppTypography.screenTitle)),
                   ],
                 ),
               ),
@@ -58,7 +59,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _contactCardFull(Icons.access_time_outlined, 'Support Hours', 'Mon-Fri: 9 AM - 6 PM IST', const Color(0xFFF59E0B)),
+                    _contactCardFull(Icons.access_time_outlined, 'Support Hours', 'Mon-Fri: 9 AM - 6 PM IST', AppColors.warning),
                   ],
                 ),
               ),
