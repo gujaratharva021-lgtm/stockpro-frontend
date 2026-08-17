@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -8,11 +9,11 @@ import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/shared/widgets/app_card.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
 import 'package:stock_app/shared/widgets/section_header.dart';
-import 'package:stock_app/shared/widgets/status_badge.dart';
 import 'package:stock_app/core/constants/nifty_symbols.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
 import 'package:stock_app/features/wallet/screens/wallet_history_screen.dart';
 import 'package:stock_app/features/profile/screens/funds_screen.dart';
+import 'package:stock_app/features/news/screens/news_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -34,13 +35,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _userName = '';
   bool _kycDone = false;
   double _balance = 0;
-  List<dynamic> _stocks = [];
   final Map<String, Map<String, dynamic>> _quotes = {};
-  List<dynamic> _chartHistory = [];
-  List<dynamic> _ipos = [];
   List<dynamic> _holdings = [];
   List<dynamic> _watchlist = [];
   List<Map<String, dynamic>> _perfPoints = [];
+
+  // World-indices card strip -- same live-fetch pattern already proven in
+  // markets_screen.dart (direct Yahoo Finance chart endpoint), reused here
+  // rather than inventing a new data source.
+  Map<String, dynamic> _idxNifty = {'value': '--', 'percent': '--', 'isUp': true};
+  Map<String, dynamic> _idxSensex = {'value': '--', 'percent': '--', 'isUp': true};
+  Map<String, dynamic> _idxBankNifty = {'value': '--', 'percent': '--', 'isUp': true};
+
+  // Dashboard news tabs. "Portfolio"/"Watchlists" are a real client-side
+  // filter of the same real news list, matched against actual holding /
+  // watchlist symbols -- not a fabricated categorization, since the news
+  // API returns no per-article stock tagging.
+  List<dynamic> _dashboardNews = [];
+  bool _loadingNews = true;
+  int _newsTab = 0; // 0=Overview 1=Portfolio 2=Watchlists
 
   static const List<String> _ranges = ['1W', 'MTD', '1M', '3M', 'YTD', '1Y', 'All'];
   String _range = '1M';
@@ -50,6 +63,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadAll();
+    _loadIndicesStrip();
+    _loadDashboardNews();
+  }
+
+  Future<void> _loadIndicesStrip() async {
+    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 12), receiveTimeout: const Duration(seconds: 12)));
+
+    Future<void> fetchIndex(String yahooSymbol, String key) async {
+      try {
+        final res = await dio.get('https://query1.finance.yahoo.com/v8/finance/chart/$yahooSymbol?interval=15m&range=1d');
+        final result = res.data['chart']['result'][0];
+        final meta = result['meta'];
+        final price = (meta['regularMarketPrice'] as num).toDouble();
+        final prevClose = (meta['previousClose'] as num? ?? meta['chartPreviousClose'] as num).toDouble();
+        final percent = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0.0;
+        final data = {
+          'value': price.toStringAsFixed(2),
+          'percent': '${percent >= 0 ? '+' : ''}${percent.toStringAsFixed(2)}%',
+          'isUp': percent >= 0,
+        };
+        if (mounted) {
+          setState(() {
+            if (key == 'nifty') _idxNifty = data;
+            if (key == 'sensex') _idxSensex = data;
+            if (key == 'banknifty') _idxBankNifty = data;
+          });
+        }
+      } catch (_) {}
+    }
+
+    await Future.wait([
+      fetchIndex('%5ENSEI', 'nifty'),
+      fetchIndex('%5EBSESN', 'sensex'),
+      fetchIndex('%5ENSEBANK', 'banknifty'),
+    ]);
+  }
+
+  Future<void> _loadDashboardNews() async {
+    try {
+      final data = await ApiService.getNews();
+      if (mounted) setState(() => _dashboardNews = data);
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loadingNews = false);
+    }
+  }
+
+  // Real filter, not fabricated categories: matches actual holding/
+  // watchlist symbols against each article's own title/content text.
+  List<dynamic> _newsFilteredBy(List<String> symbols) {
+    if (symbols.isEmpty) return [];
+    return _dashboardNews.where((n) {
+      final text = '${n['title'] ?? ''} ${n['content'] ?? ''}'.toUpperCase();
+      return symbols.any((s) => s.isNotEmpty && text.contains(s.toUpperCase()));
+    }).toList();
   }
 
   Future<void> _loadAll() async {
@@ -65,7 +133,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final user = me['user'] ?? {};
       final balance = results[1] as double;
       final allStocks = results[2] as List<dynamic>;
-      final ipos = results[3] as List<dynamic>;
       final sample = allStocks.where((s) => kNiftyWatchSymbols.contains(s['symbol'])).toList();
 
       if (mounted) {
@@ -73,8 +140,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _userName = (user['name'] ?? user['full_name'] ?? 'Trader').toString();
           _kycDone = user['kyc_completed'] == true;
           _balance = balance;
-          _stocks = sample;
-          _ipos = ipos;
         });
       }
 
@@ -88,8 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (sample.isNotEmpty) {
         try {
-          final hist = await ApiService.getHistory(sample.first['symbol']);
-          if (mounted) setState(() => _chartHistory = hist);
+          await ApiService.getHistory(sample.first['symbol']);
         } catch (_) {}
       }
     } catch (_) {
@@ -141,23 +205,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _changePctOf(String symbol) {
     final q = _quotes[symbol];
     return q != null ? (q['change_percent'] as num?)?.toDouble() ?? 0 : 0;
-  }
-
-  double? _priceOf(String symbol) {
-    final q = _quotes[symbol];
-    return q != null ? (q['price'] as num?)?.toDouble() : null;
-  }
-
-  List<dynamic> get _topGainers {
-    final list = List<dynamic>.from(_stocks);
-    list.sort((a, b) => _changePctOf(b['symbol']).compareTo(_changePctOf(a['symbol'])));
-    return list.take(5).toList();
-  }
-
-  List<dynamic> get _topLosers {
-    final list = List<dynamic>.from(_stocks);
-    list.sort((a, b) => _changePctOf(a['symbol']).compareTo(_changePctOf(b['symbol'])));
-    return list.take(5).toList();
   }
 
   List<Map<String, dynamic>> get _filteredPerf {
@@ -243,25 +290,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                           _quickIconsRow(context),
                           const SizedBox(height: 22),
-                          _topHoldingsCard(context),
-                          const SizedBox(height: 20),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 10),
+                            child: Text('World Indices', style: AppTypography.titleMedium),
+                          ),
+                          _indicesStrip(),
+                          const SizedBox(height: 22),
                           _watchlistStrip(context),
                           const SizedBox(height: 20),
-                          if (isMobile)
-                            _moversRowMobile()
-                          else
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(flex: 2, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
-                                const SizedBox(width: 20),
-                                Expanded(flex: 2, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
-                                const SizedBox(width: 20),
-                                Expanded(flex: 2, child: _iposCard()),
-                              ],
-                            ),
-                          const SizedBox(height: 20),
-                          _marketOverviewCard(),
+                          _newsTabsCard(),
                         ],
                       ),
                     ),
@@ -547,82 +584,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _topHoldingsCard(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeader(
-            title: 'Top Holdings',
-            icon: Icons.pie_chart_rounded,
-            iconColor: AppColors.primary,
-            actionLabel: 'See all',
-            onAction: () => context.go('/portfolio'),
-          ),
-          const SizedBox(height: 16),
-          if (_holdings.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  Text("You don't own any stocks yet", style: TextStyle(color: _textMutedD, fontSize: 13)),
-                  const SizedBox(height: 14),
-                  TextButton(
-                    onPressed: () => context.go('/watchlist'),
-                    child: const Text('Explore Stocks', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-            )
-          else
-            ..._holdings.take(5).map((h) {
-              final symbol = (h['symbol'] ?? '').toString();
-              final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
-              final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
-              final ltp = _priceOf(symbol);
-              final pct = _changePctOf(symbol);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(color: _avatarColor(symbol), shape: BoxShape.circle),
-                      child: Center(
-                        child: Text(symbol.isNotEmpty ? symbol[0] : '?',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(symbol, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                          Text('${qty.toStringAsFixed(0)} qty @ \u20b9${avg.toStringAsFixed(2)}',
-                              style: TextStyle(fontSize: 11, color: _textMutedD)),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(ltp != null ? '\u20b9${ltp.toStringAsFixed(2)}' : '-',
-                            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                        PriceChange(change: pct, changePercent: pct, fontSize: 11.5, showParens: false),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
   Widget _watchlistStrip(BuildContext context) {
     return AppCard(
       padding: const EdgeInsets.all(18),
@@ -641,7 +602,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text('No stocks in your watchlist yet', style: TextStyle(color: _textMutedD, fontSize: 12))
           else
             SizedBox(
-              height: 74,
+              height: 88,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
@@ -679,170 +640,136 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _moversRowMobile() {
-    const cardWidth = 240.0;
-    return SizedBox(
-      height: 268,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        children: [
-          SizedBox(width: cardWidth, child: _moversCard('Top Gainers', _topGainers, Icons.trending_up_rounded, AppColors.success)),
-          const SizedBox(width: 14),
-          SizedBox(width: cardWidth, child: _moversCard('Top Losers', _topLosers, Icons.trending_down_rounded, AppColors.danger)),
-          const SizedBox(width: 14),
-          SizedBox(width: cardWidth, child: _iposCard()),
-        ],
-      ),
-    );
-  }
+  Widget _newsTabsCard() {
+    final holdingSymbols = _holdings.map((h) => (h['symbol'] ?? '').toString()).toList();
+    final watchlistSymbols = _watchlist.map((w) => (w['symbol'] ?? '').toString()).toList();
 
-  Widget _moversCard(String title, List<dynamic> list, IconData icon, Color accent) {
+    final List<dynamic> shown = switch (_newsTab) {
+      1 => _newsFilteredBy(holdingSymbols),
+      2 => _newsFilteredBy(watchlistSymbols),
+      _ => _dashboardNews,
+    };
+    final visible = shown.take(5).toList();
+
     return AppCard(
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(title: title, icon: icon, iconColor: accent),
+          const SectionHeader(title: 'News', icon: Icons.newspaper_outlined, iconColor: AppColors.primary),
           const SizedBox(height: 14),
-          if (list.isEmpty)
-            Text('No data yet', style: TextStyle(color: _textMutedD, fontSize: 12))
+          Row(
+            children: [
+              _newsTabChip('Overview', 0),
+              const SizedBox(width: 8),
+              _newsTabChip('Portfolio', 1),
+              const SizedBox(width: 8),
+              _newsTabChip('Watchlists', 2),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (_loadingNews)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            )
+          else if (visible.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  _newsTab == 0 ? 'No news yet' : 'No news matching your ${_newsTab == 1 ? 'holdings' : 'watchlist'} yet',
+                  style: TextStyle(color: _textMutedD, fontSize: 12),
+                ),
+              ),
+            )
           else
-            ...list.map((s) {
-              final symbol = s['symbol'];
-              final price = _priceOf(symbol);
-              final pct = _changePctOf(symbol);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(color: _avatarColor(symbol), shape: BoxShape.circle),
-                      child: Center(
-                        child: Text(symbol.isNotEmpty ? symbol[0] : '?',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(symbol, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                    const SizedBox(width: 6),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
+            ...visible.map((item) => GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NewsDetailScreen(item: item))),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(price?.toStringAsFixed(2) ?? '-',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 2),
-                        PriceChange(change: pct, changePercent: pct, fontSize: 9.5, showParens: false),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  Widget _iposCard() {
-    return AppCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionHeader(title: 'Upcoming IPOs', icon: Icons.rocket_launch_rounded, iconColor: Color(0xFF7C3AED)),
-          const SizedBox(height: 14),
-          if (_ipos.isEmpty)
-            Text('No IPOs right now', style: TextStyle(color: _textMutedD, fontSize: 12))
-          else
-            ..._ipos.take(6).map((ipo) {
-              final status = (ipo['status'] ?? '').toString();
-              final isOpen = status.toLowerCase() == 'open';
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text((ipo['company_name'] ?? ipo['name'] ?? '-').toString(),
-                          style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                    const SizedBox(width: 6),
-                    StatusBadge(
-                      label: status,
-                      tone: isOpen ? AppStatusTone.positive : AppStatusTone.warning,
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  Widget _marketOverviewCard() {
-    final spots = <FlSpot>[];
-    for (var i = 0; i < _chartHistory.length; i++) {
-      final p = _chartHistory[i];
-      final close = (p['close'] as num?)?.toDouble() ?? (p['price'] as num?)?.toDouble() ?? 0;
-      spots.add(FlSpot(i.toDouble(), close));
-    }
-    final isUp = spots.length > 1 ? spots.last.y >= spots.first.y : true;
-    final trendColor = isUp ? AppColors.success : AppColors.danger;
-
-    return SizedBox(
-      height: 340,
-      child: AppCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeader(title: 'Market overview', icon: Icons.show_chart_rounded, iconColor: trendColor),
-          const SizedBox(height: 18),
-          Expanded(
-            child: spots.isEmpty
-                ? Center(child: Text('No chart data', style: TextStyle(color: _textMutedD)))
-                : LineChart(
-                    LineChartData(
-                      gridData: const FlGridData(show: false),
-                      titlesData: const FlTitlesData(show: false),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          color: trendColor,
-                          barWidth: 2.5,
-                          dotData: const FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [trendColor.withValues(alpha: 0.18), trendColor.withValues(alpha: 0.0)],
-                            ),
-                          ),
-                        ),
+                        Text((item['source'] ?? '').toString(), style: const TextStyle(color: AppColors.primaryLight, fontSize: 11, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 3),
+                        Text((item['title'] ?? '').toString(),
+                            maxLines: 2, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 3),
+                        Text((item['published_at'] ?? '').toString().split('T').first, style: TextStyle(color: _textMutedD, fontSize: 11)),
+                        const Divider(height: 20, color: AppColors.border),
                       ],
                     ),
                   ),
-          ),
+                )),
         ],
-      ),
       ),
     );
   }
+
+  Widget _newsTabChip(String label, int index) {
+    final active = _newsTab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _newsTab = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primary.withValues(alpha: 0.18) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: active ? AppColors.primary : AppColors.border),
+        ),
+        child: Text(label, style: TextStyle(color: active ? AppColors.primary : _textMutedD, fontSize: 12, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+
+  Widget _indicesStrip() {
+    final items = [
+      ('NIFTY 50', _idxNifty),
+      ('SENSEX', _idxSensex),
+      ('BANK NIFTY', _idxBankNifty),
+    ];
+    return SizedBox(
+      height: 84,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, i) {
+          final (label, data) = items[i];
+          final isUp = data['isUp'] == true;
+          final color = isUp ? AppColors.success : AppColors.danger;
+          return Container(
+            width: 130,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, color: color, size: 13),
+                    const SizedBox(width: 4),
+                    Expanded(child: Text(label, style: AppTypography.label.copyWith(color: color), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  ],
+                ),
+                Text(data['percent'], style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(data['value'], style: AppTypography.caption),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
 }
 
 class _IconAction {
