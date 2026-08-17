@@ -275,7 +275,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   void _pickOrderType() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -298,7 +298,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   void _pickTimeInForce() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -316,7 +316,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   void _pickProduct() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -348,9 +348,9 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     final symbol = widget.stock['symbol'] ?? '';
     final companyName = widget.stock['company_name'] ?? '';
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         titleSpacing: 0,
@@ -454,7 +454,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                   ],
 
                   const SizedBox(height: 12),
-                  Container(height: 8, color: const Color(0xFFF7F8FA)),
+                  Container(height: 8, color: AppColors.cardBackground),
                   const SizedBox(height: 4),
 
                   Padding(
@@ -582,7 +582,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   Widget _advancedOrderOptions() {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFFF7F8FA), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

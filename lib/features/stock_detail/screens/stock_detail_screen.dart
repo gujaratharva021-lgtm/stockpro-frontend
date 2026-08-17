@@ -100,7 +100,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     setState(() { _loadingOptionChain = true; _optionChainError = null; });
     try {
       final chain = await ApiService.getOptionChain(widget.stock['symbol'], _selectedExpiry);
-      debugPrint('OPTION_CHAIN_DEBUG: $chain');
       setState(() => _optionChain = chain);
     } catch (e) {
       setState(() => _optionChainError = 'Option chain unavailable right now');
@@ -235,7 +234,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => Padding(
