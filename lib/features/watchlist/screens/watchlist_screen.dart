@@ -5,6 +5,9 @@ import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
+import 'package:stock_app/shared/widgets/price_change.dart';
+import 'package:stock_app/shared/widgets/empty_state.dart';
+import 'package:stock_app/shared/widgets/error_state.dart';
 
 class WatchlistScreen extends StatefulWidget {
   const WatchlistScreen({super.key});
@@ -120,7 +123,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   void _showListSwitcher() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -205,7 +208,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   void _showStockOptions(dynamic item) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -253,7 +256,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   // ===== IBKR-style app bar: "My Watchlist v"  ...  [+]  [more] =====
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       elevation: 0,
       automaticallyImplyLeading: false,
       titleSpacing: 16,
@@ -287,7 +290,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   // ===== Column header row: Instrument | Last | Chg % =====
   Widget _buildColumnHeader() {
     return Container(
-      color: const Color(0xFFF7F8FA),
+      color: AppColors.cardBackground,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: const Row(
         children: [
@@ -312,8 +315,6 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     final quote = _quotes[symbol];
     final price = quote != null ? (quote['price'] as num?)?.toDouble() : null;
     final changePercent = quote != null ? (quote['change_percent'] as num?)?.toDouble() : null;
-    final isUp = (changePercent ?? 0) >= 0;
-    final changeColor = isUp ? AppColors.success : AppColors.danger;
 
     return GestureDetector(
       onTap: () => showStockQuoteSheet(context, {
@@ -356,11 +357,12 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             ),
             SizedBox(
               width: 72,
-              child: Text(
-                changePercent != null ? '${isUp ? '+' : ''}${changePercent.toStringAsFixed(2)}%' : '--',
-                textAlign: TextAlign.right,
-                style: TextStyle(color: changeColor, fontSize: 13, fontWeight: FontWeight.w600),
-              ),
+              child: changePercent != null
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: PriceChange(change: changePercent, changePercent: changePercent, fontSize: 13, showParens: false),
+                    )
+                  : const Text('--', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
             ),
           ],
         ),
@@ -373,35 +375,27 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     return MainShell(
       currentIndex: 0,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         appBar: _buildAppBar(),
         body: SafeArea(
           top: false,
           child: RefreshIndicator(
             color: AppColors.primary,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.cardBackground,
             onRefresh: _load,
             child: _loading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : _error != null
-                    ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.textSecondary)))
+                    ? ErrorState(message: _error!, onRetry: _load)
                     : _watchlist.isEmpty
                         ? ListView(
                             children: [
                               const SizedBox(height: 80),
-                              const Icon(Icons.bookmark_border, color: AppColors.textMuted, size: 48),
-                              const SizedBox(height: 12),
-                              const Center(child: Text('Your watchlist is empty', style: TextStyle(color: AppColors.textSecondary, fontSize: 14))),
-                              const SizedBox(height: 4),
-                              const Center(child: Text('Add stocks to track them here', style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
-                              const SizedBox(height: 16),
-                              Center(
-                                child: ElevatedButton.icon(
-                                  onPressed: _addStock,
-                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                                  icon: const Icon(Icons.add, color: Colors.white, size: 18),
-                                  label: const Text('Add Stock', style: TextStyle(color: Colors.white)),
-                                ),
+                              EmptyState(
+                                icon: Icons.bookmark_border,
+                                message: "Your watchlist is empty.\nAdd stocks to track them here.",
+                                actionLabel: 'Add Stock',
+                                onAction: _addStock,
                               ),
                             ],
                           )
