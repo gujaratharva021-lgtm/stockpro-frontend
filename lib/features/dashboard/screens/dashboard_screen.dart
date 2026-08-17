@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/shared/widgets/app_card.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
@@ -376,13 +377,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Text(
               showingPerf ? '${isUp ? '+' : ''}${changePct.toStringAsFixed(2)}%' : '\u20b9${ending.toStringAsFixed(2)}',
               maxLines: 1,
-              style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white),
+              style: AppTypography.priceHero.copyWith(color: Colors.white),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             '${isUp ? '+' : ''}\u20b9${change.toStringAsFixed(2)} (${isUp ? '+' : ''}${changePct.toStringAsFixed(2)}%) $_range',
-            style: TextStyle(fontSize: 14, color: trendColor, fontWeight: FontWeight.w600),
+            style: AppTypography.changeText.copyWith(fontSize: 14, color: trendColor),
           ),
           const SizedBox(height: 18),
           SizedBox(
@@ -417,7 +418,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         LineChartBarData(
                           spots: rawSpots,
                           isCurved: false,
-                          color: const Color(0xFF4A9EFF),
+                          color: AppColors.primary,
                           barWidth: 2.5,
                           dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(show: false),
@@ -437,14 +438,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: active ? const Color(0xFF4A9EFF).withValues(alpha: 0.18) : Colors.transparent,
+                      color: active ? AppColors.primary.withValues(alpha: 0.18) : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(r,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 11.5,
-                          color: active ? const Color(0xFF4A9EFF) : _textMutedD,
+                          color: active ? AppColors.primary : _textMutedD,
                           fontWeight: active ? FontWeight.bold : FontWeight.w500,
                         )),
                   ),
@@ -555,7 +556,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SectionHeader(
             title: 'Top Holdings',
             icon: Icons.pie_chart_rounded,
-            iconColor: const Color(0xFF4A9EFF),
+            iconColor: AppColors.primary,
             actionLabel: 'See all',
             onAction: () => context.go('/portfolio'),
           ),
@@ -569,7 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 14),
                   TextButton(
                     onPressed: () => context.go('/watchlist'),
-                    child: const Text('Explore Stocks', style: TextStyle(color: Color(0xFF4A9EFF), fontWeight: FontWeight.w600)),
+                    child: const Text('Explore Stocks', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -599,7 +600,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(symbol, style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+                          Text(symbol, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                           Text('${qty.toStringAsFixed(0)} qty @ \u20b9${avg.toStringAsFixed(2)}',
                               style: TextStyle(fontSize: 11, color: _textMutedD)),
                         ],
@@ -609,7 +610,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(ltp != null ? '\u20b9${ltp.toStringAsFixed(2)}' : '-',
-                            style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+                            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                         PriceChange(change: pct, changePercent: pct, fontSize: 11.5, showParens: false),
                       ],
                     ),
@@ -666,7 +667,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(symbol,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 10.5, color: Colors.white, fontWeight: FontWeight.w500)),
+                          style: const TextStyle(fontSize: 10.5, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
                       PriceChange(change: pct, changePercent: pct, fontSize: 9.5, showParens: false),
                     ],
                   );
@@ -726,7 +727,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(symbol, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                      child: Text(symbol, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
@@ -738,7 +739,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Text(price?.toStringAsFixed(2) ?? '-',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
+                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 2),
                         PriceChange(change: pct, changePercent: pct, fontSize: 9.5, showParens: false),
                       ],
@@ -772,7 +773,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Expanded(
                       child: Text((ipo['company_name'] ?? ipo['name'] ?? '-').toString(),
-                          style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                          style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
