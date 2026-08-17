@@ -57,8 +57,8 @@ class _KycDocumentsScreenState extends State<KycDocumentsScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: _kycDone
-                                ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
-                                : [const Color(0xFFF57F17), const Color(0xFFF9A825)],
+                                ? [AppColors.success, AppColors.success.withValues(alpha: 0.8)]
+                                : [AppColors.warning, AppColors.warning.withValues(alpha: 0.8)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
