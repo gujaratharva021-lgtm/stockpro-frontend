@@ -68,7 +68,7 @@ class _FnOScreenState extends State<FnOScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => _NewPositionSheet(
         isOptions: _showOptions,
@@ -93,7 +93,7 @@ class _FnOScreenState extends State<FnOScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.cardBackground,
           onRefresh: _load,
           child: CustomScrollView(
             slivers: [
@@ -363,7 +363,7 @@ class _NewPositionSheetState extends State<_NewPositionSheet> {
     final selected = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => _StockPicker(stocks: widget.stocks),
     );
@@ -650,7 +650,7 @@ class _StockPickerState extends State<_StockPicker> {
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: AppColors.primaryLight,
-                    child: Text((s['symbol'] ?? '?').toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
+                    child: Text((s['symbol'] == null || s['symbol'].toString().isEmpty) ? '?' : s['symbol'].toString().substring(0, 1), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
                   ),
                   title: Text(s['symbol'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(s['company_name'] ?? ''),

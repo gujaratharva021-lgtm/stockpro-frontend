@@ -181,7 +181,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
-              Text(order['symbol'] ?? '', style: AppTypography.titleLarge.copyWith(fontSize: 18)),
+              Text(order['symbol'] ?? '', style: AppTypography.titleLarge.copyWith(fontSize: 18), maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 6),
               Row(children: [
                 Container(
@@ -442,12 +442,14 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text((a['direction'] ?? '-').toString() + ' ' + (a['target_price'] ?? '-').toString(), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text((a['direction'] ?? '-').toString() + ' ' + (a['target_price'] ?? '-').toString(), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

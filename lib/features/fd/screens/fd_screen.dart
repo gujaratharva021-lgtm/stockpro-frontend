@@ -151,7 +151,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                         decoration: BoxDecoration(color: bankColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
                         child: Center(
                           child: Text(
-                            (p['bank_name'] as String).substring(0, 1),
+                            (p['bank_name'] as String).isNotEmpty ? (p['bank_name'] as String).substring(0, 1) : '?',
                             style: TextStyle(color: bankColor, fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                         ),

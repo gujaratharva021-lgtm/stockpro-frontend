@@ -103,7 +103,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBackground,
         title: const Text('Confirm Application', style: TextStyle(color: AppColors.textPrimary)),
         content: Text(
           'Apply for $_lots lot(s) (${_lots * lotSize} shares) of ${_ipo!['company_name']} at ₹${priceHigh.toStringAsFixed(0)}/share?\n\nTotal amount: ₹${amount.toStringAsFixed(0)}\nUPI ID: $upi',

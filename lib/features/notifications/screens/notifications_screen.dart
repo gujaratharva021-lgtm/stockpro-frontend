@@ -52,7 +52,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.cardBackground,
           onRefresh: _load,
           child: Column(
             children: [
