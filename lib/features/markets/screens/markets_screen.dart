@@ -6,6 +6,10 @@ import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/orders/order_submit_helper.dart';
+import 'package:stock_app/shared/widgets/app_card.dart';
+import 'package:stock_app/shared/widgets/price_change.dart';
+import 'package:stock_app/shared/widgets/section_header.dart';
+import 'package:stock_app/shared/widgets/error_state.dart';
 
 class MarketsScreen extends StatefulWidget {
   const MarketsScreen({super.key});
@@ -142,7 +146,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.cardBackground,
           onRefresh: () async {
             await _loadStocks();
             await _loadIndices();
@@ -229,7 +233,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
               if (_loading)
                 const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
               else if (_error != null)
-                SliverFillRemaining(child: Center(child: Text(_error!, style: const TextStyle(color: AppColors.textSecondary))))
+                SliverFillRemaining(child: ErrorState(message: _error!, onRetry: _loadStocks))
               else ...[
                   _sectionHeader('Top Gainers'),
                   SliverList(delegate: SliverChildBuilderDelegate((c, i) => _stockRow(_gainers[i]), childCount: _gainers.length)),
@@ -249,7 +253,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        child: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+        child: SectionHeader(title: title),
       ),
     );
   }
@@ -314,7 +318,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
@@ -437,15 +441,15 @@ class _MarketsScreenState extends State<MarketsScreen> {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StockDetailScreen(stock: s))),
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: AppCard(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
         child: Row(
           children: [
             Container(
               width: 34,
               height: 34,
               decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text((symbol ?? '?').toString().substring(0, 1), style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14))),
+              child: Center(child: Text((symbol == null || symbol.toString().isEmpty) ? '?' : symbol.toString().substring(0, 1), style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14))),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -461,12 +465,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(price != null ? '₹${price.toStringAsFixed(2)}' : '--', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                Row(
-                  children: [
-                    Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, color: isUp ? AppColors.success : AppColors.danger, size: 11),
-                    Text('${changePercent.abs().toStringAsFixed(2)}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
-                  ],
-                ),
+                PriceChange(change: changePercent.toDouble(), changePercent: changePercent.toDouble(), fontSize: 11, showParens: false),
               ],
             ),
             const SizedBox(width: 8),
@@ -480,6 +479,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
