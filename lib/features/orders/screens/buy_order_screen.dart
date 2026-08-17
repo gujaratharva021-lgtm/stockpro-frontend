@@ -2,6 +2,7 @@
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/core/services/api_service.dart';
 
 /// Result of submitting an order through [OrderTicketScreen.onSubmit].
@@ -362,7 +363,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(symbol, style: AppTypography.titleMedium),
                   if (companyName.toString().isNotEmpty)
                     Text(companyName.toString(), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                 ],
