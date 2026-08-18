@@ -42,15 +42,15 @@ class _ChargeBreakdown {
   double get total => brokerage + sebiFee + exchangeFee + stampDuty + stt + gst;
 }
 
-// Light-theme palette for this screen only. The order ticket is deliberately
-// light (a common broker-app pattern to set the "money moving" screen apart
-// from the rest of a dark-themed app) -- other screens are untouched.
-const _kBg = Colors.white;
-const _kCard = Color(0xFFF5F6F8);
-const _kBorder = Color(0xFFE3E5EA);
-const _kTextPrimary = Color(0xFF161A22);
-const _kTextSecondary = Color(0xFF5C6270);
-const _kTextMuted = Color(0xFF9AA0AC);
+// Dark-theme palette for this screen, matching the rest of the app
+// (AppColors). Buy and Sell both use this screen, so this one change
+// applies to both tickets.
+const _kBg = AppColors.background;
+const _kCard = AppColors.cardBackground;
+const _kBorder = AppColors.border;
+const _kTextPrimary = AppColors.textPrimary;
+const _kTextSecondary = AppColors.textSecondary;
+const _kTextMuted = AppColors.textMuted;
 
 /// Swipe-to-confirm order ticket: exchange selector, product-type tabs,
 /// quantity/limit steppers, advanced order options (Stoploss / GTT / Market
@@ -682,12 +682,12 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           child: Row(
             children: [
               Text('Amount ', style: const TextStyle(color: _kTextMuted, fontSize: 13)),
-              Text('₹${_stockValue.toStringAsFixed(2)}', style: const TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
+              Text('₹${_stockValue.toStringAsFixed(2)}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
               Text(' + ', style: const TextStyle(color: _kTextMuted, fontSize: 13)),
-              Text('₹${_fees.toStringAsFixed(2)}', style: const TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
+              Text('₹${_fees.toStringAsFixed(2)}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
               const Spacer(),
               Text('Avail. ', style: const TextStyle(color: _kTextMuted, fontSize: 13)),
-              Text(_availableBalance == null ? '…' : '₹${_availableBalance!.toStringAsFixed(2)}', style: const TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
+              Text(_availableBalance == null ? '…' : '₹${_availableBalance!.toStringAsFixed(2)}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
               const SizedBox(width: 4),
               const Icon(Icons.info_outline, size: 13, color: _kTextMuted),
             ],
@@ -710,13 +710,14 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Charges & taxes'),
+        backgroundColor: _kCard,
+        title: const Text('Charges & taxes', style: TextStyle(color: _kTextPrimary)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Statutory charges', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text('Statutory charges', style: TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
               const Text('(Govt. & Exchange fees)', style: TextStyle(color: _kTextMuted, fontSize: 11)),
               const SizedBox(height: 8),
               _chargeLine('SEBI turnover fee', c.sebiFee),
@@ -725,7 +726,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
               _chargeLine('Transaction tax (STT)', c.stt),
               _chargeLine('GST', c.gst),
               const Divider(height: 20),
-              const Text('Brokerage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text('Brokerage', style: TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 8),
               _chargeLine('Brokerage', c.brokerage),
               const Divider(height: 20),
