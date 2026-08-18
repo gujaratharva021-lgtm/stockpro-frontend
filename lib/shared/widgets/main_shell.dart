@@ -2,11 +2,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
-/// App shell with the IBKR-Mobile-style bottom navigation: Home | Portfolio
-/// | Trade | Watchlist | More. Only 4 indices (5, 2, 1, 0) get a dedicated
-/// tab; every other screen (Bids/IPO=3, Profile=4, News=-1) is reached
-/// through the "More" tab, which lights up whenever the current screen
-/// isn't one of the four primary tabs.
+/// App shell with a 5-tab bottom navigation: Home | Portfolio | Watchlist |
+/// Predictions | Explore. Every other screen (Trade/orders, Bids/IPO, News,
+/// Screener, Profile, etc.) is reached from inside the Explore tab instead
+/// of a dedicated primary tab.
 class MainShell extends StatefulWidget {
   final Widget child;
   final int currentIndex;
@@ -19,60 +18,15 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  static const List<int> _primaryTabIndices = [5, 2, 1, 0];
-
-  bool get _isMoreActive => !_primaryTabIndices.contains(widget.currentIndex);
-
   void _onTap(int index) {
     if (index == widget.currentIndex) return;
     switch (index) {
-      case 0: context.go('/watchlist'); break;
-      case 1: context.push('/pending-orders'); break;
-      case 2: context.go('/portfolio'); break;
-      case 3: context.push('/ipo'); break;
-      case 4: context.push('/profile'); break;
       case 5: context.go('/dashboard'); break;
+      case 2: context.go('/portfolio'); break;
+      case 0: context.go('/watchlist'); break;
+      case 1: context.push('/predictions'); break;
+      case 3: context.push('/explore'); break;
     }
-  }
-
-  void _openMoreMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardBackground,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('More', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-            _moreTile(ctx, Icons.gavel_outlined, 'Bids / IPO', () {
-              Navigator.pop(ctx);
-              context.push('/ipo');
-            }),
-            _moreTile(ctx, Icons.article_outlined, 'News', () {
-              Navigator.pop(ctx);
-              context.push('/news');
-            }),
-            _moreTile(ctx, Icons.account_circle_outlined, 'Profile', () {
-              Navigator.pop(ctx);
-              context.push('/profile');
-            }),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _moreTile(BuildContext ctx, IconData icon, String label, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary),
-      title: Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
-      onTap: onTap,
-    );
   }
 
   @override
@@ -99,9 +53,9 @@ class _MainShellState extends State<MainShell> {
             children: [
               _navItem(Icons.home_outlined, Icons.home, 'Home', 5),
               _navItem(Icons.pie_chart_outline, Icons.pie_chart, 'Portfolio', 2),
-              _navItem(Icons.swap_horiz_outlined, Icons.swap_horiz, 'Trade', 1),
               _navItem(Icons.star_border, Icons.star, 'Watchlist', 0),
-              _moreNavItem(),
+              _navItem(Icons.auto_graph_outlined, Icons.auto_graph, 'Predictions', 1),
+              _navItem(Icons.explore_outlined, Icons.explore, 'Explore', 3),
             ],
           ),
         ),
@@ -152,11 +106,10 @@ class _MainShellState extends State<MainShell> {
                 const Divider(color: AppColors.border, height: 1),
                 const SizedBox(height: 16),
                 _sidebarItem(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', 5),
-                _sidebarItem(Icons.bookmark_border, Icons.bookmark, 'Watchlist', 0),
-                _sidebarItem(Icons.receipt_long_outlined, Icons.receipt_long, 'Orders', 1),
                 _sidebarItem(Icons.pie_chart_outline, Icons.pie_chart, 'Portfolio', 2),
-                _sidebarItem(Icons.gavel_outlined, Icons.gavel, 'Bids', 3),
-                _sidebarItem(Icons.account_circle_outlined, Icons.account_circle, 'Profile', 4),
+                _sidebarItem(Icons.bookmark_border, Icons.bookmark, 'Watchlist', 0),
+                _sidebarItem(Icons.auto_graph_outlined, Icons.auto_graph, 'Predictions', 1),
+                _sidebarItem(Icons.explore_outlined, Icons.explore, 'Explore', 3),
                 const Spacer(),
                 const Divider(color: AppColors.border, height: 1),
                 // Profile link at bottom
@@ -258,29 +211,4 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _moreNavItem() {
-    final isActive = _isMoreActive;
-    return Expanded(
-      child: InkWell(
-        onTap: _openMoreMenu,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.menu,
-                  color: isActive ? AppColors.primaryDark : AppColors.textMuted, size: 22),
-              const SizedBox(height: 4),
-              Text('More',
-                  style: TextStyle(
-                    color: isActive ? AppColors.primaryDark : AppColors.textMuted,
-                    fontSize: 11,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
