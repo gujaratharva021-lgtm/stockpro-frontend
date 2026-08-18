@@ -450,20 +450,31 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 1))),
-                  child: Row(
-                    children: [
-                      _tabChip('Holdings', _holdings.length, 0),
-                      const SizedBox(width: 24),
-                      _tabChip('Positions', _positionsCount, 1),
-                      const SizedBox(width: 24),
-                      GestureDetector(
-                        onTap: () => context.push('/performance'),
-                        child: const Padding(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Text('Performance', style: TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w500)),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _tabChip('Holdings', _holdings.length, 0),
+                        const SizedBox(width: 24),
+                        _tabChip('Positions', _positionsCount, 1),
+                        const SizedBox(width: 24),
+                        _tabChip('News', 0, 2),
+                        const SizedBox(width: 24),
+                        _tabChip('Orders', 0, 3),
+                        const SizedBox(width: 24),
+                        _tabChip('AI Instructions', 0, 4),
+                        const SizedBox(width: 24),
+                        _tabChip('Trades', 0, 5),
+                        const SizedBox(width: 24),
+                        GestureDetector(
+                          onTap: () => context.push('/performance'),
+                          child: const Padding(
+                            padding: EdgeInsets.only(bottom: 10),
+                            child: Text('Performance', style: TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w500)),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -477,6 +488,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               else ...[
                   if (_tab == 0) ..._buildHoldingsTab(),
                   if (_tab == 1) ..._buildPositionsTab(),
+                  if (_tab == 2) ..._buildEmptyTab(),
+                  if (_tab == 3) ..._buildEmptyTab(),
+                  if (_tab == 4) ..._buildEmptyTab(),
+                  if (_tab == 5) ..._buildEmptyTab(),
                 ],
             ],
           ),
@@ -495,6 +510,28 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         child: Text(label, style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textSecondary, fontSize: 14, fontWeight: active ? FontWeight.bold : FontWeight.w500)),
       ),
     );
+  }
+
+  // Placeholder content for News / Orders / AI Instructions / Trades tabs --
+  // no backend for these yet, so this just gives them a real empty state
+  // instead of a blank screen.
+  List<Widget> _buildEmptyTab() {
+    return [
+      SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.inbox_outlined, color: AppColors.textMuted, size: 40),
+              const SizedBox(height: 14),
+              const Text('No content available', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              const Text('Please check back later', style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            ],
+          ),
+        ),
+      ),
+    ];
   }
 
   Widget _summaryStatRow(String label, double value, double pct, {String? trailingLabel}) {
