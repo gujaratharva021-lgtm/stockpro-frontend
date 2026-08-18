@@ -55,7 +55,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
 
   double get _netLiquidationValue => _cash + _currentValue;
 
-  String _fmt(double v) => 'â‚¹${v.toStringAsFixed(2)}';
+  String _fmt(double v) => '₹${v.toStringAsFixed(2)}';
 
   @override
   Widget build(BuildContext context) {

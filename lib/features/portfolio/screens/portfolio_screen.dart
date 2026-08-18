@@ -512,7 +512,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 Text(label, style: AppTypography.label),
                 const SizedBox(height: 2),
                 Text(
-                  '${isUp ? '+' : ''}â‚¹${value.toStringAsFixed(2)} (${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%)',
+                  '${isUp ? '+' : ''}₹${value.toStringAsFixed(2)} (${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%)',
                   style: AppTypography.changeText.copyWith(color: color),
                 ),
               ],
@@ -540,7 +540,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           const Text('Net Liquidation Value', style: AppTypography.label),
           const SizedBox(height: 4),
           Text(
-            'â‚¹${_totalCurrentValue.toStringAsFixed(2)}',
+            '₹${_totalCurrentValue.toStringAsFixed(2)}',
             style: AppTypography.priceHero,
           ),
           _summaryStatRow('Day P&L', _todayReturns, _todayReturnsPct, trailingLabel: 'Details'),
@@ -765,7 +765,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             ),
             SizedBox(
               width: 90,
-              child: Text('â‚¹${current.toStringAsFixed(2)}', textAlign: TextAlign.right, maxLines: 1, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+              child: Text('₹${current.toStringAsFixed(2)}', textAlign: TextAlign.right, maxLines: 1, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
             ),
             SizedBox(
               width: 90,
@@ -855,12 +855,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                     const SizedBox(height: 6),
                     Text(
                       type == 'Regular'
-                          ? 'Qty: ${data['quantity']} ? Avg â‚¹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} ? Avg ₹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'MTF'
-                          ? 'Qty: ${data['quantity']} â€¢ Entry â‚¹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} â€¢ Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'Futures'
-                          ? '${data['position_type'] ?? ''} â€¢ Lot: ${data['lot_size']} â€¢ Entry â‚¹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
-                          : '${data['option_type'] ?? ''} â€¢ Strike â‚¹${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}',
+                          ? '${data['position_type'] ?? ''} â€¢ Lot: ${data['lot_size']} â€¢ Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
+                          : '${data['option_type'] ?? ''} â€¢ Strike ₹${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}',
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
@@ -918,7 +918,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         ],
                       ),
                     ),
-                    Text('â‚¹${invested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text('₹${invested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                   ],
                 ),
               );
@@ -1030,12 +1030,12 @@ class _ImportHoldingsSheetState extends State<_ImportHoldingsSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('$qty shares @ â‚¹${avgPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          Text('$qty shares @ ₹${avgPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('â‚¹${ltp.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                              Text('${isProfit ? '+' : ''}â‚¹${pnl.toStringAsFixed(2)}', style: TextStyle(color: isProfit ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
+                              Text('₹${ltp.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                              Text('${isProfit ? '+' : ''}₹${pnl.toStringAsFixed(2)}', style: TextStyle(color: isProfit ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ],

@@ -1,3 +1,26 @@
+# Simplifies Statements & Tax screen:
+# - removes "Account Summary" section
+# - removes duplicate "Settings" section (Settings already lives in its own screen)
+# - keeps ONLY the "Statements & Tax" list (Activity Statements, Trade Reports, Download Tax Forms, Portfolio Analyst)
+#
+# Run from repo root:
+#   cd C:\Users\ABC\Downloads\stockpro-frontend-main\stockpro-frontend-main
+#   powershell -ExecutionPolicy Bypass -File fix_statements_tax.ps1
+
+$ErrorActionPreference = 'Stop'
+$root = Get-Location
+Write-Host "Applying patch in $root" -ForegroundColor Cyan
+
+function Write-Utf8NoBom($Path, $Content) {
+  $dir = Split-Path -Parent $Path
+  if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+  $enc = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($Path, $Content, $enc)
+  Write-Host "  wrote $Path"
+}
+
+# ---- lib/features/profile/screens/statements_tax_screen.dart ----
+$content = @'
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -12,7 +35,7 @@ class StatementsTaxScreen extends StatelessWidget {
   const StatementsTaxScreen({super.key});
 
   void _comingSoon(BuildContext context, String label) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label â€” coming soon')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label — coming soon')));
   }
 
   @override
@@ -81,3 +104,9 @@ class StatementsTaxScreen extends StatelessWidget {
     );
   }
 }
+'@
+Write-Utf8NoBom (Join-Path $root 'lib\features\profile\screens\statements_tax_screen.dart') $content
+
+Write-Host "Done. Updated:" -ForegroundColor Green
+Write-Host "  lib/features/profile/screens/statements_tax_screen.dart"
+Write-Host "Now run: flutter pub get; flutter run" -ForegroundColor Yellow

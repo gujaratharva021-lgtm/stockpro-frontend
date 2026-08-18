@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
-import 'package:stock_app/core/services/biometric_service.dart';
-import 'package:stock_app/core/services/privacy_mode_service.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
 import 'package:stock_app/features/profile/screens/security_screen.dart';
-import 'package:stock_app/features/profile/screens/help_support_screen.dart';
 
+/// Settings screen -- original items (Notifications, Limit & Stop-Loss
+/// Orders, Brokerage Calculator, Privacy Mode, Security, Help & Support,
+/// Privacy Policy, Terms of Service) plus the extra items that used to
+/// live duplicated inside Statements & Tax (Account Settings, User
+/// Settings, Trading Presets, Display, News Language Settings,
+/// Localization, Advanced). Biometric Login has been removed.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -16,90 +18,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _biometricAvailable = false;
-  bool _biometricEnabled = false;
   bool _privacyMode = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkBiometric();
-    _privacyMode = PrivacyModeService.enabled.value;
-    PrivacyModeService.enabled.addListener(_onPrivacyModeChanged);
-  }
-
-  @override
-  void dispose() {
-    PrivacyModeService.enabled.removeListener(_onPrivacyModeChanged);
-    super.dispose();
-  }
-
-  void _onPrivacyModeChanged() {
-    if (mounted) setState(() => _privacyMode = PrivacyModeService.enabled.value);
-  }
-
-  Future<void> _checkBiometric() async {
-    final available = await BiometricService.isAvailable();
-    final enabled = await BiometricService.isEnabled();
-    if (mounted) {
-      setState(() {
-        _biometricAvailable = available;
-        _biometricEnabled = enabled;
-      });
-    }
-  }
-
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open link')));
-      }
-    }
-  }
-
-  Widget _menuItem(IconData icon, String label, {VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap ?? () {},
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.textSecondary, size: 20),
-            const SizedBox(width: 14),
-            Expanded(child: Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14))),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _menuItemWithToggle(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.textSecondary, size: 20),
-        title: Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
-        trailing: Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  Widget _section(List<Widget> items) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(children: items),
-    );
+  void _comingSoon(String label) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label â€” coming soon')));
   }
 
   @override
@@ -112,31 +34,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
         foregroundColor: AppColors.textPrimary,
         title: const Text('Settings', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _section([
-              _menuItem(Icons.notifications_outlined, 'Notifications', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
-              _menuItem(Icons.pending_actions_outlined, 'Limit & Stop-Loss Orders', onTap: () => context.push('/pending-orders')),
-              _menuItem(Icons.calculate_outlined, 'Brokerage Calculator', onTap: () => context.push('/brokerage-calculator')),
-            ]),
-            _section([
-              if (_biometricAvailable)
-                _menuItemWithToggle(Icons.fingerprint, 'Biometric Login', _biometricEnabled, (val) async {
-                  await BiometricService.setEnabled(val);
-                  setState(() => _biometricEnabled = val);
-                }),
-              _menuItemWithToggle(Icons.remove_red_eye_outlined, 'Privacy Mode', _privacyMode, (val) => PrivacyModeService.enabled.value = val),
-              _menuItem(Icons.security_outlined, 'Security', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityScreen()))),
-            ]),
-            _section([
-              _menuItem(Icons.help_outline, 'Help & Support', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()))),
-              _menuItem(Icons.privacy_tip_outlined, 'Privacy Policy', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/OneInvest-legal/privacy-policy.html')),
-              _menuItem(Icons.description_outlined, 'Terms of Service', onTap: () => _openUrl('https://gujaratharva021-lgtm.github.io/OneInvest-legal/terms-of-service.html')),
-            ]),
-          ],
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _card([
+            _navItem(Icons.notifications_outlined, 'Notifications', null,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
+            _navItem(Icons.assignment_outlined, 'Limit & Stop-Loss Orders', null,
+                onTap: () => context.push('/pending-orders')),
+            _navItem(Icons.calculate_outlined, 'Brokerage Calculator', null,
+                onTap: () => context.push('/brokerage-calculator'), showDivider: false),
+          ]),
+          const SizedBox(height: 16),
+          _card([
+            _switchItem(Icons.visibility_outlined, 'Privacy Mode', _privacyMode,
+                onChanged: (v) => setState(() => _privacyMode = v)),
+            _navItem(Icons.shield_outlined, 'Security', null,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityScreen())), showDivider: false),
+          ]),
+          const SizedBox(height: 16),
+          _card([
+            _navItem(Icons.person_outline, 'Account Settings', 'Personal Info, Permissions & More',
+                onTap: () => _comingSoon('Account Settings')),
+            _navItem(Icons.account_circle_outlined, 'User Settings', 'Login, Communication & More',
+                onTap: () => _comingSoon('User Settings')),
+            _navItem(Icons.tune_outlined, 'Trading Presets', 'Customize Your Trade Defaults',
+                onTap: () => _comingSoon('Trading Presets')),
+            _navItem(Icons.brightness_6_outlined, 'Display', 'App Theme & Accessibility',
+                onTap: () => _comingSoon('Display')),
+            _navItem(Icons.article_outlined, 'News Language Settings', 'Filter news articles by selected languages',
+                onTap: () => _comingSoon('News Language Settings')),
+            _navItem(Icons.public_outlined, 'Localization', 'Language, Base Currency & More',
+                onTap: () => _comingSoon('Localization')),
+            _navItem(Icons.build_outlined, 'Advanced', 'Diagnostics, Debug & Extended Log',
+                onTap: () => _comingSoon('Advanced'), showDivider: false),
+          ]),
+          const SizedBox(height: 16),
+          _card([
+            _navItem(Icons.help_outline, 'Help & Support', null, onTap: () => _comingSoon('Help & Support')),
+            _navItem(Icons.privacy_tip_outlined, 'Privacy Policy', null, onTap: () => _comingSoon('Privacy Policy')),
+            _navItem(Icons.description_outlined, 'Terms of Service', null, onTap: () => _comingSoon('Terms of Service'), showDivider: false),
+          ]),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _card(List<Widget> children) => Container(
+        decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+        child: Column(children: children),
+      );
+
+  Widget _navItem(IconData icon, String title, String? subtitle, {required VoidCallback onTap, bool showDivider = true}) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            child: Row(
+              children: [
+                Icon(icon, color: AppColors.textSecondary, size: 20),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      ],
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+              ],
+            ),
+          ),
         ),
+        if (showDivider) const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Divider(height: 1, color: AppColors.border)),
+      ],
+    );
+  }
+
+  Widget _switchItem(IconData icon, String title, bool value, {required ValueChanged<bool> onChanged}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.textSecondary, size: 20),
+          const SizedBox(width: 14),
+          Expanded(child: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500))),
+          Switch(value: value, onChanged: onChanged, activeColor: AppColors.primary),
+        ],
       ),
     );
   }

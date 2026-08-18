@@ -135,7 +135,7 @@ class _AccountDrawerState extends State<AccountDrawer> {
                         children: [
                           const Text('Total Value', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                           const SizedBox(height: 4),
-                          Text('â‚¹${_totalValue.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22)),
+                          Text('₹${_totalValue.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22)),
                           const SizedBox(height: 14),
                           Row(
                             children: [
@@ -144,7 +144,7 @@ class _AccountDrawerState extends State<AccountDrawer> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text('Invested', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                    Text('â‚¹${_invested.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                    Text('₹${_invested.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                                   ],
                                 ),
                               ),
@@ -153,7 +153,7 @@ class _AccountDrawerState extends State<AccountDrawer> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text('Cash', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                    Text('â‚¹${_cash.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                    Text('₹${_cash.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                                   ],
                                 ),
                               ),

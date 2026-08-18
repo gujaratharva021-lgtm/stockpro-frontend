@@ -411,7 +411,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12)),
               child: Row(children: [
                 Expanded(child: Text(name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13))),
-                Text('â‚¹${priceLow.toStringAsFixed(0)} - â‚¹${priceHigh.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                Text('₹${priceLow.toStringAsFixed(0)} - ₹${priceHigh.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               ]),
             ),
           );
@@ -446,7 +446,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-              if (price != null) Text('â‚¹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
+              if (price != null) Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
             ]),
           ),
           PriceChange(change: change, changePercent: changePercent, fontSize: 12),
