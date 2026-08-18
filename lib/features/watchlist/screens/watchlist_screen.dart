@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
+import 'package:stock_app/shared/widgets/account_drawer.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
 import 'package:stock_app/features/search/screens/search_screen.dart';
@@ -268,7 +269,15 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
       backgroundColor: AppColors.background,
       elevation: 0,
       automaticallyImplyLeading: false,
-      titleSpacing: 16,
+      leadingWidth: 40,
+      leading: Builder(
+        builder: (ctx) => IconButton(
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+          onPressed: () => Scaffold.of(ctx).openDrawer(),
+        ),
+      ),
+      titleSpacing: 4,
       title: GestureDetector(
         onTap: _showListSwitcher,
         child: Row(
@@ -435,6 +444,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
       currentIndex: 0,
       child: Scaffold(
         backgroundColor: AppColors.background,
+        drawer: const AccountDrawer(),
         appBar: _buildAppBar(),
         body: SafeArea(
           top: false,

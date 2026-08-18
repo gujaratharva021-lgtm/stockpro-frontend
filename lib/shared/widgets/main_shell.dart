@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
@@ -11,7 +11,8 @@ class MainShell extends StatefulWidget {
   final int currentIndex;
   final Widget? floatingActionButton;
   final bool showBottomBar;
-  const MainShell({super.key, required this.child, required this.currentIndex, this.floatingActionButton, this.showBottomBar = true});
+  final Widget? drawer;
+  const MainShell({super.key, required this.child, required this.currentIndex, this.floatingActionButton, this.showBottomBar = true, this.drawer});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -38,6 +39,7 @@ class _MainShellState extends State<MainShell> {
   Widget _mobileLayout() {
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: widget.drawer,
       body: widget.child,
       floatingActionButton: widget.floatingActionButton,
       bottomNavigationBar: widget.showBottomBar ? Container(

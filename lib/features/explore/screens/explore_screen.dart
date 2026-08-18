@@ -4,6 +4,7 @@ import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/constants/nifty_symbols.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
+import 'package:stock_app/shared/widgets/account_drawer.dart';
 import 'package:stock_app/shared/widgets/stock_logo.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart';
@@ -51,33 +52,6 @@ const List<Map<String, String>> _kCrypto = [
   {'symbol': 'BCH', 'name': 'Bitcoin Cash', 'yahoo': 'BCH-USD'},
   {'symbol': 'SOL', 'name': 'Solana', 'yahoo': 'SOL-USD'},
   {'symbol': 'ADA', 'name': 'Cardano', 'yahoo': 'ADA-USD'},
-];
-
-class _DrawerItem {
-  final IconData icon;
-  final String label;
-  final String route;
-  const _DrawerItem(this.icon, this.label, this.route);
-}
-
-// Every screen that used to be a primary bottom-nav tab or live in the old
-// "More" menu -- moved here behind the hamburger drawer so nothing is lost.
-const List<_DrawerItem> _kDrawerItems = [
-  _DrawerItem(Icons.swap_horiz_outlined, 'Trade / Orders', '/pending-orders'),
-  _DrawerItem(Icons.gavel_outlined, 'Bids / IPO', '/ipo'),
-  _DrawerItem(Icons.article_outlined, 'News', '/news'),
-  _DrawerItem(Icons.filter_alt_outlined, 'Screener', '/screener'),
-  _DrawerItem(Icons.compare_arrows, 'Compare', '/compare'),
-  _DrawerItem(Icons.grid_view_outlined, 'Heatmap', '/heatmap'),
-  _DrawerItem(Icons.dashboard_customize_outlined, 'Smallcase', '/smallcase'),
-  _DrawerItem(Icons.bar_chart_outlined, 'FII / DII', '/fii-dii'),
-  _DrawerItem(Icons.calculate_outlined, 'Brokerage Calculator', '/brokerage-calculator'),
-  _DrawerItem(Icons.autorenew, 'SIP', '/sip'),
-  _DrawerItem(Icons.smart_toy_outlined, 'AI Assistant', '/assistant'),
-  _DrawerItem(Icons.notifications_outlined, 'Notifications', '/notifications'),
-  _DrawerItem(Icons.trending_up, 'Performance', '/performance'),
-  _DrawerItem(Icons.receipt_long_outlined, 'Tax Report', '/tax-report'),
-  _DrawerItem(Icons.account_circle_outlined, 'Profile', '/profile'),
 ];
 
 /// Market-overview style Explore screen: search, sector-based investment
@@ -258,7 +232,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
             Expanded(
               child: rows.isEmpty
-                  ? const Center(child: Text('Loading quotes…', style: TextStyle(color: AppColors.textMuted)))
+                  ? const Center(child: Text('Loading quotesâ€¦', style: TextStyle(color: AppColors.textMuted)))
                   : ListView.builder(
                       controller: scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -277,7 +251,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   void _comingSoon(String label) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label — coming soon')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label â€” coming soon')));
   }
 
   @override
@@ -286,7 +260,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       currentIndex: 3,
       child: Scaffold(
         backgroundColor: AppColors.background,
-        drawer: _buildDrawer(),
+        drawer: const AccountDrawer(),
         appBar: AppBar(
           backgroundColor: AppColors.background,
           elevation: 0,
@@ -333,32 +307,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    return Drawer(
-      backgroundColor: AppColors.cardBackground,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('Explore Features', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
-            ),
-            const Divider(color: AppColors.border, height: 1),
-            ..._kDrawerItems.map((item) => ListTile(
-                  leading: Icon(item.icon, color: AppColors.textSecondary),
-                  title: Text(item.label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push(item.route);
-                  },
-                )),
-          ],
         ),
       ),
     );
@@ -463,7 +411,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12)),
               child: Row(children: [
                 Expanded(child: Text(name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13))),
-                Text('₹${priceLow.toStringAsFixed(0)} - ₹${priceHigh.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                Text('â‚¹${priceLow.toStringAsFixed(0)} - â‚¹${priceHigh.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               ]),
             ),
           );
@@ -498,7 +446,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-              if (price != null) Text('₹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
+              if (price != null) Text('â‚¹${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
             ]),
           ),
           PriceChange(change: change, changePercent: changePercent, fontSize: 12),

@@ -6,6 +6,7 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
+import 'package:stock_app/shared/widgets/account_drawer.dart';
 import 'package:stock_app/shared/widgets/app_card.dart';
 import 'package:stock_app/shared/widgets/price_change.dart';
 import 'package:stock_app/shared/widgets/section_header.dart';
@@ -272,6 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       currentIndex: 5,
       child: Scaffold(
         backgroundColor: _bgBottom,
+        drawer: const AccountDrawer(),
         body: _loading
             ? const Center(child: CircularProgressIndicator(color: Colors.white))
             : SingleChildScrollView(
@@ -362,6 +364,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Row(
             children: [
+              Builder(
+                builder: (ctx) => InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => Scaffold.of(ctx).openDrawer(),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.08), shape: BoxShape.circle),
+                    child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+              ),
               Expanded(
                 child: Text('$_greeting, $_userName',
                     maxLines: 1,

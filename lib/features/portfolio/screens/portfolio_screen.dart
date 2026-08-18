@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
+import 'package:stock_app/shared/widgets/account_drawer.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/shared/widgets/error_state.dart';
 import 'package:stock_app/shared/widgets/empty_state.dart';
@@ -401,6 +402,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   Widget build(BuildContext context) {
     return MainShell(
       currentIndex: widget.navIndex,
+      drawer: const AccountDrawer(),
       child: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
@@ -414,17 +416,31 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () => showOverviewSheet(context),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Portfolio', style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-                            Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary),
-                          ],
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Builder(
+                            builder: (ctx) => IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+                              onPressed: () => Scaffold.of(ctx).openDrawer(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () => showOverviewSheet(context),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Portfolio', style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                                Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      _toolbarIcon(Icons.menu, onTap: _showFilterSheet),
+                      _toolbarIcon(Icons.tune, onTap: _showFilterSheet),
                     ],
                   ),
                 ),
@@ -496,7 +512,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 Text(label, style: AppTypography.label),
                 const SizedBox(height: 2),
                 Text(
-                  '${isUp ? '+' : ''}₹${value.toStringAsFixed(2)} (${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%)',
+                  '${isUp ? '+' : ''}â‚¹${value.toStringAsFixed(2)} (${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%)',
                   style: AppTypography.changeText.copyWith(color: color),
                 ),
               ],
@@ -524,7 +540,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           const Text('Net Liquidation Value', style: AppTypography.label),
           const SizedBox(height: 4),
           Text(
-            '₹${_totalCurrentValue.toStringAsFixed(2)}',
+            'â‚¹${_totalCurrentValue.toStringAsFixed(2)}',
             style: AppTypography.priceHero,
           ),
           _summaryStatRow('Day P&L', _todayReturns, _todayReturnsPct, trailingLabel: 'Details'),
@@ -652,7 +668,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         children: [
           Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          const Text('â€¢', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       );
     }
@@ -749,7 +765,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             ),
             SizedBox(
               width: 90,
-              child: Text('₹${current.toStringAsFixed(2)}', textAlign: TextAlign.right, maxLines: 1, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+              child: Text('â‚¹${current.toStringAsFixed(2)}', textAlign: TextAlign.right, maxLines: 1, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
             ),
             SizedBox(
               width: 90,
@@ -839,12 +855,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                     const SizedBox(height: 6),
                     Text(
                       type == 'Regular'
-                          ? 'Qty: ${data['quantity']} ? Avg ₹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} ? Avg â‚¹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'MTF'
-                          ? 'Qty: ${data['quantity']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} â€¢ Entry â‚¹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'Futures'
-                          ? '${data['position_type'] ?? ''} • Lot: ${data['lot_size']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
-                          : '${data['option_type'] ?? ''} • Strike ₹${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}',
+                          ? '${data['position_type'] ?? ''} â€¢ Lot: ${data['lot_size']} â€¢ Entry â‚¹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
+                          : '${data['option_type'] ?? ''} â€¢ Strike â‚¹${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}',
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
@@ -902,7 +918,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         ],
                       ),
                     ),
-                    Text('₹${invested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text('â‚¹${invested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                   ],
                 ),
               );
@@ -1014,12 +1030,12 @@ class _ImportHoldingsSheetState extends State<_ImportHoldingsSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('$qty shares @ ₹${avgPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          Text('$qty shares @ â‚¹${avgPrice.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('₹${ltp.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                              Text('${isProfit ? '+' : ''}₹${pnl.toStringAsFixed(2)}', style: TextStyle(color: isProfit ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
+                              Text('â‚¹${ltp.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                              Text('${isProfit ? '+' : ''}â‚¹${pnl.toStringAsFixed(2)}', style: TextStyle(color: isProfit ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ],
