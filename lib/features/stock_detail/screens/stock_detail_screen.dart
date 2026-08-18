@@ -499,6 +499,69 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 
+  // Market-data range slider: a track from low to high with a marker dot
+  // at the current price's position. Used for both the intraday (Today)
+  // range and the 52-week range, so both share one implementation.
+  Widget _rangeSliderCard({required String centerLabel, required double low, required double high, required double? current}) {
+    final ratio = (current != null && high > low) ? ((current - low) / (high - low)).clamp(0.0, 1.0) : 0.5;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            const Text('Low', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            Text(centerLabel, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+            const Text('High', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          ]),
+          const SizedBox(height: 4),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text('₹${low.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('₹${high.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+          ]),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const dotSize = 12.0;
+              final trackWidth = constraints.maxWidth;
+              final dotLeft = (ratio * trackWidth) - (dotSize / 2);
+              return SizedBox(
+                height: dotSize,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: (dotSize - 6) / 2,
+                      child: Container(
+                        width: trackWidth,
+                        height: 6,
+                        decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(4)),
+                      ),
+                    ),
+                    if (current != null)
+                      Positioned(
+                        left: dotLeft.clamp(0.0, trackWidth - dotSize),
+                        child: Container(
+                          width: dotSize,
+                          height: dotSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.background, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   // ignore: unused_element
   Color _avatarColor(String symbol) {
     final colors = [
@@ -933,39 +996,19 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
             const SizedBox(height: 14),
           ],
 
-          // 52W Range
+          // Today's range (from real OHLC data)
+          if (_ohlc != null) ...[
+            _rangeSliderCard(centerLabel: 'Today', low: _ohlc!['low']!, high: _ohlc!['high']!, current: price),
+            const SizedBox(height: 14),
+          ],
+
+          // 52-week range
           if (_recentRange != null) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    const Text('Recent Low', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                    const Text('Recent High', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  ]),
-                  const SizedBox(height: 4),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('₹${_recentRange!['low']!.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text('₹${_recentRange!['high']!.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                  ]),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: price != null && _recentRange!['high']! > _recentRange!['low']!
-                          ? ((price - _recentRange!['low']!) / (_recentRange!['high']! - _recentRange!['low']!)).clamp(0.0, 1.0)
-                          : 0.5,
-                      minHeight: 6,
-                      backgroundColor: AppColors.border,
-                      valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text('Based on last ${_history.length} trading days', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                ],
-              ),
+            _rangeSliderCard(centerLabel: '52 Weeks', low: _recentRange!['low']!, high: _recentRange!['high']!, current: price),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text('Based on last ${_history.length} trading days', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
             ),
             const SizedBox(height: 14),
           ],

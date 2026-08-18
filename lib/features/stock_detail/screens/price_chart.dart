@@ -202,8 +202,18 @@ class _PriceChartState extends State<PriceChart> {
             isCurved: true,
             curveSmoothness: 0.3,
             color: _chartColor,
-            barWidth: 2,
-            dotData: const FlDotData(show: false),
+            barWidth: 2.5,
+            shadow: Shadow(color: _chartColor.withValues(alpha: 0.55), blurRadius: 10),
+            dotData: FlDotData(
+              show: true,
+              checkToShowDot: (spot, barData) => spot.x == spots.last.x,
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: 4.5,
+                color: _chartColor,
+                strokeWidth: 2,
+                strokeColor: _chartColor.withValues(alpha: 0.35),
+              ),
+            ),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(

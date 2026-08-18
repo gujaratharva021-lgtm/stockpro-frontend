@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/shared/widgets/app_card.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/fundamentals_screen.dart';
@@ -354,14 +355,15 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
     );
   }
 
-  Widget _kvRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _statGridItem(String label, String value, double width) {
+    return SizedBox(
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-          Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+          const SizedBox(height: 3),
+          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -434,8 +436,25 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                       controller: scrollController,
                       padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + MediaQuery.of(context).padding.bottom + 16),
                       children: [
-                        // Header: symbol + price
-                        Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.bold)),
+                        // Header: symbol + price + quick actions
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.bold)),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.notifications_none, color: AppColors.textSecondary, size: 22),
+                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SetAlertScreen(stock: widget.stock, currentPrice: price))),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.description_outlined, color: AppColors.textSecondary, size: 22),
+                                  onPressed: _showAddNotesDialog,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 4),
                         if (_error != null)
                           Row(children: [
@@ -488,91 +507,111 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
                         ]),
                         const Divider(height: 20, color: AppColors.border),
                         Row(children: [
-                          _actionButton(icon: Icons.notifications_none, label: 'Set alert', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SetAlertScreen(stock: widget.stock, currentPrice: price)))),
-                          _actionButton(icon: Icons.description_outlined, label: 'Add notes', onTap: _showAddNotesDialog),
                           _actionButton(icon: Icons.shortcut, label: 'Create GTT', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GttScreen(stock: widget.stock, currentPrice: price, changePercent: changePercent)))),
                         ]),
                         const Divider(height: 24, color: AppColors.border),
 
                         // Bid/Offer depth
-                        if (depthBuy.isNotEmpty || depthSell.isNotEmpty) ...[
-                          const Row(children: [
-                            Expanded(child: Row(children: [
-                              Expanded(child: Text('Bid', style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
-                              SizedBox(width: 28, child: Text('Orders', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
-                              SizedBox(width: 56, child: Text('Qty', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
-                            ])),
-                            SizedBox(width: 8),
-                            Expanded(child: Row(children: [
-                              SizedBox(width: 56, child: Text('Offer', style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
-                              SizedBox(width: 28, child: Text('Orders', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
-                              Expanded(child: Text('Qty', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
-                            ])),
-                          ]),
-                          const SizedBox(height: 4),
-                          for (int i = 0; i < (depthBuy.length > depthSell.length ? depthBuy.length : depthSell.length); i++)
-                            _depthRow(
-                              bidPrice: i < depthBuy.length ? (depthBuy[i]['price'] as num).toStringAsFixed(2) : '',
-                              bidOrders: i < depthBuy.length ? '${depthBuy[i]['orders']}' : '',
-                              bidQty: i < depthBuy.length ? '${depthBuy[i]['quantity']}' : '',
-                              offerPrice: i < depthSell.length ? (depthSell[i]['price'] as num).toStringAsFixed(2) : '',
-                              offerOrders: i < depthSell.length ? '${depthSell[i]['orders']}' : '',
-                              offerQty: i < depthSell.length ? '${depthSell[i]['quantity']}' : '',
-                              bidFrac: i < depthBuy.length ? ((depthBuy[i]['quantity'] as num).toDouble() / maxDepthQty) : 0,
-                              offerFrac: i < depthSell.length ? ((depthSell[i]['quantity'] as num).toDouble() / maxDepthQty) : 0,
-                            ),
-                          const Divider(height: 12, color: AppColors.border),
-                          Row(children: [
-                            Expanded(child: Row(children: [
-                              const Expanded(child: Text('Total', style: TextStyle(color: AppColors.primary, fontSize: 13))),
-                              Text(NumberFormat('#,##,###').format(totalBuyQty), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
-                            ])),
-                            const SizedBox(width: 8),
-                            Expanded(child: Row(children: [
-                              const Expanded(child: Text('Total', style: TextStyle(color: AppColors.danger, fontSize: 13))),
-                              Text(NumberFormat('#,##,###').format(totalSellQty), style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600, fontSize: 13)),
-                            ])),
-                          ]),
-                        ] else
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8),
-                            child: Text('Order book depth not available for this stock', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          ),
-                        const Divider(height: 28, color: AppColors.border),
+                        AppCard(
+                          child: depthBuy.isNotEmpty || depthSell.isNotEmpty
+                              ? Column(
+                                  children: [
+                                    const Row(children: [
+                                      Expanded(child: Row(children: [
+                                        Expanded(child: Text('Bid', style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
+                                        SizedBox(width: 28, child: Text('Orders', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
+                                        SizedBox(width: 56, child: Text('Qty', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
+                                      ])),
+                                      SizedBox(width: 8),
+                                      Expanded(child: Row(children: [
+                                        SizedBox(width: 56, child: Text('Offer', style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
+                                        SizedBox(width: 28, child: Text('Orders', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 11))),
+                                        Expanded(child: Text('Qty', textAlign: TextAlign.end, style: TextStyle(color: AppColors.textMuted, fontSize: 12))),
+                                      ])),
+                                    ]),
+                                    const SizedBox(height: 4),
+                                    for (int i = 0; i < (depthBuy.length > depthSell.length ? depthBuy.length : depthSell.length); i++)
+                                      _depthRow(
+                                        bidPrice: i < depthBuy.length ? (depthBuy[i]['price'] as num).toStringAsFixed(2) : '',
+                                        bidOrders: i < depthBuy.length ? '${depthBuy[i]['orders']}' : '',
+                                        bidQty: i < depthBuy.length ? '${depthBuy[i]['quantity']}' : '',
+                                        offerPrice: i < depthSell.length ? (depthSell[i]['price'] as num).toStringAsFixed(2) : '',
+                                        offerOrders: i < depthSell.length ? '${depthSell[i]['orders']}' : '',
+                                        offerQty: i < depthSell.length ? '${depthSell[i]['quantity']}' : '',
+                                        bidFrac: i < depthBuy.length ? ((depthBuy[i]['quantity'] as num).toDouble() / maxDepthQty) : 0,
+                                        offerFrac: i < depthSell.length ? ((depthSell[i]['quantity'] as num).toDouble() / maxDepthQty) : 0,
+                                      ),
+                                    const Divider(height: 12, color: AppColors.border),
+                                    Row(children: [
+                                      Expanded(child: Row(children: [
+                                        const Expanded(child: Text('Total', style: TextStyle(color: AppColors.primary, fontSize: 13))),
+                                        Text(NumberFormat('#,##,###').format(totalBuyQty), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                      ])),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Row(children: [
+                                        const Expanded(child: Text('Total', style: TextStyle(color: AppColors.danger, fontSize: 13))),
+                                        Text(NumberFormat('#,##,###').format(totalSellQty), style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600, fontSize: 13)),
+                                      ])),
+                                    ]),
+                                  ],
+                                )
+                              : const Text('Order book depth not available for this stock', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        ),
+                        const SizedBox(height: 16),
 
                         // Day's range
                         if (low != null && high != null) ...[
-                          const Text("Day's range", style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                          const SizedBox(height: 12),
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            const Text('Low', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                            const Text('High', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                          ]),
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text(low.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-                            Text(high.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-                          ]),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: price != null && high > low ? ((price - low) / (high - low)).clamp(0.0, 1.0) : 0.5,
-                              minHeight: 5,
-                              backgroundColor: AppColors.border,
-                              valueColor: const AlwaysStoppedAnimation(AppColors.danger),
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("Day's range", style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                                const SizedBox(height: 12),
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                                  const Text('Low', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                                  const Text('High', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                                ]),
+                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                                  Text(low.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+                                  Text(high.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+                                ]),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: price != null && high > low ? ((price - low) / (high - low)).clamp(0.0, 1.0) : 0.5,
+                                    minHeight: 5,
+                                    backgroundColor: AppColors.border,
+                                    valueColor: const AlwaysStoppedAnimation(AppColors.danger),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 16),
                         ],
 
-                        if (open != null) _kvRow('Open', open.toStringAsFixed(2)),
-                        if (prevClose != null) _kvRow('Prev. close', prevClose.toStringAsFixed(2)),
-                        if (volume != null) _kvRow('Volume', _formatVolume(volume)),
-                        if (avgPrice != null) _kvRow('Avg. trade price', avgPrice.toStringAsFixed(2)),
-                        if (ltq != null) _kvRow('Last traded quantity', '$ltq'),
-                        if (ltt != null) _kvRow('Last traded at', ltt),
-                        if (lowerCircuit != null) _kvRow('Lower circuit', lowerCircuit.toStringAsFixed(2)),
-                        if (upperCircuit != null) _kvRow('Upper circuit', upperCircuit.toStringAsFixed(2)),
+                        AppCard(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final colWidth = (constraints.maxWidth - 16) / 2;
+                              return Wrap(
+                                spacing: 16,
+                                runSpacing: 14,
+                                children: [
+                                  if (open != null) _statGridItem('Open', open.toStringAsFixed(2), colWidth),
+                                  if (prevClose != null) _statGridItem('Prev. close', prevClose.toStringAsFixed(2), colWidth),
+                                  if (volume != null) _statGridItem('Volume', _formatVolume(volume), colWidth),
+                                  if (avgPrice != null) _statGridItem('Avg. trade price', avgPrice.toStringAsFixed(2), colWidth),
+                                  if (ltq != null) _statGridItem('Last traded qty', '$ltq', colWidth),
+                                  if (ltt != null) _statGridItem('Last traded at', ltt, colWidth),
+                                  if (lowerCircuit != null) _statGridItem('Lower circuit', lowerCircuit.toStringAsFixed(2), colWidth),
+                                  if (upperCircuit != null) _statGridItem('Upper circuit', upperCircuit.toStringAsFixed(2), colWidth),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
 
                         const Divider(height: 28, color: AppColors.border),
                         const Text('Apps', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
