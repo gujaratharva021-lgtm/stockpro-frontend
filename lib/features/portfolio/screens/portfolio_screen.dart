@@ -82,7 +82,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         ApiService.getMyFunds().catchError((_) => []),
         ApiService.getMyETFs().catchError((_) => []),
         ApiService.getMTFPositions().catchError((_) => []),
-        ApiService.getPositions().catchError((_) => []),
+        ApiService.getPositions().catchError((e) { debugPrint('getPositions error: $e'); return []; }),
         ApiService.getFutures().catchError((_) => []),
         ApiService.getOptions().catchError((_) => []),
         ApiService.getPendingOrders().catchError((_) => []),

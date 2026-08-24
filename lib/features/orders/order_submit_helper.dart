@@ -1,42 +1,45 @@
-﻿import 'package:stock_app/core/models/order.dart';
-import 'package:stock_app/core/services/order_service.dart';
+﻿import 'package:dio/dio.dart';
+import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
-/// Places a MARKET order through the real order engine and waits for it to
-/// reach a terminal status before returning, instead of returning the
-/// instant the HTTP request completes. Shared by every screen that opens
-/// [OrderTicketScreen] for a MARKET order (orders_screen, stock_detail,
-/// stock_quote_sheet) so they all get the same honest behaviour:
+/// TEMPORARY FIX (see stockpro-app notes): the real order engine
+/// (POST /api/v1/orders, internal/orders on the backend) is not deployed
+/// yet -- calling it returns 404. Until that backend module exists, every
+/// screen that opens [OrderTicketScreen] goes through the legacy
+/// synchronous endpoint (POST /api/v1/portfolio/orders) instead.
 ///
-///  - FILLED / PARTIALLY_FILLED at the timeout -> returns normally with a
-///    status label reflecting what actually happened.
-///  - REJECTED / CANCELLED / FAILED -> throws, so it surfaces through the
-///    existing error-handling path in OrderTicketScreen (shown to the user
-///    as a real failure, not a fake success dialog).
-///  - Still OPEN/pending when tracking gives up (timeout) -> returns
-///    "Pending" rather than claiming it executed; the user can check the
-///    order in Orders later.
+/// This endpoint gives no order id and no state machine -- a successful
+/// call means the trade already executed (BUY/SELL happened against the
+/// portfolio immediately), so we report a flat "Executed" status here.
+/// There is no "Pending"/"Open" state and no tracking to wait for: swap
+/// this helper back to OrderService.submit/trackToTerminal once
+/// internal/orders is built and deployed.
+///
+/// The legacy endpoint's `price` field is `required,gt=0` server-side, even
+/// though the server always overwrites it with its own live quote before
+/// executing (see portfolio.Service.PlaceOrder) -- so any positive number
+/// satisfies validation without affecting what the order actually fills at.
 Future<OrderSubmitResult> submitMarketOrderAndTrack({
   required String stockId,
   required String side, // BUY | SELL
   required double quantity,
   String productType = 'REGULAR',
 }) {
-  return _submitAndTrack(
+  return _submitLegacy(
     stockId: stockId,
     side: side,
-    orderType: 'MARKET',
     quantity: quantity,
+    price: 1, // placeholder -- server ignores this and uses its live quote
     productType: productType,
   );
 }
 
-/// Places a LIMIT order through the real order engine and waits for it to
-/// reach a terminal status (or times out) before returning, mirroring
-/// [submitMarketOrderAndTrack]. A LIMIT order that is still OPEN (resting
-/// on the book, not yet matched) when tracking gives up is reported with
-/// its actual status label rather than a blanket "Pending" -- it genuinely
-/// is open, not just unconfirmed.
+/// Legacy endpoint always executes at the current live quote (it ignores
+/// whatever price the client sends), so a "LIMIT" order placed through
+/// this fallback executes immediately at market price rather than resting
+/// on the book until the limit price is hit. Kept as a separate function
+/// name so call sites don't change, and so the real LIMIT behaviour is a
+/// one-line swap once internal/orders exists.
 Future<OrderSubmitResult> submitLimitOrderThroughEngine({
   required String stockId,
   required String side, // BUY | SELL
@@ -44,60 +47,33 @@ Future<OrderSubmitResult> submitLimitOrderThroughEngine({
   required double limitPrice,
   String productType = 'REGULAR',
 }) {
-  return _submitAndTrack(
+  return _submitLegacy(
     stockId: stockId,
     side: side,
-    orderType: 'LIMIT',
     quantity: quantity,
-    limitPrice: limitPrice,
+    price: limitPrice > 0 ? limitPrice : 1,
     productType: productType,
   );
 }
 
-Future<OrderSubmitResult> _submitAndTrack({
+Future<OrderSubmitResult> _submitLegacy({
   required String stockId,
   required String side,
-  required String orderType,
   required double quantity,
-  double? limitPrice,
+  required double price,
   String productType = 'REGULAR',
 }) async {
-  final placed = await OrderService.submit(
-    stockId: stockId,
-    side: side,
-    orderType: orderType,
-    productType: productType,
-    quantity: quantity,
-    limitPrice: limitPrice,
-  );
-
-  Order finalOrder = placed;
   try {
-    finalOrder = await OrderService.trackToTerminal(placed).last;
-  } on OrderTrackingTimeout catch (e) {
-    finalOrder = e.lastKnown;
-  } catch (_) {
-    // Tracking itself failed (e.g. network drop mid-poll) -- fall back to
-    // one direct status check rather than silently reporting the order as
-    // executed when we simply lost track of it.
-    try {
-      finalOrder = await OrderService.getOrder(placed.id);
-    } catch (_) {
-      // Still couldn't confirm -- be honest that we don't know, don't
-      // claim success.
-      return OrderSubmitResult(status: 'Pending', orderId: placed.id);
-    }
+    await ApiService.placeOrder(
+      stockId,
+      side,
+      quantity.round(),
+      price,
+      productType: productType,
+    );
+  } on DioException catch (e) {
+    final serverMsg = e.response?.data is Map ? (e.response?.data['error']?.toString()) : null;
+    throw Exception(serverMsg ?? e.message ?? 'Order failed');
   }
-
-  if (finalOrder.isRejectedOrFailed) {
-    throw Exception(finalOrder.rejectReason ?? 'Order ${OrderStatus.label(finalOrder.status).toLowerCase()}');
-  }
-  if (finalOrder.isCancelled) {
-    throw Exception('Order was cancelled');
-  }
-  if (finalOrder.isFilled) {
-    return OrderSubmitResult(status: 'Executed', orderId: finalOrder.id);
-  }
-  // OPEN / PARTIALLY_FILLED / still mid-flight when we stopped watching.
-  return OrderSubmitResult(status: OrderStatus.label(finalOrder.status), orderId: finalOrder.id);
+  return const OrderSubmitResult(status: 'Executed', orderId: null);
 }
