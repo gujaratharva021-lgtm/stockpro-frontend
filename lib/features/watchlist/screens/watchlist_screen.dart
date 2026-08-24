@@ -183,7 +183,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           if (mounted) setState(() => _quotes[symbol] = quote);
         } catch (_) {}
         try {
-          final intraday = await ApiService.getIntraday(symbol, '15m');
+          final intraday = await ApiService.getIntraday(symbol, '5m');
           final closes = intraday
               .map((p) => (p['close'] as num?)?.toDouble() ?? (p['price'] as num?)?.toDouble())
               .whereType<double>()
