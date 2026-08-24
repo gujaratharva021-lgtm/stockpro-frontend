@@ -474,13 +474,11 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         const SizedBox(width: 24),
                         _tabChip('Positions', _positionsCount, 1),
                         const SizedBox(width: 24),
-                        _tabChip('News', 0, 2),
+                        _tabChip('Orders', 0, 2),
                         const SizedBox(width: 24),
-                        _tabChip('Orders', 0, 3),
+                        _tabChip('AI Instructions', 0, 3),
                         const SizedBox(width: 24),
-                        _tabChip('AI Instructions', 0, 4),
-                        const SizedBox(width: 24),
-                        _tabChip('Trades', 0, 5),
+                        _tabChip('Trades', 0, 4),
                         const SizedBox(width: 24),
                         GestureDetector(
                           onTap: () => context.push('/performance'),
@@ -504,10 +502,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               else ...[
                   if (_tab == 0) ..._buildHoldingsTab(),
                   if (_tab == 1) ..._buildPositionsTab(),
-                  if (_tab == 2) ..._buildEmptyTab(),
-                  if (_tab == 3) ..._buildOrdersTab(),
-                  if (_tab == 4) ..._buildEmptyTab(),
-                  if (_tab == 5) ..._buildTradesTab(),
+                  if (_tab == 2) ..._buildOrdersTab(),
+                  if (_tab == 3) ..._buildEmptyTab(),
+                  if (_tab == 4) ..._buildTradesTab(),
                 ],
             ],
           ),
@@ -971,54 +968,151 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     final isBuy = order['buy_sell'] == 'BUY';
     final status = (order['status'] ?? '').toString();
     final accentColor = isBuy ? AppColors.success : AppColors.danger;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border(left: BorderSide(color: accentColor, width: 4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                child: Text(order['buy_sell'] ?? '', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 11)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  order['symbol']?.toString() ?? '',
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: () => _showOrderDetail(order),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border(left: BorderSide(color: accentColor, width: 4)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                  child: Text(order['buy_sell'] ?? '', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 11)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    order['symbol']?.toString() ?? '',
+                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                StatusBadge(label: status, tone: _orderStatusTone(status)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Qty: ${order['quantity'] ?? '-'}  \u2022  Trigger: \u20b9${order['trigger_price'] ?? '-'}  \u2022  ${order['order_type'] ?? '-'}',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+            if (status == 'PENDING') ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _cancelPendingOrder(order['id']),
+                  style: TextButton.styleFrom(backgroundColor: AppColors.danger.withValues(alpha: 0.1), padding: const EdgeInsets.symmetric(horizontal: 10)),
+                  child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
                 ),
               ),
-              StatusBadge(label: status, tone: _orderStatusTone(status)),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Qty: ${order['quantity'] ?? '-'}  \u2022  Trigger: \u20b9${order['trigger_price'] ?? '-'}  \u2022  ${order['order_type'] ?? '-'}',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-          ),
-          if (status == 'PENDING') ...[
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => _cancelPendingOrder(order['id']),
-                style: TextButton.styleFrom(backgroundColor: AppColors.danger.withValues(alpha: 0.1), padding: const EdgeInsets.symmetric(horizontal: 10)),
-                child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
-              ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  String _formatOrderTimestamp(dynamic raw) {
+    if (raw == null) return '-';
+    final dt = DateTime.tryParse(raw.toString());
+    if (dt == null) return '-';
+    return DateFormat('dd MMM yyyy, hh:mm a').format(dt.toLocal());
+  }
+
+  Widget _orderDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showOrderDetail(Map<String, dynamic> order) {
+    final isBuy = order['buy_sell'] == 'BUY';
+    final status = (order['status'] ?? '').toString();
+    final accentColor = isBuy ? AppColors.success : AppColors.danger;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4, margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                    child: Text(order['buy_sell'] ?? '', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      order['symbol']?.toString() ?? '',
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                  StatusBadge(label: status, tone: _orderStatusTone(status)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Divider(color: AppColors.border, height: 24),
+              _orderDetailRow('Order Type', order['order_type']?.toString() ?? '-'),
+              _orderDetailRow('Quantity', order['quantity']?.toString() ?? '-'),
+              _orderDetailRow('Trigger Price', '\u20b9${order['trigger_price'] ?? '-'}'),
+              _orderDetailRow('Status', status.isEmpty ? '-' : status),
+              _orderDetailRow('GTT Order', order['is_gtt'] == true ? 'Yes' : 'No'),
+              _orderDetailRow('Placed On', _formatOrderTimestamp(order['created_at'])),
+              if (order['executed_at'] != null) _orderDetailRow('Executed On', _formatOrderTimestamp(order['executed_at'])),
+              _orderDetailRow('Order ID', order['id']?.toString() ?? '-'),
+              if (status == 'PENDING') ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _cancelPendingOrder(order['id']);
+                    },
+                    style: TextButton.styleFrom(backgroundColor: AppColors.danger.withValues(alpha: 0.1), padding: const EdgeInsets.symmetric(vertical: 12)),
+                    child: const Text('Cancel Order', style: TextStyle(color: AppColors.danger, fontSize: 14, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
