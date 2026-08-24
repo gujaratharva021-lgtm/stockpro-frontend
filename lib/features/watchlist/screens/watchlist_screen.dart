@@ -399,9 +399,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         lineBarsData: [
                           LineChartBarData(
                             spots: [for (var i = 0; i < spark.length; i++) FlSpot(i.toDouble(), spark[i])],
-                            isCurved: true,
+                            isCurved: false,
                             color: color,
-                            barWidth: 1.5,
+                            barWidth: 1.3,
                             dotData: const FlDotData(show: false),
                           ),
                         ],

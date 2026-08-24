@@ -3,14 +3,171 @@ import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
 import 'package:stock_app/shared/widgets/account_drawer.dart';
 
-/// Predictions tab placeholder. No prediction feature/backend exists yet --
-/// this simply gives the new bottom-nav tab somewhere to go without
-/// fabricating any data or fake "AI predictions" content.
-class PredictionsScreen extends StatelessWidget {
+/// Predictions tab. No prediction backend exists yet, so every number on
+/// this screen is illustrative placeholder data (clearly labelled as a
+/// preview) rather than fabricated real market data. Structure/UX modeled
+/// as an India-first prediction markets experience: categories grid,
+/// category filter chips, and "Trending"/category rails of market cards
+/// with multi-contract Yes/No rows, matching the reference layout.
+class PredictionsScreen extends StatefulWidget {
   const PredictionsScreen({super.key});
 
   @override
+  State<PredictionsScreen> createState() => _PredictionsScreenState();
+}
+
+class _PredictionCategory {
+  final String label;
+  final IconData icon;
+  final List<Color> gradient;
+  final GlobalKey sectionKey = GlobalKey();
+  _PredictionCategory(this.label, this.icon, this.gradient);
+}
+
+class _PredictionContract {
+  final String name;
+  final int yesPct;
+  final int noPct;
+  const _PredictionContract(this.name, this.yesPct, this.noPct);
+}
+
+class _PredictionMarket {
+  final String title;
+  final String category;
+  final String closesLabel;
+  final String volumeLabel;
+  final String moreCount;
+  final List<_PredictionContract> contracts;
+  const _PredictionMarket({
+    required this.title,
+    required this.category,
+    required this.closesLabel,
+    required this.volumeLabel,
+    required this.moreCount,
+    required this.contracts,
+  });
+}
+
+class _PredictionsScreenState extends State<PredictionsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  late final List<_PredictionCategory> _categories = [
+    _PredictionCategory('Elections', Icons.how_to_vote_outlined, [AppColors.primary, AppColors.primaryDark]),
+    _PredictionCategory('Financial Markets', Icons.show_chart, [AppColors.success, const Color(0xFF0B6B47)]),
+    _PredictionCategory('Cricket & Sports', Icons.sports_cricket_outlined, [AppColors.warning, const Color(0xFF8A5A12)]),
+    _PredictionCategory('Economic Indicators', Icons.bar_chart_rounded, [const Color(0xFF7C5CFF), const Color(0xFF3E2E99)]),
+    _PredictionCategory('Government Policy', Icons.account_balance_outlined, [const Color(0xFF4C8DFF), const Color(0xFF1E3F73)]),
+    _PredictionCategory('Weather & Monsoon', Icons.water_drop_outlined, [const Color(0xFF2FB8C6), const Color(0xFF105B63)]),
+  ];
+
+  late final List<_PredictionMarket> _trending = [
+    _PredictionMarket(
+      title: '2026 State Assembly Elections: Majority Alliance',
+      category: 'Elections',
+      closesLabel: 'Closes Mar 2026',
+      volumeLabel: '18.4K traders',
+      moreCount: 'See 12 more contracts',
+      contracts: const [
+        _PredictionContract('NDA-led Alliance Majority', 54, 46),
+        _PredictionContract('INDIA Bloc Majority', 41, 59),
+      ],
+    ),
+    _PredictionMarket(
+      title: 'RBI Monetary Policy — December 2026',
+      category: 'Economic Indicators',
+      closesLabel: 'Closes Dec 2026',
+      volumeLabel: '12.1K traders',
+      moreCount: 'See 4 more contracts',
+      contracts: const [
+        _PredictionContract('Repo Rate Cut (25 bps)', 38, 62),
+        _PredictionContract('Repo Rate Held Steady', 55, 45),
+      ],
+    ),
+    _PredictionMarket(
+      title: 'India vs Australia Test Series 2026-27',
+      category: 'Cricket & Sports',
+      closesLabel: 'Closes Jan 2027',
+      volumeLabel: '31.6K traders',
+      moreCount: 'See 8 more contracts',
+      contracts: const [
+        _PredictionContract('India Wins Series', 62, 38),
+        _PredictionContract('Series Drawn 2-2', 14, 86),
+      ],
+    ),
+    _PredictionMarket(
+      title: 'Nifty 50 Year-End Level',
+      category: 'Financial Markets',
+      closesLabel: 'Closes Dec 2026',
+      volumeLabel: '9.8K traders',
+      moreCount: 'See 6 more contracts',
+      contracts: const [
+        _PredictionContract('Closes Above 26,000', 47, 53),
+        _PredictionContract('Closes Above 27,000', 22, 78),
+      ],
+    ),
+  ];
+
+  Map<String, List<_PredictionMarket>> get _byCategory {
+    final map = <String, List<_PredictionMarket>>{};
+    for (final c in _categories) {
+      map[c.label] = _trending.where((m) => m.category == c.label).toList();
+    }
+    // Ensure every section has at least one card even if only in trending.
+    map['Government Policy'] ??= const [];
+    map['Weather & Monsoon'] ??= const [];
+    if (map['Government Policy']!.isEmpty) {
+      map['Government Policy'] = [
+        const _PredictionMarket(
+          title: 'Parliament Winter Session: Key Bill Passage',
+          category: 'Government Policy',
+          closesLabel: 'Closes Dec 2026',
+          volumeLabel: '3.9K traders',
+          moreCount: 'See 3 more contracts',
+          contracts: [
+            _PredictionContract('Bill Passed This Session', 58, 42),
+            _PredictionContract('Referred to Select Committee', 27, 73),
+          ],
+        ),
+      ];
+    }
+    if (map['Weather & Monsoon']!.isEmpty) {
+      map['Weather & Monsoon'] = [
+        const _PredictionMarket(
+          title: 'Monsoon 2026 Rainfall (IMD)',
+          category: 'Weather & Monsoon',
+          closesLabel: 'Closes Sep 2026',
+          volumeLabel: '4.2K traders',
+          moreCount: 'See 2 more contracts',
+          contracts: [
+            _PredictionContract('Above Normal Rainfall', 44, 56),
+            _PredictionContract('Below Normal Rainfall', 18, 82),
+          ],
+        ),
+      ];
+    }
+    return map;
+  }
+
+  void _scrollToCategory(_PredictionCategory category) {
+    final ctx = category.sectionKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut, alignment: 0.05);
+    }
+  }
+
+  void _showPreviewNotice() {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Live India prediction markets are launching soon — this is a preview of the experience.'),
+        backgroundColor: AppColors.cardBackground,
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final grouped = _byCategory;
     return MainShell(
       currentIndex: 1,
       child: Scaffold(
@@ -22,41 +179,340 @@ class PredictionsScreen extends StatelessWidget {
           leading: Builder(
             builder: (ctx) => IconButton(icon: const Icon(Icons.menu, color: AppColors.textPrimary), onPressed: () => Scaffold.of(ctx).openDrawer()),
           ),
-          title: const Text('Predictions', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          title: const Text('Prediction Markets', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
           iconTheme: const IconThemeData(color: AppColors.textPrimary),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications_none_rounded),
+              onPressed: _showPreviewNotice,
+            ),
+          ],
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
+        body: SafeArea(
+          child: ListView(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(bottom: 24),
+            children: [
+              _previewBanner(),
+              _searchBar(),
+              const SizedBox(height: 20),
+              _sectionHeader('Explore Categories'),
+              const SizedBox(height: 12),
+              _categoriesGrid(),
+              const SizedBox(height: 24),
+              _categoryChipsRow(),
+              const SizedBox(height: 24),
+              _sectionHeader('Trending'),
+              const SizedBox(height: 12),
+              _marketRail(_trending),
+              const SizedBox(height: 28),
+              for (final category in _categories) ...[
+                Container(key: category.sectionKey, child: _sectionHeader(category.label)),
+                const SizedBox(height: 12),
+                _marketRail(grouped[category.label] ?? const []),
+                const SizedBox(height: 28),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _previewBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.warning, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Preview — India markets launching soon. Prices shown are illustrative, not live data.',
+              style: TextStyle(color: AppColors.warning.withValues(alpha: 0.95), fontSize: 12, height: 1.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                onTap: _showPreviewNotice,
+                readOnly: true,
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                decoration: const InputDecoration(
+                  hintText: 'Search by market or contract name',
+                  hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _categoriesGrid() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _categories.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 0.92,
+        ),
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _scrollToCategory(category),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: category.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(category.icon, color: Colors.white, size: 20),
                   ),
-                  child: const Icon(Icons.auto_graph_outlined, color: AppColors.primary, size: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    category.label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w600, height: 1.2),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _categoryChipsRow() {
+    return SizedBox(
+      height: 42,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _chip(icon: Icons.search, label: null, onTap: _showPreviewNotice, highlighted: true),
+          const SizedBox(width: 10),
+          for (final category in _categories) ...[
+            _chip(icon: category.icon, label: category.label, onTap: () => _scrollToCategory(category)),
+            const SizedBox(width: 10),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _chip({required IconData icon, String? label, required VoidCallback onTap, bool highlighted = false}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: label == null ? 12 : 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: highlighted ? AppColors.primary.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: highlighted ? AppColors.primary : AppColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: highlighted ? AppColors.primary : AppColors.textSecondary),
+            if (label != null) ...[
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(color: highlighted ? AppColors.primary : AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _marketRail(List<_PredictionMarket> markets) {
+    if (markets.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Text('More markets coming soon.', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+      );
+    }
+    return SizedBox(
+      height: 268,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: markets.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) => _marketCard(markets[index]),
+      ),
+    );
+  }
+
+  Widget _marketCard(_PredictionMarket market) {
+    final category = _categories.firstWhere((c) => c.label == market.category, orElse: () => _categories.first);
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: _showPreviewNotice,
+      child: Container(
+        width: 290,
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 92,
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: category.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+              ),
+              child: Stack(
+                children: [
+                  Positioned(right: -6, top: -6, child: Icon(category.icon, color: Colors.white.withValues(alpha: 0.18), size: 64)),
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Text(
+                      market.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, height: 1.2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final contract in market.contracts) _contractRow(contract, market.closesLabel),
+                    const Spacer(),
+                    const Divider(color: AppColors.border, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(market.moreCount, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          Text(market.volumeLabel, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Predictions â€” Coming Soon',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _contractRow(_PredictionContract contract, String closesLabel) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  contract.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  'We\'re working on price and trend predictions for your watchlist. This will show up here once it\'s ready.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5),
-                ),
+                const SizedBox(height: 2),
+                Text(closesLabel, style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5)),
               ],
             ),
           ),
-        ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _pctPill('Yes', contract.yesPct, AppColors.success),
+              const SizedBox(height: 4),
+              _pctPill('No', contract.noPct, AppColors.danger),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pctPill(String label, int pct, Color color) {
+    return Container(
+      width: 78,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(6)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text('$pct%', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
