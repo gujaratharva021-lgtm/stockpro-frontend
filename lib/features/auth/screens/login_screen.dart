@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -173,27 +173,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
           if (_biometricAvailable) ...[
             const SizedBox(height: 16),
-            Center(
-              child: GestureDetector(
-                onTap: _loginWithBiometric,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.fingerprint, color: AppColors.primary, size: 24),
-                      SizedBox(width: 8),
-                      Text('Login with Biometric', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           ],
           const SizedBox(height: 20),
           Center(

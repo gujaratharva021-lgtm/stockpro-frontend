@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
 import 'package:stock_app/features/profile/screens/security_screen.dart';
+import 'package:stock_app/features/profile/screens/help_support_screen.dart';
+import 'package:stock_app/features/profile/screens/privacy_policy_screen.dart';
+import 'package:stock_app/features/profile/screens/terms_of_service_screen.dart';
 
 /// Settings screen -- original items (Notifications, Limit & Stop-Loss
 /// Orders, Brokerage Calculator, Privacy Mode, Security, Help & Support,
@@ -71,9 +74,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
           const SizedBox(height: 16),
           _card([
-            _navItem(Icons.help_outline, 'Help & Support', null, onTap: () => _comingSoon('Help & Support')),
-            _navItem(Icons.privacy_tip_outlined, 'Privacy Policy', null, onTap: () => _comingSoon('Privacy Policy')),
-            _navItem(Icons.description_outlined, 'Terms of Service', null, onTap: () => _comingSoon('Terms of Service'), showDivider: false),
+            _navItem(Icons.help_outline, 'Help & Support', null,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()))),
+            _navItem(Icons.privacy_tip_outlined, 'Privacy Policy', null,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()))),
+            _navItem(Icons.description_outlined, 'Terms of Service', null,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsOfServiceScreen())), showDivider: false),
           ]),
           const SizedBox(height: 24),
         ],
