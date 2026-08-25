@@ -80,13 +80,14 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.textPrimary,
+                          color: AppColors.cardBackground,
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Total P&L', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                            const Text('Total P&L', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                             const SizedBox(height: 6),
                             Text(
                               '${totalPnL >= 0 ? '+' : ''}₹${totalPnL.toStringAsFixed(2)}',
@@ -155,13 +156,14 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
           const SizedBox(height: 4),
           Text(
             '${value >= 0 ? '+' : ''}₹${value.toStringAsFixed(2)}',

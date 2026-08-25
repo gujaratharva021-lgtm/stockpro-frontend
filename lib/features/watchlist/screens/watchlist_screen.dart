@@ -192,7 +192,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         } catch (_) {}
       }
     } catch (e) {
-      debugPrint('Watchlist load error: $e'); setState(() => _error = 'Could not load watchlist');
+      debugPrint('Watchlist load error: $e'); debugPrint('Watchlist load error: $e'); debugPrint('Watchlist load error: $e'); setState(() => _error = 'Could not load watchlist');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

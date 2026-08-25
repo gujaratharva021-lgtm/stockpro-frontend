@@ -99,17 +99,18 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.textPrimary,
+                        color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Estimated Total Tax', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                          const Text('Estimated Total Tax', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                           const SizedBox(height: 6),
                           Text(
                             '₹${totalTax.toStringAsFixed(2)}',
-                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           Row(
@@ -158,20 +159,21 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
           const SizedBox(height: 4),
           Text(
             '₹${gain.toStringAsFixed(2)}',
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 2),
-          Text('Tax ($rate): ₹${tax.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white60, fontSize: 10)),
+          Text('Tax ($rate): ₹${tax.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
         ],
       ),
     );

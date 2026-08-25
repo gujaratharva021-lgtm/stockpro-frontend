@@ -159,7 +159,10 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Live India prediction markets are launching soon — this is a preview of the experience.'),
+        content: Text(
+          'Live India prediction markets are launching soon — this is a preview of the experience.',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         backgroundColor: AppColors.cardBackground,
       ),
     );
