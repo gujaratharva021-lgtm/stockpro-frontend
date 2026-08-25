@@ -422,7 +422,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
       maxChildSize: 1.0,
       builder: (context, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: _loading

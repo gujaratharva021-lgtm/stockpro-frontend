@@ -476,9 +476,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         const SizedBox(width: 24),
                         _tabChip('Orders', 0, 2),
                         const SizedBox(width: 24),
-                        _tabChip('AI Instructions', 0, 3),
-                        const SizedBox(width: 24),
-                        _tabChip('Trades', 0, 4),
+                        _tabChip('Trades', 0, 3),
                         const SizedBox(width: 24),
                         GestureDetector(
                           onTap: () => context.push('/performance'),
@@ -503,8 +501,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                   if (_tab == 0) ..._buildHoldingsTab(),
                   if (_tab == 1) ..._buildPositionsTab(),
                   if (_tab == 2) ..._buildOrdersTab(),
-                  if (_tab == 3) ..._buildEmptyTab(),
-                  if (_tab == 4) ..._buildTradesTab(),
+                  if (_tab == 3) ..._buildTradesTab(),
                 ],
             ],
           ),
@@ -884,7 +881,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               final pos = allPositions[index];
               final type = pos['type'] as String;
               final data = pos['data'] as Map;
-              return Container(
+              return GestureDetector(
+                onTap: () => _showPositionDetail(type, data),
+                child: Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
@@ -915,6 +914,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                     ),
                   ],
                 ),
+                ),
               );
             },
             childCount: allPositions.length,
@@ -922,6 +922,60 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         ),
       ),
     ];
+  }
+
+  void _showPositionDetail(String type, Map data) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4, margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      data['symbol']?.toString() ?? '',
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                    child: Text(type, style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Divider(color: AppColors.border, height: 24),
+              _orderDetailRow('Quantity', data['quantity']?.toString() ?? '-'),
+              if (type == 'Regular') _orderDetailRow('Avg Price', '\u20b9${(data['avg_price'] as num?)?.toStringAsFixed(2) ?? '-'}'),
+              if (type == 'MTF') _orderDetailRow('Entry Price', '\u20b9${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'),
+              if (type == 'Futures') ...[
+                _orderDetailRow('Position Type', data['position_type']?.toString() ?? '-'),
+                _orderDetailRow('Lot Size', data['lot_size']?.toString() ?? '-'),
+                _orderDetailRow('Entry Price', '\u20b9${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'),
+              ],
+              if (type == 'Options') ...[
+                _orderDetailRow('Option Type', data['option_type']?.toString() ?? '-'),
+                _orderDetailRow('Strike Price', '\u20b9${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}'),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 
   List<Widget> _buildOrdersTab() {
@@ -1149,35 +1203,86 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     String timeStr = '-';
     final createdAt = t['created_at'] != null ? DateTime.tryParse(t['created_at'].toString()) : null;
     if (createdAt != null) timeStr = DateFormat('dd MMM, h:mm a').format(createdAt.toLocal());
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border(left: BorderSide(color: accentColor, width: 4)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-            child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 11)),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 2),
-                Text('Qty $qty @ \u20b9${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
+    return GestureDetector(
+      onTap: () => _showTradeDetail(t, symbol, timeStr),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border(left: BorderSide(color: accentColor, width: 4)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+              child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 11)),
             ),
-          ),
-          Text(timeStr, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text('Qty $qty @ \u20b9${price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                ],
+              ),
+            ),
+            Text(timeStr, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showTradeDetail(dynamic t, String symbol, String timeStr) {
+    final isBuy = t['buy_sell'] == 'BUY';
+    final accentColor = isBuy ? AppColors.success : AppColors.danger;
+    final qty = (t['quantity'] as num?) ?? 0;
+    final price = (t['price'] as num?) ?? 0;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4, margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                    child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(symbol, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Divider(color: AppColors.border, height: 24),
+              _orderDetailRow('Quantity', qty.toString()),
+              _orderDetailRow('Price', '\u20b9${price.toStringAsFixed(2)}'),
+              _orderDetailRow('Traded On', timeStr),
+              _orderDetailRow('Trade ID', t['id']?.toString() ?? '-'),
+            ],
+          ),
+        );
+      },
     );
   }
 
