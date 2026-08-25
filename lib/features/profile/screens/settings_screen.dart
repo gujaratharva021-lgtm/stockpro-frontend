@@ -6,13 +6,16 @@ import 'package:stock_app/features/profile/screens/security_screen.dart';
 import 'package:stock_app/features/profile/screens/help_support_screen.dart';
 import 'package:stock_app/features/profile/screens/privacy_policy_screen.dart';
 import 'package:stock_app/features/profile/screens/terms_of_service_screen.dart';
+import 'package:stock_app/features/profile/screens/account_settings_screen.dart';
+import 'package:stock_app/features/profile/screens/trading_presets_screen.dart';
+import 'package:stock_app/features/profile/screens/advanced_screen.dart';
 
 /// Settings screen -- original items (Notifications, Limit & Stop-Loss
 /// Orders, Brokerage Calculator, Privacy Mode, Security, Help & Support,
-/// Privacy Policy, Terms of Service) plus the extra items that used to
-/// live duplicated inside Statements & Tax (Account Settings, User
-/// Settings, Trading Presets, Display, News Language Settings,
-/// Localization, Advanced). Biometric Login has been removed.
+/// Privacy Policy, Terms of Service) plus Account Settings, Trading
+/// Presets, and Advanced, each backed by a real screen. User Settings,
+/// Display, News Language Settings, and Localization were removed --
+/// they are out of scope for now. Biometric Login has been removed.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -22,10 +25,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _privacyMode = false;
-
-  void _comingSoon(String label) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label â€” coming soon')));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,19 +57,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           _card([
             _navItem(Icons.person_outline, 'Account Settings', 'Personal Info, Permissions & More',
-                onTap: () => _comingSoon('Account Settings')),
-            _navItem(Icons.account_circle_outlined, 'User Settings', 'Login, Communication & More',
-                onTap: () => _comingSoon('User Settings')),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountSettingsScreen()))),
             _navItem(Icons.tune_outlined, 'Trading Presets', 'Customize Your Trade Defaults',
-                onTap: () => _comingSoon('Trading Presets')),
-            _navItem(Icons.brightness_6_outlined, 'Display', 'App Theme & Accessibility',
-                onTap: () => _comingSoon('Display')),
-            _navItem(Icons.article_outlined, 'News Language Settings', 'Filter news articles by selected languages',
-                onTap: () => _comingSoon('News Language Settings')),
-            _navItem(Icons.public_outlined, 'Localization', 'Language, Base Currency & More',
-                onTap: () => _comingSoon('Localization')),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TradingPresetsScreen()))),
             _navItem(Icons.build_outlined, 'Advanced', 'Diagnostics, Debug & Extended Log',
-                onTap: () => _comingSoon('Advanced'), showDivider: false),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvancedScreen())), showDivider: false),
           ]),
           const SizedBox(height: 16),
           _card([
