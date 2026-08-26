@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/profile/screens/tradebook_screen.dart';
 import 'package:stock_app/features/tax/screens/pnl_report_screen.dart';
+import 'package:stock_app/features/profile/screens/downloads_screen.dart';
 
 /// "Statements & Tax" destination -- replaces the old "Support" entry in
 /// the account drawer. Shows only statements/tax items (Account Settings
@@ -10,11 +11,6 @@ import 'package:stock_app/features/tax/screens/pnl_report_screen.dart';
 /// here).
 class StatementsTaxScreen extends StatelessWidget {
   const StatementsTaxScreen({super.key});
-
-  void _comingSoon(BuildContext context, String label) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label â€” coming soon')));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +26,7 @@ class StatementsTaxScreen extends StatelessWidget {
         children: [
           _card([
             _navItem(context, Icons.description_outlined, 'Activity Statements', null,
-                onTap: () => _comingSoon(context, 'Activity Statements')),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DownloadsScreen()))),
             _navItem(context, Icons.insert_chart_outlined, 'Trade Reports', null,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TradebookScreen()))),
             _navItem(context, Icons.file_download_outlined, 'Download Tax Forms', null,
@@ -81,3 +77,4 @@ class StatementsTaxScreen extends StatelessWidget {
     );
   }
 }
+
