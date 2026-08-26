@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -11,6 +11,8 @@ import 'package:stock_app/features/stock_detail/screens/stock_detail_screen.dart
 import 'package:stock_app/features/search/screens/search_screen.dart';
 import 'package:stock_app/features/news/screens/news_detail_screen.dart';
 import 'package:stock_app/features/ipo/screens/ipo_detail_screen.dart';
+import 'package:stock_app/features/explore/screens/customize_explore_screen.dart';
+import 'package:stock_app/core/services/explore_preferences_service.dart';
 import 'package:go_router/go_router.dart';
 
 /// Real, published NSE sectoral groupings of the symbols already tracked in
@@ -81,14 +83,49 @@ class _ExploreScreenState extends State<ExploreScreen> {
   bool _loadingStocks = true;
   bool _loadingNews = true;
 
+  ExplorePreferences _prefs = ExplorePreferences.defaults();
+
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     _loadStocks();
     _loadIpos();
     _loadNewsAndHoldings();
     _loadIndices();
     _loadCrypto();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await ExplorePreferencesService.instance.load();
+    if (!mounted) return;
+    setState(() {
+      _prefs = prefs;
+      _stocksTab = prefs.defaultStockTab;
+      _newsTab = prefs.defaultNewsTab;
+    });
+  }
+
+  Future<void> _openCustomizeExplore() async {
+    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const CustomizeExploreScreen()));
+    if (saved == true) {
+      // Re-apply the newly saved preferences immediately, including the
+      // default tab selections (a user opening Customize expects those to
+      // take effect right away, not just on next app launch).
+      await _loadPreferences();
+    }
+  }
+
+  /// Sector groups filtered by the user's selected Investment Themes. An
+  /// empty selection means "no filter" -- show every theme, same as before
+  /// customization existed.
+  Map<String, List<String>> get _visibleSectorGroups {
+    if (_prefs.selectedThemes.isEmpty) return _kSectorGroups;
+    final filtered = Map.fromEntries(_kSectorGroups.entries.where((e) => _prefs.selectedThemes.contains(e.key)));
+    // Guard against a saved selection that no longer matches any known theme
+    // (e.g. stale data) -- fall back to showing everything rather than a
+    // blank section.
+    return filtered.isEmpty ? _kSectorGroups : filtered;
   }
 
   Future<void> _loadStocks() async {
@@ -201,8 +238,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   List<dynamic> get _newsForTab {
-    if (_newsTab == 'overview') return _news;
-    final symbols = _newsTab == 'portfolio' ? _holdingSymbols : _watchlistSymbols;
+    // The "Overview" tab normally shows everything, but the user's News
+    // Preference can narrow what "overview" means for them (e.g. always
+    // just portfolio-related news) without changing which tab is selected.
+    final effectiveTab = _newsTab == 'overview' && _prefs.newsPreference != 'all' ? _prefs.newsPreference : _newsTab;
+    if (effectiveTab == 'overview') return _news;
+    final symbols = effectiveTab == 'portfolio' ? _holdingSymbols : _watchlistSymbols;
     if (symbols.isEmpty) return [];
     return _news.where((n) {
       final text = '${n['title'] ?? ''} ${n['content'] ?? ''}'.toUpperCase();
@@ -250,10 +291,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     Navigator.push(context, MaterialPageRoute(builder: (_) => StockDetailScreen(stock: stock)));
   }
 
-  void _comingSoon(String label) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label â€” coming soon')));
-  }
-
   @override
   Widget build(BuildContext context) {
     return MainShell(
@@ -269,7 +306,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
           title: const Text('Explore', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
           actions: [
-            IconButton(icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary), onPressed: () => _comingSoon('Edit')),
+            IconButton(icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary), onPressed: _openCustomizeExplore),
             IconButton(icon: const Icon(Icons.smart_toy_outlined, color: AppColors.textPrimary), onPressed: () => context.push('/assistant')),
             IconButton(icon: const Icon(Icons.notifications_outlined, color: AppColors.textPrimary), onPressed: () => context.push('/notifications')),
           ],
@@ -289,27 +326,64 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 _sectionHeader('Investment Themes'),
                 _themesWrap(),
                 const SizedBox(height: 8),
-                _sectionHeader('Stocks'),
-                _stocksTabs(),
-                _stocksList(),
-                Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 8), child: _screenerButton()),
-                _sectionHeader('World Markets'),
-                _worldMarketsGrid(),
-                _sectionHeader('Performance By Sector'),
-                _sectorGrid(),
-                _sectionHeader('Cryptocurrencies'),
-                _cryptoGrid(),
-                _sectionHeader('Learn'),
-                _learnStrip(),
-                _sectionHeader('News'),
-                _newsTabsRow(),
-                _newsList(),
+                ..._orderedSections(),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// Flattens the enabled sections into a single widget list, in the order
+  /// chosen on the Customize Explore screen. Disabled sections are simply
+  /// omitted -- this is the single place that makes "Sections ON/OFF" and
+  /// "Section Order" take visible effect.
+  List<Widget> _orderedSections() {
+    final builders = <String, List<Widget> Function()>{
+      'stocks': () => [
+            _sectionHeader('Stocks'),
+            _stocksTabs(),
+            _stocksList(),
+            Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 8), child: _screenerButton()),
+          ],
+      'world_markets': () => [
+            _sectionHeader('World Markets'),
+            _worldMarketsGrid(),
+          ],
+      'sector_performance': () => [
+            _sectionHeader('Performance By Sector'),
+            _sectorGrid(),
+          ],
+      'crypto': () => [
+            _sectionHeader('Cryptocurrencies'),
+            _cryptoGrid(),
+          ],
+      'learn': () => [
+            _sectionHeader('Learn'),
+            _learnStrip(),
+          ],
+      'news': () => [
+            _sectionHeader('News'),
+            _newsTabsRow(),
+            _newsList(),
+          ],
+    };
+
+    final order = _prefs.sectionOrder.where(builders.containsKey).toList();
+    // Any known section missing from a stale/invalid saved order still gets
+    // shown, appended at the end, so a bad save can never silently delete a
+    // whole section from the screen.
+    for (final key in kExploreSectionKeys) {
+      if (!order.contains(key)) order.add(key);
+    }
+
+    final widgets = <Widget>[];
+    for (final key in order) {
+      if (!_prefs.isSectionEnabled(key)) continue;
+      widgets.addAll(builders[key]!());
+    }
+    return widgets;
   }
 
   Widget _sectionHeader(String title, {bool withInfo = false}) {
@@ -347,7 +421,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
-        children: _kSectorGroups.entries.map((e) {
+        children: _visibleSectorGroups.entries.map((e) {
           return OutlinedButton(
             onPressed: () => _showThemeSheet(e.key, e.value),
             style: OutlinedButton.styleFrom(
@@ -507,7 +581,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _sectorGrid() {
-    final entries = _kSectorGroups.entries.toList();
+    final entries = _visibleSectorGroups.entries.toList();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
