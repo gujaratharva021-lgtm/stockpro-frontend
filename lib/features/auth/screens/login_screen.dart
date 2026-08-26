@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,7 +7,6 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
-import 'package:stock_app/core/services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,39 +20,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _showPassword = false;
   String? _error;
-  bool _biometricAvailable = false;
 
   @override
   void initState() {
     super.initState();
-    _checkBiometric();
-  }
-
-  Future<void> _checkBiometric() async {
-    final available = await BiometricService.isAvailable();
-    final enabled = await BiometricService.isEnabled();
-    debugPrint('🔐 Biometric available: $available, enabled: $enabled');
-    if (mounted) setState(() => _biometricAvailable = available && enabled);
-  }
-
-  Future<void> _loginWithBiometric() async {
-    debugPrint('🔐 Attempting biometric auth...');
-    final success = await BiometricService.authenticate();
-    debugPrint('🔐 Biometric result: $success');
-    if (!success) return;
-    setState(() { _loading = true; _error = null; });
-    try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'auth_token');
-      if (token != null && mounted) {
-        WebSocketService.connect();
-        context.go('/dashboard');
-      } else {
-        setState(() => _error = 'No saved session. Please login with password first.');
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
   Future<void> _login() async {
@@ -108,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 8),
           _buildField(
             controller: _passwordController,
-            hint: '••••••••',
+            hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
             icon: Icons.lock_outline,
             obscure: !_showPassword,
             suffix: IconButton(
@@ -170,9 +140,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: const Text('Login with Code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
               ),
             ),
-          ],
-          if (_biometricAvailable) ...[
-            const SizedBox(height: 16),
           ],
           const SizedBox(height: 20),
           Center(
@@ -292,3 +259,5 @@ class _FeatureRow extends StatelessWidget {
     );
   }
 }
+
+
