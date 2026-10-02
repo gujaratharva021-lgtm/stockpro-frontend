@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:dio/dio.dart' show Dio, DioException, Options;
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/wallet/screens/wallet_history_screen.dart';
@@ -234,17 +235,19 @@ class _FundsScreenState extends State<FundsScreen> {
                   }
                   Navigator.pop(ctx);
                   try {
-                    await ApiService.withdrawFunds(amt);
+                    final bankId = await _pickBankAccount();
+                    if (bankId == null) return;
+                    await ApiService.withdrawFunds(amt, bankId);
                     await _load();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('₹${amt.toStringAsFixed(0)} withdrawn successfully'), backgroundColor: Colors.green),
+                        SnackBar(content: Text('₹${amt.toStringAsFixed(0)} withdrawal requested. It will be processed after admin approval.'), backgroundColor: Colors.green),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Withdrawal failed'), backgroundColor: AppColors.danger),
+                        SnackBar(content: Text(_withdrawError(e)), backgroundColor: AppColors.danger),
                       );
                     }
                   }
@@ -257,6 +260,50 @@ class _FundsScreenState extends State<FundsScreen> {
         ),
       ),
     );
+  }
+
+  Future<String?> _pickBankAccount() async {
+    List<dynamic> accounts = [];
+    try {
+      final token = await ApiService.getToken();
+      final res = await Dio().get(
+        '${ApiService.baseUrl}/auth/bank-accounts',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      accounts = (res.data['bank_accounts'] as List?) ?? [];
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not load your bank accounts')));
+      }
+      return null;
+    }
+    if (!mounted) return null;
+    if (accounts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add a bank account first (Profile > Bank Accounts)')));
+      return null;
+    }
+    if (accounts.length == 1) return (accounts.first as Map)['id'].toString();
+    return showDialog<String>(
+      context: context,
+      builder: (dctx) => SimpleDialog(
+        title: const Text('Withdraw to which account?'),
+        children: [
+          for (final a in accounts)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dctx, (a as Map)['id'].toString()),
+              child: Text('${a['bank_name']} - ${a['account_number']}'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _withdrawError(Object e) {
+    if (e is DioException) {
+      final d = e.response?.data;
+      if (d is Map && d['error'] != null) return d['error'].toString();
+    }
+    return 'Withdrawal failed';
   }
 
   Widget _statRow(String label, String value) {

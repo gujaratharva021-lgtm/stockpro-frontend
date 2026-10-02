@@ -14,6 +14,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
   List<dynamic> _accounts = [];
   bool _loading = true;
   bool _saving = false;
+  final ValueNotifier<String?> _addError = ValueNotifier<String?>(null);
 
 
   @override
@@ -44,6 +45,8 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
   }
 
   Future<void> _addAccount(String bankName, String accountNumber, String ifsc, String holderName) async {
+    if (_saving) return;
+    _addError.value = null;
     setState(() => _saving = true);
     try {
       final dio = Dio();
@@ -65,12 +68,13 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
           const SnackBar(content: Text('Bank account added'), backgroundColor: AppColors.success),
         );
       }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not add bank account')),
-        );
+    } catch (e) {
+      String msg = 'Could not add bank account';
+      if (e is DioException) {
+        final d = e.response?.data;
+        if (d is Map && d['error'] != null) msg = d['error'].toString();
       }
+      _addError.value = msg;
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -104,6 +108,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
     final accNumberCtrl = TextEditingController();
     final ifscCtrl = TextEditingController();
     final holderCtrl = TextEditingController();
+    _addError.value = null;
 
     showModalBottomSheet(
       context: context,
@@ -127,6 +132,15 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                 _input('Account Number', accNumberCtrl, keyboardType: TextInputType.number),
                 const SizedBox(height: 12),
                 _input('IFSC Code', ifscCtrl, textCapitalization: TextCapitalization.characters),
+                ValueListenableBuilder<String?>(
+                  valueListenable: _addError,
+                  builder: (context, err, child) => err == null
+                      ? const SizedBox(height: 8)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text(err, style: const TextStyle(color: AppColors.danger, fontSize: 12.5)),
+                        ),
+                ),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -139,9 +153,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                           accNumberCtrl.text.trim().isEmpty ||
                           ifscCtrl.text.trim().isEmpty ||
                           holderCtrl.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text('Please fill all fields')),
-                        );
+                        _addError.value = 'Please fill all fields';
                         return;
                       }
                       _addAccount(

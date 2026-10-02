@@ -1,8 +1,54 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
+String _demoDate(int days) => DateTime.now().add(Duration(days: days)).toIso8601String();
+
+Map<String, dynamic> _demoIpo(String id, String name, String status, int low, int high, int lot, String size, String exchange, int openDay, int closeDay, String about, List<String> strengths, List<String> risks) => {
+      'id': id,
+      'company_name': name,
+      'status': status,
+      'price_band_low': low,
+      'price_band_high': high,
+      'lot_size': lot,
+      'min_qty': lot,
+      'issue_size': size,
+      'exchange': exchange,
+      'open_date': _demoDate(openDay),
+      'close_date': _demoDate(closeDay),
+      'allotment_date': _demoDate(closeDay + 3),
+      'refund_date': _demoDate(closeDay + 4),
+      'demat_transfer_date': _demoDate(closeDay + 4),
+      'listing_date': _demoDate(closeDay + 6),
+      'mandate_end_date': _demoDate(closeDay + 3),
+      'about_text': about,
+      'strengths': strengths,
+      'risks': risks,
+    };
+
+final List<dynamic> kDemoIpos = [
+  _demoIpo('demo-1', 'Bharat Solar Energy Ltd', 'open', 210, 221, 67, 'Rs 1,250 Cr', 'Mainboard', -1, 2,
+      'Bharat Solar Energy manufactures solar modules and provides rooftop and utility-scale solar solutions across India.',
+      ['Fast growing renewable energy demand', 'Strong order book', 'Experienced promoters'],
+      ['High competition in solar sector', 'Dependence on government policies']),
+  _demoIpo('demo-2', 'Nexa Digital Payments Ltd', 'open', 340, 358, 41, 'Rs 2,100 Cr', 'Mainboard', 0, 3,
+      'Nexa Digital Payments offers UPI, card and merchant payment solutions to over 2 million merchants.',
+      ['Large merchant network', 'Consistent revenue growth', 'Asset-light business model'],
+      ['Regulatory changes in payments', 'Thin margins on transactions']),
+  _demoIpo('demo-3', 'GreenLeaf Foods Ltd', 'upcoming', 120, 128, 117, 'Rs 480 Cr', 'SME', 5, 8,
+      'GreenLeaf Foods produces packaged organic foods and sells through retail chains and online platforms.',
+      ['Growing demand for organic food', 'Wide distribution network'],
+      ['Raw material price volatility', 'Seasonal demand']),
+  _demoIpo('demo-4', 'Vayu Aerospace Components Ltd', 'upcoming', 480, 505, 29, 'Rs 3,400 Cr', 'Mainboard', 8, 11,
+      'Vayu Aerospace makes precision components for aircraft and defence equipment.',
+      ['Rising defence spending', 'Long term export contracts'],
+      ['Long project cycles', 'High capital requirement']),
+  _demoIpo('demo-5', 'Sanjeevani Healthcare Ltd', 'closed', 290, 305, 49, 'Rs 900 Cr', 'Mainboard', -8, -5,
+      'Sanjeevani Healthcare runs a chain of multi-speciality hospitals and diagnostic centres in tier-2 cities.',
+      ['Expanding hospital network', 'Strong occupancy levels'],
+      ['Regulatory pricing controls', 'Dependence on doctors and staff']),
+];
 class ApiService {
-  static const String host = 'adjimrxt3y.ap-south-1.awsapprunner.com';
+  static const String host = 'stockpro-backend-jgej.onrender.com';
   static const String baseUrl = 'https://$host/api/v1';
   static const String wsUrl = 'wss://$host/ws';
   static final Dio _dio = Dio(BaseOptions(
@@ -81,7 +127,21 @@ class ApiService {
     final res = await dio.get('/auth/me');
     return res.data;
   }
-  static Future<void> completeKYC() async {
+  static Future<Map<String, dynamic>> kycAadhaarOtp(String aadhaar) async {
+    final dio = await _authDio();
+    final res = await dio.post('/kyc/aadhaar/otp', data: {'aadhaar_number': aadhaar});
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+  static Future<Map<String, dynamic>> kycAadhaarVerify(String otp, String refId) async {
+    final dio = await _authDio();
+    final res = await dio.post('/kyc/aadhaar/verify', data: {'otp': otp, 'ref_id': refId});
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+  static Future<Map<String, dynamic>> kycPan(String pan, String name) async {
+    final dio = await _authDio();
+    final res = await dio.post('/kyc/pan', data: {'pan': pan, 'name': name});
+    return Map<String, dynamic>.from(res.data as Map);
+  }  static Future<void> completeKYC() async {
     final dio = await _authDio();
     await dio.post('/auth/complete-kyc');
   }
@@ -431,10 +491,11 @@ class ApiService {
   static Future<List<dynamic>> getIPOs() async {
     final dio = await _authDio();
     final res = await dio.get('/ipo');
-    return res.data['ipos'] ?? [];
+    final l = (res.data['ipos'] as List?) ?? []; return l.isEmpty ? kDemoIpos : l;
   }
   static Future<Map<String, dynamic>> getIPODetail(String ipoId) async {
     final dio = await _authDio();
+    if (ipoId.startsWith('demo-')) { return Map<String, dynamic>.from(kDemoIpos.firstWhere((i) => i['id'] == ipoId) as Map); }
     final res = await dio.get('/ipo/$ipoId');
     return res.data['ipo'];
   }
@@ -444,6 +505,7 @@ class ApiService {
     return res.data['applications'] ?? [];
   }
   static Future<void> applyIPO(String ipoId, int lots, String upiId) async {
+    if (ipoId.startsWith('demo-')) return;
     final dio = await _authDio();
     await dio.post('/ipo/apply', data: {
       'ipo_id': ipoId,
@@ -518,9 +580,9 @@ class ApiService {
       'amount': amount,
     });
   }
-  static Future<void> withdrawFunds(double amount) async {
+  static Future<void> withdrawFunds(double amount, String bankAccountId) async {
     final dio = await _authDio();
-    await dio.post('/payments/withdraw', data: {'amount': amount});
+    await dio.post('/payments/withdraw', data: {'amount': amount, 'bank_account_id': bankAccountId});
   }
   static Future<List<dynamic>> getWalletHistory() async {
     final dio = await _authDio();

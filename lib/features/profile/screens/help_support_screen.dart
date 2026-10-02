@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:stock_app/features/support/screens/support_tickets_screen.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -65,6 +66,23 @@ class HelpSupportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           const Text('Still need help?', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportTicketsScreen())),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+              child: const Row(
+                children: [
+                  Icon(Icons.support_agent_outlined, color: AppColors.primary, size: 18),
+                  SizedBox(width: 10),
+                  Expanded(child: Text('My support tickets', style: TextStyle(color: AppColors.textPrimary, fontSize: 13.5, fontWeight: FontWeight.w600))),
+                  Icon(Icons.chevron_right, color: AppColors.textMuted),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(16),
