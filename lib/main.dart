@@ -35,6 +35,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 import 'package:stock_app/features/predictions/screens/predictions_screen.dart';
 import 'package:stock_app/features/explore/screens/explore_screen.dart';
+import 'package:stock_app/features/commodity/screens/commodity_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -85,6 +86,7 @@ final _router = GoRouter(
     GoRoute(path: '/sip', builder: (context, state) => const SipScreen()),
     GoRoute(path: '/predictions', builder: (context, state) => const PredictionsScreen()),
     GoRoute(path: '/explore', builder: (context, state) => const ExploreScreen()),
+    GoRoute(path: '/commodity', builder: (context, state) => CommodityScreen()),
   ],
 );
 class MyApp extends StatelessWidget {
