@@ -1,8 +1,21 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
-import 'package:stock_app/core/theme/app_colors.dart';
+
+// Scoped light palette for the auth flow (login/signup/forgot-password),
+// distinct from the app-wide dark AppColors used everywhere else post-login.
+class _AuthPalette {
+  static const bg = Color(0xFF0B0E14);
+  static const card = Color(0xFF151A23);
+  static const border = Color(0xFF232935);
+  static const primary = Color(0xFF4C8DFF);
+  static const primaryDark = Color(0xFF2A5F9E);
+  static const textPrimary = Color(0xFFF5F6F8);
+  static const textSecondary = Color(0xFFAEB4C0);
+  static const textMuted = Color(0xFF7A8091);
+  static const danger = Color(0xFFFF5C4D);
+}
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -132,12 +145,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: _AuthPalette.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: _AuthPalette.bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios, color: _AuthPalette.textPrimary, size: 20),
           onPressed: () => context.go('/login'),
         ),
       ),
@@ -148,9 +161,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              const Text('Forgot Password', style: TextStyle(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
+              const Text('Forgot Password', style: TextStyle(color: _AuthPalette.textPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
-              const Text('Enter your email to receive an OTP', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+              const Text('Enter your email to receive an OTP', style: TextStyle(color: _AuthPalette.textMuted, fontSize: 14)),
               const SizedBox(height: 32),
               _buildLabel('Email'),
               const SizedBox(height: 8),
@@ -179,7 +192,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   icon: Icons.lock_outline,
                   obscure: !_showPassword,
                   suffix: IconButton(
-                    icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted, size: 20),
+                    icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: _AuthPalette.textMuted, size: 20),
                     onPressed: () => setState(() => _showPassword = !_showPassword),
                   ),
                 ),
@@ -198,11 +211,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.08),
+                    color: _AuthPalette.danger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
+                    border: Border.all(color: _AuthPalette.danger.withValues(alpha: 0.25)),
                   ),
-                  child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                  child: Text(_error!, style: const TextStyle(color: _AuthPalette.danger, fontSize: 13)),
                 ),
               ],
               if (_success != null) ...[
@@ -224,7 +237,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : (_otpSent ? _resetPassword : _sendOTP),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: _AuthPalette.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     elevation: 0,
                   ),
@@ -241,7 +254,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Center(
                   child: GestureDetector(
                     onTap: _loading ? null : _sendOTP,
-                    child: const Text('Resend OTP', style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w600, fontSize: 14)),
+                    child: const Text('Resend OTP', style: TextStyle(color: _AuthPalette.primaryDark, fontWeight: FontWeight.w600, fontSize: 14)),
                   ),
                 ),
               ],
@@ -252,7 +265,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildLabel(String text) => Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13));
+  Widget _buildLabel(String text) => Text(text, style: const TextStyle(color: _AuthPalette.textSecondary, fontSize: 13));
 
   Widget _buildField({
     required TextEditingController controller,
@@ -265,20 +278,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: enabled ? AppColors.cardBackground : AppColors.cardBackground.withValues(alpha: 0.5),
+        color: enabled ? _AuthPalette.card : _AuthPalette.card.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: _AuthPalette.border),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         enabled: enabled,
         keyboardType: keyboardType,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+        style: const TextStyle(color: _AuthPalette.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-          prefixIcon: Icon(icon, color: AppColors.textMuted, size: 20),
+          hintStyle: const TextStyle(color: _AuthPalette.textMuted, fontSize: 14),
+          prefixIcon: Icon(icon, color: _AuthPalette.textMuted, size: 20),
           suffixIcon: suffix,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
+import 'package:lottie/lottie.dart';
 
 class KycSuccessScreen extends StatefulWidget {
   const KycSuccessScreen({super.key});
@@ -11,14 +12,6 @@ class KycSuccessScreen extends StatefulWidget {
 class _KycSuccessScreenState extends State<KycSuccessScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
-
-  final List<Map<String, dynamic>> _checklist = [
-    {'label': 'Personal details added', 'reward': 50},
-    {'label': 'PAN verified', 'reward': 75},
-    {'label': 'Bank linked', 'reward': 75},
-    {'label': 'Selfie captured', 'reward': 25},
-    {'label': 'E-sign completed', 'reward': 25},
-  ];
 
   @override
   void initState() {
@@ -37,7 +30,6 @@ class _KycSuccessScreenState extends State<KycSuccessScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final isWeb = MediaQuery.of(context).size.width > 768;
-    final totalReward = _checklist.fold<int>(0, (sum, item) => sum + (item['reward'] as int));
 
     final content = Column(
       mainAxisSize: MainAxisSize.min,
@@ -45,10 +37,13 @@ class _KycSuccessScreenState extends State<KycSuccessScreen> with SingleTickerPr
         const SizedBox(height: 32),
         ScaleTransition(
           scale: _scale,
-          child: Container(
-            width: 90, height: 90,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.success),
-            child: const Icon(Icons.check, color: Colors.white, size: 48),
+          child: SizedBox(
+            width: 140, height: 140,
+            child: Lottie.asset(
+              'assets/animations/kyc_success.json',
+              fit: BoxFit.contain,
+              repeat: false,
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -60,47 +55,11 @@ class _KycSuccessScreenState extends State<KycSuccessScreen> with SingleTickerPr
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.5),
         ),
-        const SizedBox(height: 24),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text("You've unlocked", style: TextStyle(color: Colors.white70, fontSize: 13)),
-            Text('₹$totalReward', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
-            const Text('Complete trading to claim', style: TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
-        ),
-        const SizedBox(height: 16),
-        ..._checklist.map((item) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(children: [
-              Container(
-                width: 28, height: 28,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.success),
-                child: const Icon(Icons.check, color: Colors.white, size: 16),
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: Text(item['label'], style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500))),
-              Text('₹${item['reward']}', style: const TextStyle(color: AppColors.success, fontSize: 13, fontWeight: FontWeight.bold)),
-            ]),
-          ),
-        )),
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity, height: 52,
           child: ElevatedButton(
-            onPressed: () => context.go('/watchlist'),
+            onPressed: () => context.go('/dashboard'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

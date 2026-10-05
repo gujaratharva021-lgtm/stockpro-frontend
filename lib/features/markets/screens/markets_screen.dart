@@ -62,7 +62,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   }
 
   Future<void> _loadIndices() async {
-    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 12), receiveTimeout: const Duration(seconds: 12)));
+    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
 
     Future<void> fetchIndex(String yahooSymbol, String key) async {
       try {

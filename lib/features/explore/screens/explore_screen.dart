@@ -172,7 +172,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Future<void> _loadIndices() async {
-    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 12), receiveTimeout: const Duration(seconds: 12)));
+    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
     for (final idx in _kWorldIndices) {
       try {
         final res = await dio.get('https://query1.finance.yahoo.com/v8/finance/chart/${idx['yahoo']}?interval=15m&range=1d');
@@ -191,7 +191,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Future<void> _loadCrypto() async {
-    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 12), receiveTimeout: const Duration(seconds: 12)));
+    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
     for (final c in _kCrypto) {
       try {
         final res = await dio.get('https://query1.finance.yahoo.com/v8/finance/chart/${c['yahoo']}?interval=15m&range=1d');
@@ -746,3 +746,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 }
+

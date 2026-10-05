@@ -410,7 +410,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             ),
             const SizedBox(width: 8),
             SizedBox(
-              width: 92,
+              width: 110,
               child: price == null
                   ? const Text('--', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 13))
                   : Column(
@@ -427,7 +427,10 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         const SizedBox(height: 3),
                         Text(
                           '${price.toStringAsFixed(2)}${change != null ? ' (${isUp ? '+' : ''}${change.toStringAsFixed(2)})' : ''}',
-                          style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.visible,
+                          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),

@@ -1,17 +1,5 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
-
-Uint8List _decodeImage(dynamic imageUrl) {
-  try {
-    final str = imageUrl.toString();
-    final base64Str = str.contains(',') ? str.split(',').last : str;
-    return base64Decode(base64Str);
-  } catch (_) {
-    return Uint8List(0);
-  }
-}
 
 class NewsDetailScreen extends StatelessWidget {
   final Map<String, dynamic> item;
@@ -53,11 +41,25 @@ class NewsDetailScreen extends StatelessWidget {
                         child: Container(
                           width: double.infinity,
                           color: AppColors.border.withValues(alpha: 0.3),
-                          child: Image.memory(
-                            _decodeImage(item['image_url']),
+                          child: Image.network(
+                            item['image_url'].toString(),
                             width: double.infinity,
                             fit: BoxFit.fitWidth,
-                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return SizedBox(
+                                height: 200,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primary,
+                                    value: progress.expectedTotalBytes != null
+                                        ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                           ),
                         ),
                       ),
@@ -75,7 +77,7 @@ class NewsDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '•',
+                          '\u2022',
                           style: TextStyle(color: AppColors.textMuted),
                         ),
                         const SizedBox(width: 8),

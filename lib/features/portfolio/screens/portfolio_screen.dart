@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -715,7 +715,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         children: [
           Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('â€¢', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       );
     }
@@ -906,10 +906,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       type == 'Regular'
                           ? 'Qty: ${data['quantity']} ? Avg ₹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'MTF'
-                          ? 'Qty: ${data['quantity']} â€¢ Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'Futures'
-                          ? '${data['position_type'] ?? ''} â€¢ Lot: ${data['lot_size']} â€¢ Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
-                          : '${data['option_type'] ?? ''} â€¢ Strike ₹${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}',
+                          ? '${data['position_type'] ?? ''} • Lot: ${data['lot_size']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2) ?? '-'}'
+                          : '${data['option_type'] ?? ''} • Strike ₹${(data['strike_price'] as num?)?.toStringAsFixed(2) ?? '-'}',
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
@@ -1463,3 +1463,4 @@ class _ImportHoldingsSheetState extends State<_ImportHoldingsSheet> {
     );
   }
 }
+

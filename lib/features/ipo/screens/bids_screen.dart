@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -121,7 +121,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
             child: const Icon(Icons.trending_up, color: AppColors.primary, size: 22),
           ),
           const SizedBox(width: 12),
@@ -164,7 +164,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
+            color: active ? AppColors.primary.withValues(alpha: 0.18) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: active
                 ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 1))]
@@ -205,7 +205,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(14),
           border: Border(left: BorderSide(color: accent, width: 4)),
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
@@ -303,7 +303,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(14),
         border: Border(left: BorderSide(color: accent, width: 4)),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
@@ -352,7 +352,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(8)),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -466,7 +466,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
                       child: Container(
                         width: 38,
                         height: 38,
-                        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]),
+                        decoration: BoxDecoration(color: AppColors.cardBackground, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]),
                         child: const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary),
                       ),
                     ),

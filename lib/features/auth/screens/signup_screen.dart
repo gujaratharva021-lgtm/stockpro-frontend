@@ -4,8 +4,21 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
-import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
+
+// Scoped light palette for the auth flow (login/signup/forgot-password),
+// distinct from the app-wide dark AppColors used everywhere else post-login.
+class _AuthPalette {
+  static const bg = Color(0xFF0B0E14);
+  static const card = Color(0xFF151A23);
+  static const border = Color(0xFF232935);
+  static const primary = Color(0xFF4C8DFF);
+  static const primaryDark = Color(0xFF2A5F9E);
+  static const textPrimary = Color(0xFFF5F6F8);
+  static const textSecondary = Color(0xFFAEB4C0);
+  static const textMuted = Color(0xFF7A8091);
+  static const danger = Color(0xFFFF5C4D);
+}
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -24,7 +37,18 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _signup() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final res = await ApiService.signup(_emailController.text.trim(), _passwordController.text, _nameController.text.trim());
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      if (_nameController.text.trim().isEmpty || email.isEmpty || password.isEmpty) {
+        setState(() => _error = 'Please fill in all the fields.');
+        return;
+      }
+      if (password.length < 12 || !RegExp(r'[A-Za-z]').hasMatch(password) || !RegExp(r'[0-9]').hasMatch(password) || !RegExp(r'[^A-Za-z0-9]').hasMatch(password)) {
+        setState(() => _error = 'Password must be at least 12 characters long and strong (use letters, numbers and symbols).');
+        return;
+      }
+      await ApiService.signup(email, password, _nameController.text.trim());
+      final res = await ApiService.login(email, password);
       const storage = FlutterSecureStorage();
       await storage.write(key: 'auth_token', value: res['token']);
       WebSocketService.connect();
@@ -52,7 +76,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 width: 40, height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
+                  gradient: const LinearGradient(colors: [_AuthPalette.primary, _AuthPalette.primaryDark]),
                 ),
                 child: const Icon(Icons.trending_up, color: Colors.white, size: 22),
               ),
@@ -61,9 +85,9 @@ class _SignupScreenState extends State<SignupScreen> {
             ],
           ),
           const SizedBox(height: 32),
-          const Text('Create account', style: TextStyle(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
+          const Text('Create account', style: TextStyle(color: _AuthPalette.textPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          const Text('Start your trading journey today', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+          const Text('Start your trading journey today', style: TextStyle(color: _AuthPalette.textMuted, fontSize: 14)),
           const SizedBox(height: 32),
           _buildLabel('Full Name'),
           const SizedBox(height: 8),
@@ -77,11 +101,11 @@ class _SignupScreenState extends State<SignupScreen> {
           const SizedBox(height: 8),
           _buildField(
             controller: _passwordController,
-            hint: 'Min 6 characters',
+            hint: 'Min 12 characters',
             icon: Icons.lock_outline,
             obscure: !_showPassword,
             suffix: IconButton(
-              icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted, size: 20),
+              icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: _AuthPalette.textMuted, size: 20),
               onPressed: () => setState(() => _showPassword = !_showPassword),
             ),
           ),
@@ -90,11 +114,11 @@ class _SignupScreenState extends State<SignupScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.danger.withValues(alpha: 0.08),
+                color: _AuthPalette.danger.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
+                border: Border.all(color: _AuthPalette.danger.withValues(alpha: 0.25)),
               ),
-              child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+              child: Text(_error!, style: const TextStyle(color: _AuthPalette.danger, fontSize: 13)),
             ),
           ],
           const SizedBox(height: 28),
@@ -104,7 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: ElevatedButton(
               onPressed: _loading ? null : _signup,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: _AuthPalette.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
@@ -120,8 +144,8 @@ class _SignupScreenState extends State<SignupScreen> {
               child: RichText(
                 text: TextSpan(
                   text: 'Already have an account? ',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                  children: const [TextSpan(text: 'Sign in', style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w600))],
+                  style: const TextStyle(color: _AuthPalette.textMuted, fontSize: 14),
+                  children: const [TextSpan(text: 'Sign in', style: TextStyle(color: _AuthPalette.primaryDark, fontWeight: FontWeight.w600))],
                 ),
               ),
             ),
@@ -139,7 +163,7 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
+                    colors: [_AuthPalette.primary, _AuthPalette.primaryDark],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -180,7 +204,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: _AuthPalette.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -190,19 +214,19 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildLabel(String text) => Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13));
+  Widget _buildLabel(String text) => Text(text, style: const TextStyle(color: _AuthPalette.textSecondary, fontSize: 13));
 
   Widget _buildField({required TextEditingController controller, required String hint, required IconData icon, bool obscure = false, Widget? suffix}) {
     return Container(
-      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(color: _AuthPalette.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: _AuthPalette.border)),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+        style: const TextStyle(color: _AuthPalette.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-          prefixIcon: Icon(icon, color: AppColors.textMuted, size: 20),
+          hintStyle: const TextStyle(color: _AuthPalette.textMuted, fontSize: 14),
+          prefixIcon: Icon(icon, color: _AuthPalette.textMuted, size: 20),
           suffixIcon: suffix,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

@@ -86,15 +86,36 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _verifyAadhaarOTP() {
-    if (_aadhaarOtpController.text == '123456' || _aadhaarOtpController.text.length == 6) {
+    if (_aadhaarOtpController.text.length == 6) {
       setState(() { _aadhaarVerified = true; _aadhaarOtpError = null; });
     } else {
       setState(() => _aadhaarOtpError = 'Invalid OTP. Please try again.');
     }
   }
+  bool _panVerified = false;
+  String? _panCheckedValue;
 
-  void _next() {
+  Future<void> _next() async {
     final error = _validateStep();
+    if (false && error == null && _step == 2) {
+      final pan = _panController.text.trim().toUpperCase();
+      if (!_panVerified || _panCheckedValue != pan) {
+        try {
+          final res = await ApiService.kycPan(pan, _nameController.text.trim());
+          final valid = res['valid'] == true || (res['status'] ?? '').toString().toUpperCase() == 'VALID';
+          if (!valid) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text((res['message'] ?? 'PAN could not be verified').toString()), backgroundColor: AppColors.danger));
+            return;
+          }
+          _panVerified = true;
+          _panCheckedValue = pan;
+        } catch (_) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PAN verification failed. Please try again.'), backgroundColor: AppColors.danger));
+          return;
+        }
+      }
+    }
+    if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: AppColors.danger),
@@ -102,6 +123,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return;
     }
     if (_step < _stepTitles.length - 1) {
+      FocusManager.instance.primaryFocus?.unfocus();
       setState(() => _step++);
     } else {
       _submit();
@@ -119,14 +141,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         if (!_otpVerified) return 'Please verify your mobile number with OTP';
         return null;
       case 2:
-        if (_panController.text.trim().length != 10) return 'Please enter a valid 10-character PAN number';
+        if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(_panController.text.trim().toUpperCase())) return 'Please enter a valid PAN number (5 letters, 4 digits, 1 letter, e.g. ABCDE1234F)';
         return null;
       case 3:
         if (!_aadhaarVerified) return 'Please verify your Aadhaar with OTP';
         return null;
       case 4:
-        if (_accountController.text.trim().isEmpty) return 'Please enter your bank account number';
-        if (_ifscController.text.trim().isEmpty) return 'Please enter your IFSC code';
+        if (!RegExp(r'^[0-9]{9,18}$').hasMatch(_accountController.text.trim())) return 'Please enter a valid bank account number (9 to 18 digits)';
+        if (!RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$').hasMatch(_ifscController.text.trim().toUpperCase())) return 'Please enter a valid IFSC code, e.g. SBIN0001234';
         return null;
       case 5:
         if (_incomeProofFile == null) return 'Please upload your income proof document';
@@ -144,6 +166,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
   void _back() {
     if (_step > 0) {
+      FocusManager.instance.primaryFocus?.unfocus();
       setState(() => _step--);
     } else {
       Navigator.maybePop(context);
@@ -248,7 +271,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     }
   }
 
-  Widget _field(String label, TextEditingController controller, {String? hint, TextInputType? keyboardType, List<TextInputFormatter>? inputFormatters, TextCapitalization textCapitalization = TextCapitalization.none, bool enabled = true}) {
+  Widget _field(String label, TextEditingController controller, {String? hint, TextInputType? keyboardType, List<TextInputFormatter>? inputFormatters, TextCapitalization textCapitalization = TextCapitalization.none, bool enabled = true, bool autofocus = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -264,6 +287,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             controller: controller,
             enabled: enabled,
             keyboardType: keyboardType,
+            autofocus: autofocus,
             inputFormatters: inputFormatters,
             textCapitalization: textCapitalization,
             style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
@@ -391,7 +415,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       const SizedBox(height: 24),
 
       if (!_aadhaarVerified) ...[
-        _field('Aadhaar Number', _aadhaarController, hint: 'XXXX XXXX XXXX', keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)]),
+        _field('Aadhaar Number', _aadhaarController, hint: 'XXXX XXXX XXXX', autofocus: true, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)]),
         if (!_aadhaarOtpSent)
           SizedBox(
             width: double.infinity,
@@ -451,8 +475,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       const SizedBox(height: 6),
       const Text('Used to fund your trading wallet and withdrawals', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
       const SizedBox(height: 24),
-      _field('Account Number', _accountController, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(20)]),
-      _field('IFSC Code', _ifscController, hint: 'e.g. HDFC0001234', textCapitalization: TextCapitalization.characters),
+      _field('Account Number', _accountController, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(18)]),
+      _field('IFSC Code', _ifscController, hint: 'e.g. HDFC0001234', textCapitalization: TextCapitalization.characters, inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')), LengthLimitingTextInputFormatter(11), TextInputFormatter.withFunction((oldV, newV) => newV.copyWith(text: newV.text.toUpperCase()))]),
     ]);
   }
 

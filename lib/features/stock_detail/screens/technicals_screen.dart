@@ -134,7 +134,7 @@ class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerPr
       // Real NIFTY 50 index value, fetched directly (same approach already
       // used elsewhere in this app's Markets screen).
       try {
-        final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 10)));
+        final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
         final res = await dio.get('https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=15m&range=1d');
         final result = res.data['chart']['result'][0];
         final meta = result['meta'];

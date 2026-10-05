@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
@@ -10,12 +10,6 @@ import 'package:stock_app/features/profile/screens/account_settings_screen.dart'
 import 'package:stock_app/features/profile/screens/trading_presets_screen.dart';
 import 'package:stock_app/features/profile/screens/advanced_screen.dart';
 
-/// Settings screen -- original items (Notifications, Limit & Stop-Loss
-/// Orders, Brokerage Calculator, Privacy Mode, Security, Help & Support,
-/// Privacy Policy, Terms of Service) plus Account Settings, Trading
-/// Presets, and Advanced, each backed by a real screen. User Settings,
-/// Display, News Language Settings, and Localization were removed --
-/// they are out of scope for now. Biometric Login has been removed.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 

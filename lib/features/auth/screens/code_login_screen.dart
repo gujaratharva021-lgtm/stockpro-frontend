@@ -5,7 +5,18 @@ import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:stock_app/core/theme/app_colors.dart';
+
+// Scoped light palette for the auth flow (login/signup/forgot-password),
+// distinct from the app-wide dark AppColors used everywhere else post-login.
+class _AuthPalette {
+  static const bg = Colors.white;
+  static const card = Color(0xFFF3F5F3);
+  static const border = Color(0xFFE2E6E1);
+  static const primary = Color(0xFF1FA855);
+  static const textPrimary = Color(0xFF12160F);
+  static const textMuted = Color(0xFF6B7568);
+  static const danger = Color(0xFFD64545);
+}
 
 class CodeLoginScreen extends StatefulWidget {
   const CodeLoginScreen({super.key});
@@ -71,7 +82,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: _AuthPalette.bg,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -83,7 +94,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
                 children: [
                   IconButton(
                     alignment: Alignment.centerLeft,
-                    icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 22),
+                    icon: const Icon(Icons.arrow_back, color: _AuthPalette.textPrimary, size: 22),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(height: 8),
@@ -91,21 +102,21 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: _AuthPalette.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(Icons.phonelink_lock_outlined, color: AppColors.primary, size: 28),
+                    child: const Icon(Icons.phonelink_lock_outlined, color: _AuthPalette.primary, size: 28),
                   ),
                   const SizedBox(height: 20),
                   const Text(
                     'Login with Mobile App',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: _AuthPalette.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Enter this code in your OneInvest mobile app under Profile ? Link Web Session',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.4),
+                    style: TextStyle(color: _AuthPalette.textMuted, fontSize: 13, height: 1.4),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -128,20 +139,20 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 22),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: _AuthPalette.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: _AuthPalette.border),
       ),
       child: _status == 'loading'
           ? const SizedBox(
               height: 36,
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5)),
+              child: Center(child: CircularProgressIndicator(color: _AuthPalette.primary, strokeWidth: 2.5)),
             )
           : Text(
               _code ?? '------',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: AppColors.textPrimary,
+                color: _AuthPalette.textPrimary,
                 fontSize: 34,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 8,
@@ -157,10 +168,10 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
         const SizedBox(
           width: 14,
           height: 14,
-          child: CircularProgressIndicator(color: AppColors.textMuted, strokeWidth: 2),
+          child: CircularProgressIndicator(color: _AuthPalette.textMuted, strokeWidth: 2),
         ),
         const SizedBox(width: 10),
-        const Text('Waiting for confirmation...', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text('Waiting for confirmation...', style: TextStyle(color: _AuthPalette.textMuted, fontSize: 13)),
       ],
     );
   }
@@ -168,7 +179,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
   Widget _buildExpiredRow() {
     return Column(
       children: [
-        const Text('Code expired', style: TextStyle(color: AppColors.danger, fontSize: 13, fontWeight: FontWeight.w600)),
+        const Text('Code expired', style: TextStyle(color: _AuthPalette.danger, fontSize: 13, fontWeight: FontWeight.w600)),
         const SizedBox(height: 10),
         TextButton(onPressed: _generateCode, child: const Text('Get a new code')),
       ],
@@ -178,7 +189,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
   Widget _buildErrorRow() {
     return Column(
       children: [
-        const Text('Could not connect. Try again.', style: TextStyle(color: AppColors.danger, fontSize: 13)),
+        const Text('Could not connect. Try again.', style: TextStyle(color: _AuthPalette.danger, fontSize: 13)),
         const SizedBox(height: 10),
         TextButton(onPressed: _generateCode, child: const Text('Retry')),
       ],

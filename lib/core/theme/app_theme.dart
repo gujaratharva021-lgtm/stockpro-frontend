@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
 /// StockPro's single app theme. Dark is the one true StockPro visual
