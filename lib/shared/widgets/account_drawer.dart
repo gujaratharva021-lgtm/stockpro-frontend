@@ -6,6 +6,8 @@ import 'package:stock_app/features/profile/screens/funds_screen.dart';
 import 'package:stock_app/features/profile/screens/settings_screen.dart';
 import 'package:stock_app/features/profile/screens/account_details_screen.dart';
 import 'package:stock_app/features/profile/screens/statements_tax_screen.dart';
+import 'package:stock_app/shared/widgets/feature_info_screen.dart';
+import 'package:stock_app/shared/widgets/account_info_screen.dart';
 
 class DrawerFeature {
   final IconData icon;
@@ -32,6 +34,7 @@ const List<DrawerFeature> kMoreFeatures = [
   DrawerFeature(Icons.trending_up, 'Performance', '/performance'),
   DrawerFeature(Icons.receipt_long_outlined, 'Tax Report', '/tax-report'),
   DrawerFeature(Icons.account_circle_outlined, 'Profile', '/profile'),
+  DrawerFeature(Icons.show_chart, 'Commodity', '/commodity'),
 ];
 
 /// Account-style drawer opened from the hamburger icon on every screen.
@@ -285,8 +288,9 @@ class _AccountDrawerState extends State<AccountDrawer> {
                   // ===== Account Overview (highlighted) =====
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
+                    child: Material(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
                       child: ListTile(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         leading: const Icon(Icons.pie_chart_outline, color: AppColors.primary),
@@ -326,6 +330,24 @@ class _AccountDrawerState extends State<AccountDrawer> {
                         onTap: () {
                           Navigator.pop(context);
                           context.push(item.route);
+                        },
+                      )),
+                  ...[
+                    ['Mutual Fund', Icons.pie_chart_outline],
+                    ['F&O', Icons.stacked_line_chart],
+                    ['Intraday', Icons.flash_on_outlined],
+                    ['Option Trading', Icons.swap_vert],
+                    ['Stock Exchange', Icons.account_balance_outlined],
+                    ['Trading Account', Icons.candlestick_chart_outlined],
+                    ['Demat Account', Icons.folder_special_outlined],
+                  ].map((e) => ListTile(
+                        leading: Icon(e[1] as IconData, color: AppColors.textSecondary, size: 20),
+                        title: Text(e[0] as String, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
+                        trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+                        onTap: () {
+                          final nav = Navigator.of(context);
+                          Navigator.pop(context);
+                          nav.push(MaterialPageRoute(builder: (_) => (e[0] as String).endsWith(' Account') ? AccountInfoScreen(title: e[0] as String) : FeatureInfoScreen(title: e[0] as String, icon: e[1] as IconData)));
                         },
                       )),
                   const Divider(color: AppColors.border, height: 1),
