@@ -36,59 +36,133 @@ import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 import 'package:stock_app/features/predictions/screens/predictions_screen.dart';
 import 'package:stock_app/features/explore/screens/explore_screen.dart';
 import 'package:stock_app/features/commodity/screens/commodity_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    FlutterError.onError = (errorDetails) {
-      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-    };
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
+    if (!kIsWeb) {
+      FlutterError.onError = (errorDetails) {
+        FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+    }
   } catch (e) {
     debugPrint('Firebase init failed: $e');
   }
   runApp(const MyApp());
 }
+
 final _router = GoRouter(
   initialLocation: '/splash',
   routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
-    GoRoute(path: '/watchlist', builder: (context, state) => const WatchlistScreen()),
-    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+    GoRoute(
+      path: '/watchlist',
+      builder: (context, state) => const WatchlistScreen(),
+    ),
+    GoRoute(
+      path: '/dashboard',
+      builder: (context, state) => const DashboardScreen(),
+    ),
     GoRoute(path: '/ipo', builder: (context, state) => const BidsScreen()),
-    GoRoute(path: '/app-code', builder: (context, state) => const AppCodeScreen()),
-    GoRoute(path: '/code-login', builder: (context, state) => const CodeLoginScreen()),
-    GoRoute(path: '/link-web-session', builder: (context, state) => const LinkWebSessionScreen()),
-    GoRoute(path: '/portfolio', builder: (context, state) => const PortfolioScreen()),
+    GoRoute(
+      path: '/app-code',
+      builder: (context, state) => const AppCodeScreen(),
+    ),
+    GoRoute(
+      path: '/code-login',
+      builder: (context, state) => const CodeLoginScreen(),
+    ),
+    GoRoute(
+      path: '/link-web-session',
+      builder: (context, state) => const LinkWebSessionScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio',
+      builder: (context, state) => const PortfolioScreen(),
+    ),
     GoRoute(path: '/news', builder: (context, state) => const NewsScreen()),
-    GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingFlow()),
-    GoRoute(path: '/kyc-success', builder: (context, state) => const KycSuccessScreen()),
-    GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
-    GoRoute(path: '/compare', builder: (context, state) => const CompareScreen()),
-    GoRoute(path: '/heatmap', builder: (context, state) => const HeatmapScreen()),
-    GoRoute(path: '/tax-report', builder: (context, state) => const TaxReportScreen()),
-    GoRoute(path: '/pending-orders', builder: (context, state) => const OrdersScreen()),
-    GoRoute(path: '/brokerage-calculator', builder: (context, state) => const BrokerageCalculatorScreen()),
-    GoRoute(path: '/screener', builder: (context, state) => const ScreenerScreen()),
-    GoRoute(path: '/performance', builder: (context, state) => const PerformanceScreen()),
-    GoRoute(path: '/assistant', builder: (context, state) => const AssistantScreen()),
-    GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
-    GoRoute(path: '/fii-dii', builder: (context, state) => const FiiDiiScreen()),
-    GoRoute(path: '/smallcase', builder: (context, state) => const SmallcaseScreen()),
-    GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingFlow(),
+    ),
+    GoRoute(
+      path: '/kyc-success',
+      builder: (context, state) => const KycSuccessScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/compare',
+      builder: (context, state) => const CompareScreen(),
+    ),
+    GoRoute(
+      path: '/heatmap',
+      builder: (context, state) => const HeatmapScreen(),
+    ),
+    GoRoute(
+      path: '/tax-report',
+      builder: (context, state) => const TaxReportScreen(),
+    ),
+    GoRoute(
+      path: '/pending-orders',
+      builder: (context, state) => const OrdersScreen(),
+    ),
+    GoRoute(
+      path: '/brokerage-calculator',
+      builder: (context, state) => const BrokerageCalculatorScreen(),
+    ),
+    GoRoute(
+      path: '/screener',
+      builder: (context, state) => const ScreenerScreen(),
+    ),
+    GoRoute(
+      path: '/performance',
+      builder: (context, state) => const PerformanceScreen(),
+    ),
+    GoRoute(
+      path: '/assistant',
+      builder: (context, state) => const AssistantScreen(),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/fii-dii',
+      builder: (context, state) => const FiiDiiScreen(),
+    ),
+    GoRoute(
+      path: '/smallcase',
+      builder: (context, state) => const SmallcaseScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsScreen(),
+    ),
     GoRoute(path: '/sip', builder: (context, state) => const SipScreen()),
-    GoRoute(path: '/predictions', builder: (context, state) => const PredictionsScreen()),
-    GoRoute(path: '/explore', builder: (context, state) => const ExploreScreen()),
+    GoRoute(
+      path: '/predictions',
+      builder: (context, state) => const PredictionsScreen(),
+    ),
+    GoRoute(
+      path: '/explore',
+      builder: (context, state) => const ExploreScreen(),
+    ),
     GoRoute(path: '/commodity', builder: (context, state) => CommodityScreen()),
   ],
 );
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override

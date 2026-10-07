@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:lottie/lottie.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -12,7 +13,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   static const _bg = Colors.black;
   AnimationController? _lottieController;
   bool _navigated = false;
@@ -20,10 +22,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+    if (kIsWeb) {
+      Future.delayed(const Duration(milliseconds: 1500), _navigateNext);
+    }
   }
 
   @override
@@ -66,21 +73,29 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       backgroundColor: _bg,
       body: Stack(
         children: [
-          SizedBox.expand(
-            child: Lottie.asset(
-              'assets/animations/splash_animation_v2.json',
-              fit: BoxFit.cover,
-              controller: _lottieController,
-              onLoaded: (composition) {
-                _lottieController = AnimationController(vsync: this, duration: composition.duration * 0.6)
-                  ..addStatusListener((status) {
-                    if (status == AnimationStatus.completed) _navigateNext();
-                  })
-                  ..forward();
-                setState(() {});
-              },
-            ),
-          ),
+          kIsWeb
+              ? const SizedBox.shrink()
+              : SizedBox.expand(
+                  child: Lottie.asset(
+                    'assets/animations/splash_animation_v2.json',
+                    fit: BoxFit.cover,
+                    controller: _lottieController,
+                    onLoaded: (composition) {
+                      _lottieController =
+                          AnimationController(
+                              vsync: this,
+                              duration: composition.duration * 0.6,
+                            )
+                            ..addStatusListener((status) {
+                              if (status == AnimationStatus.completed) {
+                                _navigateNext();
+                              }
+                            })
+                            ..forward();
+                      setState(() {});
+                    },
+                  ),
+                ),
           Positioned(
             left: 0,
             right: 0,
