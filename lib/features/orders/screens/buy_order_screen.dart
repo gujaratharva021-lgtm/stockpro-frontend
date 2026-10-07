@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -14,7 +14,8 @@ import 'package:stock_app/core/services/api_service.dart';
 class OrderSubmitResult {
   final String status;
   final String? orderId;
-  const OrderSubmitResult({required this.status, this.orderId});
+  final double? filledQty;
+  const OrderSubmitResult({required this.status, this.orderId, this.filledQty});
 }
 
 /// Real, publicly documented Indian equity charge formulas (SEBI/NSE/GST
@@ -72,7 +73,8 @@ class OrderTicketScreen extends StatefulWidget {
     required double price,
     double? marketProtectionPercent,
     String productType,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const OrderTicketScreen({
     super.key,
@@ -95,7 +97,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   late bool isBuy;
   String _orderType = 'MARKET'; // MARKET | LIMIT
   String _product = 'DELIVERY'; // DELIVERY (Longterm) | INTRADAY
-  String _orderMode = 'REGULAR'; // REGULAR | MTF | ICEBERG (MTF/Iceberg are informational only for now)
+  String _orderMode =
+      'REGULAR'; // REGULAR | MTF | ICEBERG (MTF/Iceberg are informational only for now)
 
   // Advanced order options: stoploss (a trigger price that fires a market/
   // limit sell once the price falls to protect against loss), GTT (Good
@@ -126,7 +129,9 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     super.initState();
     isBuy = widget.buySell == 'buy';
     _qtyController = TextEditingController(text: '1');
-    _priceController = TextEditingController(text: widget.currentPrice.toStringAsFixed(2));
+    _priceController = TextEditingController(
+      text: widget.currentPrice.toStringAsFixed(2),
+    );
     _stoplossController = TextEditingController();
     _gttTargetController = TextEditingController();
     _loadBalance();
@@ -161,7 +166,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   }
 
   void _adjustPrice(double delta) {
-    final current = double.tryParse(_priceController.text) ?? widget.currentPrice;
+    final current =
+        double.tryParse(_priceController.text) ?? widget.currentPrice;
     final updated = (current + delta).clamp(0.05, double.infinity);
     setState(() => _priceController.text = updated.toStringAsFixed(2));
   }
@@ -175,10 +181,15 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   _ChargeBreakdown get _charges {
     final turnover = _stockValue;
     final isIntraday = _product == 'INTRADAY';
-    final brokerage = isIntraday ? [20.0, turnover * 0.0003].reduce((a, b) => a < b ? a : b) : 0.0;
+    final brokerage = isIntraday
+        ? [20.0, turnover * 0.0003].reduce((a, b) => a < b ? a : b)
+        : 0.0;
     final sebiFee = turnover * 0.000001; // SEBI turnover fee: Rs 10 per crore
-    final exchangeFee = turnover * 0.0000297; // NSE transaction charge (approx published rate)
-    final stampDuty = isBuy ? turnover * (isIntraday ? 0.00003 : 0.00015) : 0.0; // buy-side only
+    final exchangeFee =
+        turnover * 0.0000297; // NSE transaction charge (approx published rate)
+    final stampDuty = isBuy
+        ? turnover * (isIntraday ? 0.00003 : 0.00015)
+        : 0.0; // buy-side only
     final stt = isIntraday
         ? (isBuy ? 0.0 : turnover * 0.00025) // intraday STT: sell-side only
         : turnover * 0.001; // delivery STT: both sides
@@ -209,7 +220,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       return;
     }
     if (_orderMode != 'REGULAR') {
-      setState(() => _errorMsg = '${_orderMode == 'MTF' ? 'MTF' : 'Iceberg'} orders are coming soon. Switch to Regular to place this order.');
+      setState(
+        () => _errorMsg =
+            '${_orderMode == 'MTF' ? 'MTF' : 'Iceberg'} orders are coming soon. Switch to Regular to place this order.',
+      );
       return;
     }
     setState(() {
@@ -222,18 +236,31 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         orderType: _orderType,
         qty: _qty,
         price: _price,
-        marketProtectionPercent: (_orderType == 'MARKET' && _marketProtectionEnabled) ? _marketProtectionPercent : null,
+        marketProtectionPercent:
+            (_orderType == 'MARKET' && _marketProtectionEnabled)
+            ? _marketProtectionPercent
+            : null,
         productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR',
       );
       if (_stoplossEnabled) {
         final slPrice = double.tryParse(_stoplossController.text);
         if (slPrice != null && slPrice > 0) {
           try {
-            await ApiService.createPendingOrder(widget.stock['id'], 'SELL', 'STOP_LOSS', _qty, slPrice);
+            await ApiService.createPendingOrder(
+              widget.stock['id'],
+              'SELL',
+              'STOP_LOSS',
+              _qty,
+              slPrice,
+            );
           } catch (_) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order placed, but Stoploss could not be set. Add it from Orders.')),
+                const SnackBar(
+                  content: Text(
+                    'Order placed, but Stoploss could not be set. Add it from Orders.',
+                  ),
+                ),
               );
             }
           }
@@ -243,11 +270,22 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         final gttPrice = double.tryParse(_gttTargetController.text);
         if (gttPrice != null && gttPrice > 0) {
           try {
-            await ApiService.createPendingOrder(widget.stock['id'], widget.buySell.toUpperCase(), 'LIMIT', _qty, gttPrice, isGtt: true);
+            await ApiService.createPendingOrder(
+              widget.stock['id'],
+              widget.buySell.toUpperCase(),
+              'LIMIT',
+              _qty,
+              gttPrice,
+              isGtt: true,
+            );
           } catch (_) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order placed, but GTT could not be set. Add it from Orders.')),
+                const SnackBar(
+                  content: Text(
+                    'Order placed, but GTT could not be set. Add it from Orders.',
+                  ),
+                ),
               );
             }
           }
@@ -269,8 +307,11 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         _errorMsg = e.toString().contains('insufficient shares')
             ? 'You don\'t have enough shares to sell'
             : e.toString().contains('insufficient')
-                ? 'Insufficient balance'
-                : 'Order failed: ' + (e is DioException ? (e.response?.data?.toString() ?? e.toString()) : e.toString());
+            ? 'Insufficient balance'
+            : 'Order failed: ' +
+                  (e is DioException
+                      ? (e.response?.data?.toString() ?? e.toString())
+                      : e.toString());
       });
     }
   }
@@ -279,7 +320,9 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: _kBg,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -290,7 +333,12 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                 _priceController.text = widget.currentPrice.toStringAsFixed(2);
               });
             }),
-            _sheetTile('Limit', 'LIMIT', _orderType, (v) => setState(() => _orderType = v)),
+            _sheetTile(
+              'Limit',
+              'LIMIT',
+              _orderType,
+              (v) => setState(() => _orderType = v),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -302,13 +350,25 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: _kBg,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _sheetTile('Longterm (Delivery)', 'DELIVERY', _product, (v) => setState(() => _product = v)),
-            _sheetTile('Intraday', 'INTRADAY', _product, (v) => setState(() => _product = v)),
+            _sheetTile(
+              'Longterm (Delivery)',
+              'DELIVERY',
+              _product,
+              (v) => setState(() => _product = v),
+            ),
+            _sheetTile(
+              'Intraday',
+              'INTRADAY',
+              _product,
+              (v) => setState(() => _product = v),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -316,10 +376,21 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     );
   }
 
-  Widget _sheetTile(String label, String value, String groupValue, ValueChanged<String> onPick) {
+  Widget _sheetTile(
+    String label,
+    String value,
+    String groupValue,
+    ValueChanged<String> onPick,
+  ) {
     final selected = value == groupValue;
     return ListTile(
-      title: Text(label, style: TextStyle(color: selected ? _accentColor : _kTextPrimary, fontWeight: selected ? FontWeight.w700 : FontWeight.normal)),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: selected ? _accentColor : _kTextPrimary,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+        ),
+      ),
       trailing: selected ? Icon(Icons.check, color: _accentColor) : null,
       onTap: () {
         onPick(value);
@@ -339,7 +410,14 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         elevation: 0,
         foregroundColor: _kTextPrimary,
         iconTheme: const IconThemeData(color: _kTextPrimary),
-        title: Text(symbol, style: const TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          symbol,
+          style: const TextStyle(
+            color: _kTextPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: _kTextPrimary),
@@ -349,7 +427,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             },
             itemBuilder: (ctx) => const [
               PopupMenuItem(value: 'charges', child: Text('Charges & taxes')),
-              PopupMenuItem(value: 'product', child: Text('Longterm / Intraday')),
+              PopupMenuItem(
+                value: 'product',
+                child: Text('Longterm / Intraday'),
+              ),
             ],
           ),
         ],
@@ -367,31 +448,67 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                     _buySellBadgeRow(),
                     if (!isBuy && widget.holdingQty > 0) ...[
                       const SizedBox(height: 6),
-                      Text('Holding: ${widget.holdingQty.toStringAsFixed(0)} shares • Avg ₹${widget.avgBuyPrice.toStringAsFixed(2)}',
-                          style: const TextStyle(color: _kTextMuted, fontSize: 12)),
+                      Text(
+                        'Holding: ${widget.holdingQty.toStringAsFixed(0)} shares • Avg ₹${widget.avgBuyPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: _kTextMuted,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 20),
                     _exchangeSelector(),
                     const SizedBox(height: 16),
                     _orderModeTabs(),
                     const SizedBox(height: 20),
-                    const Text('Quantity', style: TextStyle(color: _kTextPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-                    const SizedBox(height: 6),
-                    _stepperField(controller: _qtyController, keyboardType: TextInputType.number, onIncrement: () => _adjustQty(1), onDecrement: () => _adjustQty(-1)),
-                    const SizedBox(height: 18),
-                    Row(children: [
-                      Text(_orderType == 'MARKET' ? 'Market' : 'Limit', style: const TextStyle(color: _kTextPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: _pickOrderType,
-                        child: Icon(Icons.edit, size: 14, color: _accentColor),
+                    const Text(
+                      'Quantity',
+                      style: TextStyle(
+                        color: _kTextPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
-                    ]),
+                    ),
+                    const SizedBox(height: 6),
+                    _stepperField(
+                      controller: _qtyController,
+                      keyboardType: TextInputType.number,
+                      onIncrement: () => _adjustQty(1),
+                      onDecrement: () => _adjustQty(-1),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Text(
+                          _orderType == 'MARKET' ? 'Market' : 'Limit',
+                          style: const TextStyle(
+                            color: _kTextPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: _pickOrderType,
+                          child: Icon(
+                            Icons.edit,
+                            size: 14,
+                            color: _accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     _stepperField(
                       controller: _priceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
+                        ),
+                      ],
                       enabled: _orderType == 'LIMIT',
                       onIncrement: () => _adjustPrice(0.05),
                       onDecrement: () => _adjustPrice(-0.05),
@@ -402,7 +519,13 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                     _amountSummary(),
                     if (_errorMsg != null) ...[
                       const SizedBox(height: 10),
-                      Text(_errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                      Text(
+                        _errorMsg!,
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -426,14 +549,31 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           onTap: () => setState(() => isBuy = !isBuy),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(color: _accentColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-            child: Text(isBuy ? 'BUY' : 'SELL', style: TextStyle(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.4)),
+            decoration: BoxDecoration(
+              color: _accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isBuy ? 'BUY' : 'SELL',
+              style: TextStyle(
+                color: _accentColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                letterSpacing: 0.4,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 10),
         Text(
           '${widget.changePercent >= 0 ? '+' : ''}${widget.changePercent.toStringAsFixed(2)}%',
-          style: TextStyle(color: widget.changePercent >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600, fontSize: 14),
+          style: TextStyle(
+            color: widget.changePercent >= 0
+                ? AppColors.success
+                : AppColors.danger,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
       ],
     );
@@ -444,24 +584,59 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     return Row(
       children: [
         Expanded(
-          child: Row(children: [
-            Radio<bool>(value: true, groupValue: true, onChanged: (_) {}, activeColor: _accentColor, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            const SizedBox(width: 4),
-            const Text('NSE', style: TextStyle(color: _kTextPrimary, fontSize: 14)),
-            const SizedBox(width: 6),
-            Text('₹${widget.currentPrice.toStringAsFixed(2)}', style: const TextStyle(color: _kTextPrimary, fontWeight: FontWeight.w700, fontSize: 15)),
-          ]),
+          child: Row(
+            children: [
+              Radio<bool>(
+                value: true,
+                groupValue: true,
+                onChanged: (_) {},
+                activeColor: _accentColor,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              const SizedBox(width: 4),
+              const Text(
+                'NSE',
+                style: TextStyle(color: _kTextPrimary, fontSize: 14),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '₹${widget.currentPrice.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: _kTextPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
         ),
         Expanded(
           child: Opacity(
             opacity: 0.45,
-            child: Row(children: [
-              const Radio<bool>(value: false, groupValue: true, onChanged: null, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
-              const SizedBox(width: 4),
-              const Text('BSE', style: TextStyle(color: _kTextSecondary, fontSize: 14)),
-              const SizedBox(width: 6),
-              Text('₹${widget.currentPrice.toStringAsFixed(2)}', style: const TextStyle(color: _kTextSecondary, fontWeight: FontWeight.w700, fontSize: 15)),
-            ]),
+            child: Row(
+              children: [
+                const Radio<bool>(
+                  value: false,
+                  groupValue: true,
+                  onChanged: null,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                const SizedBox(width: 4),
+                const Text(
+                  'BSE',
+                  style: TextStyle(color: _kTextSecondary, fontSize: 14),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '₹${widget.currentPrice.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: _kTextSecondary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -486,9 +661,20 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label, style: TextStyle(color: selected ? _accentColor : _kTextMuted, fontWeight: selected ? FontWeight.bold : FontWeight.w500, fontSize: 14)),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? _accentColor : _kTextMuted,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 6),
-              Container(height: 2, width: label.length * 7.5, color: selected ? _accentColor : Colors.transparent),
+              Container(
+                height: 2,
+                width: label.length * 7.5,
+                color: selected ? _accentColor : Colors.transparent,
+              ),
             ],
           ),
         ),
@@ -498,7 +684,13 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [tab('Regular', 'REGULAR'), tab('MTF', 'MTF'), tab('Iceberg', 'ICEBERG')]),
+        Row(
+          children: [
+            tab('Regular', 'REGULAR'),
+            tab('MTF', 'MTF'),
+            tab('Iceberg', 'ICEBERG'),
+          ],
+        ),
         const Divider(color: _kBorder, height: 1),
         if (_orderMode != 'REGULAR') ...[
           const SizedBox(height: 8),
@@ -523,7 +715,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     return Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(border: Border.all(color: _kBorder), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        border: Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -533,16 +728,36 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
               onChanged: (_) => setState(() {}),
-              style: TextStyle(color: enabled ? _kTextPrimary : _kTextMuted, fontSize: 18),
-              decoration: const InputDecoration(border: InputBorder.none, isDense: true),
+              style: TextStyle(
+                color: enabled ? _kTextPrimary : _kTextMuted,
+                fontSize: 18,
+              ),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+              ),
             ),
           ),
           if (enabled)
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                InkWell(onTap: onIncrement, child: Icon(Icons.keyboard_arrow_up, size: 20, color: _accentColor)),
-                InkWell(onTap: onDecrement, child: Icon(Icons.keyboard_arrow_down, size: 20, color: _accentColor)),
+                InkWell(
+                  onTap: onIncrement,
+                  child: Icon(
+                    Icons.keyboard_arrow_up,
+                    size: 20,
+                    color: _accentColor,
+                  ),
+                ),
+                InkWell(
+                  onTap: onDecrement,
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: _accentColor,
+                  ),
+                ),
               ],
             ),
         ],
@@ -554,11 +769,21 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
   Widget _advancedOrderOptions() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _kCard, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Advanced Options', style: TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+          const Text(
+            'Advanced Options',
+            style: TextStyle(
+              color: _kTextPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 14),
           _advancedOptionRow(
             label: 'Stoploss',
@@ -571,12 +796,23 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             _inlineStepper(
               controller: _stoplossController,
               onIncrement: () {
-                final current = double.tryParse(_stoplossController.text) ?? widget.currentPrice;
-                setState(() => _stoplossController.text = (current + 0.05).toStringAsFixed(2));
+                final current =
+                    double.tryParse(_stoplossController.text) ??
+                    widget.currentPrice;
+                setState(
+                  () => _stoplossController.text = (current + 0.05)
+                      .toStringAsFixed(2),
+                );
               },
               onDecrement: () {
-                final current = double.tryParse(_stoplossController.text) ?? widget.currentPrice;
-                setState(() => _stoplossController.text = (current - 0.05).clamp(0.05, double.infinity).toStringAsFixed(2));
+                final current =
+                    double.tryParse(_stoplossController.text) ??
+                    widget.currentPrice;
+                setState(
+                  () => _stoplossController.text = (current - 0.05)
+                      .clamp(0.05, double.infinity)
+                      .toStringAsFixed(2),
+                );
               },
             ),
           ],
@@ -592,12 +828,23 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             _inlineStepper(
               controller: _gttTargetController,
               onIncrement: () {
-                final current = double.tryParse(_gttTargetController.text) ?? widget.currentPrice;
-                setState(() => _gttTargetController.text = (current + 0.05).toStringAsFixed(2));
+                final current =
+                    double.tryParse(_gttTargetController.text) ??
+                    widget.currentPrice;
+                setState(
+                  () => _gttTargetController.text = (current + 0.05)
+                      .toStringAsFixed(2),
+                );
               },
               onDecrement: () {
-                final current = double.tryParse(_gttTargetController.text) ?? widget.currentPrice;
-                setState(() => _gttTargetController.text = (current - 0.05).clamp(0.05, double.infinity).toStringAsFixed(2));
+                final current =
+                    double.tryParse(_gttTargetController.text) ??
+                    widget.currentPrice;
+                setState(
+                  () => _gttTargetController.text = (current - 0.05)
+                      .clamp(0.05, double.infinity)
+                      .toStringAsFixed(2),
+                );
               },
             ),
           ],
@@ -605,7 +852,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             const SizedBox(height: 14),
             _advancedOptionRow(
               label: 'Market Protection',
-              subtitle: 'Caps how far your MARKET order can fill from the quoted price',
+              subtitle:
+                  'Caps how far your MARKET order can fill from the quoted price',
               value: _marketProtectionEnabled,
               onChanged: (v) => setState(() => _marketProtectionEnabled = v),
             ),
@@ -613,7 +861,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Text('Protect up to', style: TextStyle(fontSize: 12, color: _kTextSecondary)),
+                  const Text(
+                    'Protect up to',
+                    style: TextStyle(fontSize: 12, color: _kTextSecondary),
+                  ),
                   Expanded(
                     child: Slider(
                       value: _marketProtectionPercent,
@@ -622,10 +873,18 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
                       divisions: 18,
                       label: '${_marketProtectionPercent.toStringAsFixed(1)}%',
                       activeColor: _accentColor,
-                      onChanged: (v) => setState(() => _marketProtectionPercent = v),
+                      onChanged: (v) =>
+                          setState(() => _marketProtectionPercent = v),
                     ),
                   ),
-                  Text('${_marketProtectionPercent.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kTextPrimary)),
+                  Text(
+                    '${_marketProtectionPercent.toStringAsFixed(1)}%',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextPrimary,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -635,39 +894,90 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     );
   }
 
-  Widget _inlineStepper({required TextEditingController controller, required VoidCallback onIncrement, required VoidCallback onDecrement}) {
+  Widget _inlineStepper({
+    required TextEditingController controller,
+    required VoidCallback onIncrement,
+    required VoidCallback onDecrement,
+  }) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: _kBorder), borderRadius: BorderRadius.circular(8), color: _kBg),
-      child: Row(children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
-            onChanged: (_) => setState(() {}),
-            style: const TextStyle(fontSize: 16, color: _kTextPrimary),
-            decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+      decoration: BoxDecoration(
+        border: Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(8),
+        color: _kBg,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+              ],
+              onChanged: (_) => setState(() {}),
+              style: const TextStyle(fontSize: 16, color: _kTextPrimary),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+            ),
           ),
-        ),
-        InkWell(onTap: onDecrement, child: Padding(padding: const EdgeInsets.all(10), child: Icon(Icons.remove, size: 16, color: _accentColor))),
-        InkWell(onTap: onIncrement, child: Padding(padding: const EdgeInsets.all(10), child: Icon(Icons.add, size: 16, color: _accentColor))),
-      ]),
+          InkWell(
+            onTap: onDecrement,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Icon(Icons.remove, size: 16, color: _accentColor),
+            ),
+          ),
+          InkWell(
+            onTap: onIncrement,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Icon(Icons.add, size: 16, color: _accentColor),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _advancedOptionRow({required String label, required String subtitle, required bool value, required ValueChanged<bool> onChanged}) {
+  Widget _advancedOptionRow({
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _kTextPrimary)),
-              Text(subtitle, style: const TextStyle(fontSize: 11, color: _kTextMuted)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _kTextPrimary,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 11, color: _kTextMuted),
+              ),
             ],
           ),
         ),
-        Switch(value: value, onChanged: onChanged, activeThumbColor: _accentColor),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: _accentColor,
+        ),
       ],
     );
   }
@@ -681,13 +991,45 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           onTap: _showChargesDialog,
           child: Row(
             children: [
-              Text('Amount ', style: const TextStyle(color: _kTextMuted, fontSize: 13)),
-              Text('₹${_stockValue.toStringAsFixed(2)}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
-              Text(' + ', style: const TextStyle(color: _kTextMuted, fontSize: 13)),
-              Text('₹${_fees.toStringAsFixed(2)}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
+              Text(
+                'Amount ',
+                style: const TextStyle(color: _kTextMuted, fontSize: 13),
+              ),
+              Text(
+                '₹${_stockValue.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: _accentColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                ' + ',
+                style: const TextStyle(color: _kTextMuted, fontSize: 13),
+              ),
+              Text(
+                '₹${_fees.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: _accentColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
               const Spacer(),
-              Text('Avail. ', style: const TextStyle(color: _kTextMuted, fontSize: 13)),
-              Text(_availableBalance == null ? '…' : '₹${_availableBalance!.toStringAsFixed(2)}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600, fontSize: 13)),
+              Text(
+                'Avail. ',
+                style: const TextStyle(color: _kTextMuted, fontSize: 13),
+              ),
+              Text(
+                _availableBalance == null
+                    ? '…'
+                    : '₹${_availableBalance!.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: _accentColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(width: 4),
               const Icon(Icons.info_outline, size: 13, color: _kTextMuted),
             ],
@@ -697,8 +1039,18 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(isBuy ? 'Total Payable' : 'Net Receivable', style: const TextStyle(color: _kTextSecondary, fontSize: 14)),
-            Text('₹${_total.toStringAsFixed(2)}', style: const TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              isBuy ? 'Total Payable' : 'Net Receivable',
+              style: const TextStyle(color: _kTextSecondary, fontSize: 14),
+            ),
+            Text(
+              '₹${_total.toStringAsFixed(2)}',
+              style: const TextStyle(
+                color: _kTextPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
           ],
         ),
       ],
@@ -711,14 +1063,27 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: _kCard,
-        title: const Text('Charges & taxes', style: TextStyle(color: _kTextPrimary)),
+        title: const Text(
+          'Charges & taxes',
+          style: TextStyle(color: _kTextPrimary),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Statutory charges', style: TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-              const Text('(Govt. & Exchange fees)', style: TextStyle(color: _kTextMuted, fontSize: 11)),
+              const Text(
+                'Statutory charges',
+                style: TextStyle(
+                  color: _kTextPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              const Text(
+                '(Govt. & Exchange fees)',
+                style: TextStyle(color: _kTextMuted, fontSize: 11),
+              ),
               const SizedBox(height: 8),
               _chargeLine('SEBI turnover fee', c.sebiFee),
               _chargeLine('Exchange turnover fee', c.exchangeFee),
@@ -726,7 +1091,14 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
               _chargeLine('Transaction tax (STT)', c.stt),
               _chargeLine('GST', c.gst),
               const Divider(height: 20),
-              const Text('Brokerage', style: TextStyle(color: _kTextPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Brokerage',
+                style: TextStyle(
+                  color: _kTextPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 8),
               _chargeLine('Brokerage', c.brokerage),
               const Divider(height: 20),
@@ -735,7 +1107,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
@@ -747,8 +1122,22 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: bold ? _kTextPrimary : _kTextSecondary, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
-          Text('₹${amount.toStringAsFixed(2)}', style: TextStyle(color: _kTextPrimary, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              color: bold ? _kTextPrimary : _kTextSecondary,
+              fontSize: 13,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            '₹${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              color: _kTextPrimary,
+              fontSize: 13,
+              fontWeight: bold ? FontWeight.bold : FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -765,12 +1154,15 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         final trackWidth = constraints.maxWidth;
         final maxDx = trackWidth - handleSize - 8; // 4px padding each side
         return GestureDetector(
-          onHorizontalDragStart: _submitting ? null : (_) => setState(() => _dragging = true),
+          onHorizontalDragStart: _submitting
+              ? null
+              : (_) => setState(() => _dragging = true),
           onHorizontalDragUpdate: _submitting
               ? null
               : (details) {
                   setState(() {
-                    final newDx = ((_dragProgress * maxDx) + details.delta.dx).clamp(0.0, maxDx);
+                    final newDx = ((_dragProgress * maxDx) + details.delta.dx)
+                        .clamp(0.0, maxDx);
                     _dragProgress = maxDx == 0 ? 0 : newDx / maxDx;
                   });
                 },
@@ -788,24 +1180,49 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           child: Container(
             width: trackWidth,
             height: trackHeight,
-            decoration: BoxDecoration(color: _accentColor, borderRadius: BorderRadius.circular(trackHeight / 2)),
+            decoration: BoxDecoration(
+              color: _accentColor,
+              borderRadius: BorderRadius.circular(trackHeight / 2),
+            ),
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Center(
                   child: _submitting
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                      : Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.5)),
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                 ),
                 if (!_submitting)
                   AnimatedPositioned(
-                    duration: _dragging ? Duration.zero : const Duration(milliseconds: 200),
+                    duration: _dragging
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
                     curve: Curves.easeOut,
                     left: 4 + (_dragProgress * maxDx),
                     child: Container(
                       width: handleSize,
                       height: handleSize,
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(Icons.chevron_right, color: _accentColor),
                     ),
                   ),

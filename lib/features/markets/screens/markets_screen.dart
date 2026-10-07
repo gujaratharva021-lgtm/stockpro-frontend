@@ -24,11 +24,21 @@ class _MarketsScreenState extends State<MarketsScreen> {
   bool _loading = true;
   String? _error;
   String _category = 'Explore';
-  final List<String> _categories = ['Explore', 'Nifty 50', 'Banking', 'IT', 'Auto'];
+  final List<String> _categories = [
+    'Explore',
+    'Nifty 50',
+    'Banking',
+    'IT',
+    'Auto',
+  ];
 
   Map<String, dynamic> _nifty = {'value': '--', 'percent': '--', 'isUp': true};
   Map<String, dynamic> _sensex = {'value': '--', 'percent': '--', 'isUp': true};
-  Map<String, dynamic> _bankNifty = {'value': '--', 'percent': '--', 'isUp': true};
+  Map<String, dynamic> _bankNifty = {
+    'value': '--',
+    'percent': '--',
+    'isUp': true,
+  };
   final Map<String, List<double>> _indexSpots = {};
 
   @override
@@ -62,20 +72,32 @@ class _MarketsScreenState extends State<MarketsScreen> {
   }
 
   Future<void> _loadIndices() async {
-    final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 3),
+        receiveTimeout: const Duration(seconds: 3),
+      ),
+    );
 
     Future<void> fetchIndex(String yahooSymbol, String key) async {
       try {
-        final res = await dio.get('https://query1.finance.yahoo.com/v8/finance/chart/$yahooSymbol?interval=15m&range=1d');
+        final res = await dio.get(
+          'https://query1.finance.yahoo.com/v8/finance/chart/$yahooSymbol?interval=15m&range=1d',
+        );
         final result = res.data['chart']['result'][0];
         final meta = result['meta'];
         final price = (meta['regularMarketPrice'] as num).toDouble();
-        final prevClose = (meta['previousClose'] as num? ?? meta['chartPreviousClose'] as num).toDouble();
-        final percent = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0.0;
-        final closes = (result['indicators']['quote'][0]['close'] as List<dynamic>?)
-            ?.where((c) => c != null)
-            .map((c) => (c as num).toDouble())
-            .toList() ??
+        final prevClose =
+            (meta['previousClose'] as num? ?? meta['chartPreviousClose'] as num)
+                .toDouble();
+        final percent = prevClose > 0
+            ? ((price - prevClose) / prevClose) * 100
+            : 0.0;
+        final closes =
+            (result['indicators']['quote'][0]['close'] as List<dynamic>?)
+                ?.where((c) => c != null)
+                .map((c) => (c as num).toDouble())
+                .toList() ??
             [];
 
         final data = {
@@ -111,7 +133,9 @@ class _MarketsScreenState extends State<MarketsScreen> {
         case 'Banking':
           return sector.contains('bank') || sector.contains('financial');
         case 'IT':
-          return sector.contains('it') || sector.contains('technology') || sector.contains('software');
+          return sector.contains('it') ||
+              sector.contains('technology') ||
+              sector.contains('software');
         case 'Auto':
           return sector.contains('auto') || sector.contains('motor');
         default:
@@ -123,8 +147,10 @@ class _MarketsScreenState extends State<MarketsScreen> {
   List<dynamic> get _gainers {
     final list = List<dynamic>.from(_categoryFiltered);
     list.sort((a, b) {
-      final ap = (_quotes[a['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
-      final bp = (_quotes[b['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
+      final ap =
+          (_quotes[a['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
+      final bp =
+          (_quotes[b['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
       return bp.compareTo(ap);
     });
     return list.take(5).toList();
@@ -133,8 +159,10 @@ class _MarketsScreenState extends State<MarketsScreen> {
   List<dynamic> get _losers {
     final list = List<dynamic>.from(_categoryFiltered);
     list.sort((a, b) {
-      final ap = (_quotes[a['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
-      final bp = (_quotes[b['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
+      final ap =
+          (_quotes[a['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
+      final bp =
+          (_quotes[b['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
       return ap.compareTo(bp);
     });
     return list.take(5).toList();
@@ -159,13 +187,35 @@ class _MarketsScreenState extends State<MarketsScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                   child: Row(
                     children: [
-                      IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-                      const Expanded(child: Text('Stocks', style: AppTypography.screenTitle)),
                       IconButton(
-                        icon: const Icon(Icons.search, color: AppColors.textPrimary),
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: AppColors.textPrimary,
+                        ),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      IconButton(icon: const Icon(Icons.tune, color: AppColors.textPrimary), onPressed: () {}),
+                      const Expanded(
+                        child: Text('Stocks', style: AppTypography.screenTitle),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.search,
+                          color: AppColors.textPrimary,
+                        ),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SearchScreen(),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.tune,
+                          color: AppColors.textPrimary,
+                        ),
+                        onPressed: () {},
+                      ),
                     ],
                   ),
                 ),
@@ -183,13 +233,31 @@ class _MarketsScreenState extends State<MarketsScreen> {
                         child: GestureDetector(
                           onTap: () => setState(() => _category = c),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: active ? AppColors.primary : AppColors.cardBackground,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
                             ),
-                            child: Text(c, style: TextStyle(color: active ? Colors.white : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? AppColors.primary
+                                  : AppColors.cardBackground,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: active
+                                    ? AppColors.primary
+                                    : AppColors.border,
+                              ),
+                            ),
+                            child: Text(
+                              c,
+                              style: TextStyle(
+                                color: active
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -205,8 +273,20 @@ class _MarketsScreenState extends State<MarketsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Market Indices', style: AppTypography.titleMedium),
-                      GestureDetector(onTap: () {}, child: const Text('View All >', style: TextStyle(color: AppColors.primaryDark, fontSize: 12))),
+                      const Text(
+                        'Market Indices',
+                        style: AppTypography.titleMedium,
+                      ),
+                      GestureDetector(
+                        onTap: () {},
+                        child: const Text(
+                          'View All >',
+                          style: TextStyle(
+                            color: AppColors.primaryDark,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -223,7 +303,11 @@ class _MarketsScreenState extends State<MarketsScreen> {
                       const SizedBox(width: 10),
                       _indexCard('SENSEX', _sensex, _indexSpots['sensex']),
                       const SizedBox(width: 10),
-                      _indexCard('BANK NIFTY', _bankNifty, _indexSpots['banknifty']),
+                      _indexCard(
+                        'BANK NIFTY',
+                        _bankNifty,
+                        _indexSpots['banknifty'],
+                      ),
                     ],
                   ),
                 ),
@@ -232,17 +316,33 @@ class _MarketsScreenState extends State<MarketsScreen> {
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
               if (_loading)
-                const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+                const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                )
               else if (_error != null)
-                SliverFillRemaining(child: ErrorState(message: _error!, onRetry: _loadStocks))
+                SliverFillRemaining(
+                  child: ErrorState(message: _error!, onRetry: _loadStocks),
+                )
               else ...[
-                  _sectionHeader('Top Gainers'),
-                  SliverList(delegate: SliverChildBuilderDelegate((c, i) => _stockRow(_gainers[i]), childCount: _gainers.length)),
-                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                  _sectionHeader('Top Losers'),
-                  SliverList(delegate: SliverChildBuilderDelegate((c, i) => _stockRow(_losers[i]), childCount: _losers.length)),
-                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                ],
+                _sectionHeader('Top Gainers'),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (c, i) => _stockRow(_gainers[i]),
+                    childCount: _gainers.length,
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                _sectionHeader('Top Losers'),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (c, i) => _stockRow(_losers[i]),
+                    childCount: _losers.length,
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
             ],
           ),
         ),
@@ -259,50 +359,78 @@ class _MarketsScreenState extends State<MarketsScreen> {
     );
   }
 
-  Widget _indexCard(String label, Map<String, dynamic> data, List<double>? spots) {
+  Widget _indexCard(
+    String label,
+    Map<String, dynamic> data,
+    List<double>? spots,
+  ) {
     final isUp = data['isUp'] == true;
     return SizedBox(
       width: 150,
       child: AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text(data['value'] ?? '--', style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold)),
-                Text(data['percent'] ?? '--', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
-              ],
-            ),
-          ),
-          if (spots != null && spots.length > 1)
-            SizedBox(
-              width: 40,
-              height: 36,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineTouchData: const LineTouchData(enabled: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: [for (int i = 0; i < spots.length; i++) FlSpot(i.toDouble(), spots[i])],
-                      isCurved: true,
-                      color: isUp ? AppColors.success : AppColors.danger,
-                      barWidth: 1.5,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(show: false),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    data['value'] ?? '--',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    data['percent'] ?? '--',
+                    style: TextStyle(
+                      color: isUp ? AppColors.success : AppColors.danger,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
+            if (spots != null && spots.length > 1)
+              SizedBox(
+                width: 40,
+                height: 36,
+                child: LineChart(
+                  LineChartData(
+                    gridData: const FlGridData(show: false),
+                    titlesData: const FlTitlesData(show: false),
+                    borderData: FlBorderData(show: false),
+                    lineTouchData: const LineTouchData(enabled: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: [
+                          for (int i = 0; i < spots.length; i++)
+                            FlSpot(i.toDouble(), spots[i]),
+                        ],
+                        isCurved: true,
+                        color: isUp ? AppColors.success : AppColors.danger,
+                        barWidth: 1.5,
+                        dotData: const FlDotData(show: false),
+                        belowBarData: BarAreaData(show: false),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -322,13 +450,20 @@ class _MarketsScreenState extends State<MarketsScreen> {
       context: context,
       backgroundColor: AppColors.cardBackground,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
             final total = qty * price;
             return Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,16 +474,38 @@ class _MarketsScreenState extends State<MarketsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(stock['company_name'] ?? stock['symbol'] ?? '', style: AppTypography.titleMedium),
-                            Text('₹${price.toStringAsFixed(2)} / share', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                            Text(
+                              stock['company_name'] ?? stock['symbol'] ?? '',
+                              style: AppTypography.titleMedium,
+                            ),
+                            Text(
+                              '₹${price.toStringAsFixed(2)} / share',
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      IconButton(icon: const Icon(Icons.close, color: AppColors.textPrimary), onPressed: () => Navigator.pop(ctx)),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.textPrimary,
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 18),
-                  const Text('Quantity', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Text(
+                    'Quantity',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -357,38 +514,90 @@ class _MarketsScreenState extends State<MarketsScreen> {
                           if (qty > 1) setModalState(() => qty--);
                         },
                         borderRadius: BorderRadius.circular(8),
-                        child: Container(width: 36, height: 36, decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.remove, size: 16, color: AppColors.primary)),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.remove,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
-                      Expanded(child: Center(child: Text('$qty', style: AppTypography.screenTitle))),
+                      Expanded(
+                        child: Center(
+                          child: Text('$qty', style: AppTypography.screenTitle),
+                        ),
+                      ),
                       InkWell(
                         onTap: () => setModalState(() => qty++),
                         borderRadius: BorderRadius.circular(8),
-                        child: Container(width: 36, height: 36, decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.add, size: 16, color: AppColors.primary)),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total Amount', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                        Text('₹${total.toStringAsFixed(2)}', style: AppTypography.titleMedium),
+                        const Text(
+                          'Total Amount',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          '₹${total.toStringAsFixed(2)}',
+                          style: AppTypography.titleMedium,
+                        ),
                       ],
                     ),
                   ),
                   if (error != null) ...[
                     const SizedBox(height: 10),
-                    Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text(
+                      error!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       onPressed: placing
                           ? null
                           : () async {
@@ -407,7 +616,11 @@ class _MarketsScreenState extends State<MarketsScreen> {
                                 }
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('${result.status} • $qty share(s) of ${stock['symbol'] ?? ''}')),
+                                    SnackBar(
+                                      content: Text(
+                                        '${result.status} • ${result.filledQty != null ? result.filledQty!.toStringAsFixed(0) : qty} share(s) of ${stock['symbol'] ?? ''}',
+                                      ),
+                                    ),
                                   );
                                   _loadStocks();
                                 }
@@ -419,8 +632,22 @@ class _MarketsScreenState extends State<MarketsScreen> {
                               }
                             },
                       child: placing
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Buy Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Buy Now',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -436,52 +663,112 @@ class _MarketsScreenState extends State<MarketsScreen> {
     final symbol = s['symbol'];
     final quote = _quotes[symbol];
     final price = quote != null ? (quote['price'] as num?)?.toDouble() : null;
-    final changePercent = quote != null ? (quote['change_percent'] as num?)?.toDouble() ?? 0 : 0;
+    final changePercent = quote != null
+        ? (quote['change_percent'] as num?)?.toDouble() ?? 0
+        : 0;
     final isUp = changePercent >= 0;
 
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StockDetailScreen(stock: s))),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => StockDetailScreen(stock: s)),
+      ),
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(color: (isUp ? AppColors.success : AppColors.danger).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text((symbol == null || symbol.toString().isEmpty) ? '?' : symbol.toString().substring(0, 1), style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14))),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: (isUp ? AppColors.success : AppColors.danger)
+                      .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    (symbol == null || symbol.toString().isEmpty)
+                        ? '?'
+                        : symbol.toString().substring(0, 1),
+                    style: TextStyle(
+                      color: isUp ? AppColors.success : AppColors.danger,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s['company_name'] ?? symbol ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      symbol ?? '',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(s['company_name'] ?? symbol ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text(symbol ?? '', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  Text(
+                    price != null ? '₹${price.toStringAsFixed(2)}' : '--',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  PriceChange(
+                    change: changePercent.toDouble(),
+                    changePercent: changePercent.toDouble(),
+                    fontSize: 11,
+                    showParens: false,
+                  ),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(price != null ? '₹${price.toStringAsFixed(2)}' : '--', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                PriceChange(change: changePercent.toDouble(), changePercent: changePercent.toDouble(), fontSize: 11, showParens: false),
-              ],
-            ),
-            const SizedBox(width: 8),
-            InkWell(
-              onTap: () => _showQuickBuy(s, price),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(8)),
-                child: const Text('Buy', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => _showQuickBuy(s, price),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Buy',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

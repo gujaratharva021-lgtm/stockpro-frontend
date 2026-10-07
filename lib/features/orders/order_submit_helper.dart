@@ -1,4 +1,4 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
@@ -63,8 +63,9 @@ Future<OrderSubmitResult> _submitLegacy({
   required double price,
   String productType = 'REGULAR',
 }) async {
+  late Map<String, dynamic> res;
   try {
-    await ApiService.placeOrder(
+    res = await ApiService.placeOrder(
       stockId,
       side,
       quantity.round(),
@@ -72,8 +73,16 @@ Future<OrderSubmitResult> _submitLegacy({
       productType: productType,
     );
   } on DioException catch (e) {
-    final serverMsg = e.response?.data is Map ? (e.response?.data['error']?.toString()) : null;
+    final serverMsg = e.response?.data is Map
+        ? (e.response?.data['error']?.toString())
+        : null;
     throw Exception(serverMsg ?? e.message ?? 'Order failed');
   }
-  return const OrderSubmitResult(status: 'Executed', orderId: null);
+  final txn = res['transaction'];
+  final filled = txn is Map ? (txn['quantity'] as num?)?.toDouble() : null;
+  return OrderSubmitResult(
+    status: 'Executed',
+    orderId: null,
+    filledQty: filled,
+  );
 }
