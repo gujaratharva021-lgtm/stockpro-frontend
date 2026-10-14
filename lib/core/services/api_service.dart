@@ -128,21 +128,7 @@ class ApiService {
     final res = await dio.get('/auth/me');
     return res.data;
   }
-  static Future<Map<String, dynamic>> kycAadhaarOtp(String aadhaar) async {
-    final dio = await _authDio();
-    final res = await dio.post('/kyc/aadhaar/otp', data: {'aadhaar_number': aadhaar});
-    return Map<String, dynamic>.from(res.data as Map);
-  }
-  static Future<Map<String, dynamic>> kycAadhaarVerify(String otp, String refId) async {
-    final dio = await _authDio();
-    final res = await dio.post('/kyc/aadhaar/verify', data: {'otp': otp, 'ref_id': refId});
-    return Map<String, dynamic>.from(res.data as Map);
-  }
-  static Future<Map<String, dynamic>> kycPan(String pan, String name) async {
-    final dio = await _authDio();
-    final res = await dio.post('/kyc/pan', data: {'pan': pan, 'name': name});
-    return Map<String, dynamic>.from(res.data as Map);
-  }  static Future<void> completeKYC() async {
+  static Future<void> completeKYC() async {
     final dio = await _authDio();
     await dio.post('/auth/complete-kyc');
   }

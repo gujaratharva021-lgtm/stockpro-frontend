@@ -92,29 +92,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       setState(() => _aadhaarOtpError = 'Invalid OTP. Please try again.');
     }
   }
-  bool _panVerified = false;
-  String? _panCheckedValue;
-
   Future<void> _next() async {
     final error = _validateStep();
-    if (false && error == null && _step == 2) {
-      final pan = _panController.text.trim().toUpperCase();
-      if (!_panVerified || _panCheckedValue != pan) {
-        try {
-          final res = await ApiService.kycPan(pan, _nameController.text.trim());
-          final valid = res['valid'] == true || (res['status'] ?? '').toString().toUpperCase() == 'VALID';
-          if (!valid) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text((res['message'] ?? 'PAN could not be verified').toString()), backgroundColor: AppColors.danger));
-            return;
-          }
-          _panVerified = true;
-          _panCheckedValue = pan;
-        } catch (_) {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PAN verification failed. Please try again.'), backgroundColor: AppColors.danger));
-          return;
-        }
-      }
-    }
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
