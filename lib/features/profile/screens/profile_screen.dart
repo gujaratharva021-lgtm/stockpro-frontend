@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -125,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   double get _totalInvested => _stocksInvested + _mfInvested + _etfInvested;
   double get _totalReturns => _stocksCurrent - _stocksInvested;
-  double get _totalReturnsPct => _totalInvested > 0 ? (_totalReturns / _totalInvested) * 100 : 0;
+  double get _totalReturnsPct => _stocksInvested > 0 ? (_totalReturns / _stocksInvested) * 100 : 0;
 
   Future<void> _pickAndUploadAvatar() async {
     final picker = ImagePicker();
@@ -272,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
                               ),
                             ),
-                            _roundIconButton(Icons.notifications_none, onTap: () {}),
+                            _roundIconButton(Icons.notifications_none, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
                             const SizedBox(width: 10),
                             _roundIconButton(Icons.settings_outlined, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
                           ],
@@ -398,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         const Text('Total Invested', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                                        Text('₹${_totalInvested.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                                        Text('₹${_privacyMode ? '****' : _totalInvested.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
                                       ],
                                     ),
                                   ),
@@ -409,7 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       children: [
                                         const Text('Total Returns', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                                         Text(
-                                          '${returnsPositive ? '+' : ''}₹${_totalReturns.toStringAsFixed(0)} (${_totalReturnsPct.toStringAsFixed(1)}%)',
+                                          '${returnsPositive ? '+' : ''}₹${_privacyMode ? '****' : _totalReturns.toStringAsFixed(0)} (${_privacyMode ? '**' : _totalReturnsPct.toStringAsFixed(1)}%)',
                                           style: TextStyle(color: returnsPositive ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 13),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,

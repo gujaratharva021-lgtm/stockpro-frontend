@@ -333,7 +333,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     if (filterStatus == 'GTT') {
       filtered = _pendingOrders.where((o) => o['is_gtt'] == true).toList();
     } else if (filterStatus == 'EXECUTED') {
-      final executedPending = _pendingOrders.where((o) => o['status'] == 'EXECUTED' && o['is_gtt'] != true).toList();
+      
       final marketExecuted = _transactions.map((t) => {
         'id': t['id'],
         'stock_id': t['stock_id'],
@@ -342,11 +342,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         'order_type': 'MARKET',
         'quantity': t['quantity'],
         'price': t['price'],
+        'trigger_price': t['price'],
         'status': 'EXECUTED',
         'created_at': t['created_at'],
         'is_gtt': false,
       }).toList();
-      filtered = [...marketExecuted, ...executedPending];
+      filtered = marketExecuted; // transactions are the single source of truth for executed trades
     } else if (filterStatus.isEmpty) {
       filtered = _pendingOrders.where((o) => o['is_gtt'] != true).toList();
     } else {
@@ -409,7 +410,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text((s['fund_id'] ?? 'SIP').toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text((s['fund_name'] ?? s['name'] ?? 'SIP').toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   TextButton(
                     onPressed: () => _cancelSip(s['id']),
                     child: const Text('Cancel', style: TextStyle(color: AppColors.danger, fontSize: 12)),
@@ -498,9 +499,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(children: [
-                    const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                    const SizedBox.shrink(),
                     const SizedBox(width: 16),
-                    const Icon(Icons.tune, color: AppColors.textMuted, size: 20),
+                    const SizedBox.shrink(),
                   ]),
                   GestureDetector(
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TradebookScreen())),
@@ -597,8 +598,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
   }
 
-  int get _openOrdersCount => _pendingOrders.length;
-  double get _openOrdersValue => _pendingOrders
+  int get _openOrdersCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
+  double get _openOrdersValue => _pendingOrders.where((o) => o['status'] == 'PENDING')
       .fold(0.0, (sum, o) => sum + ((o['quantity'] as num?)?.toDouble() ?? 0) * ((o['trigger_price'] as num?)?.toDouble() ?? 0));
   int get _pendingCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
 
@@ -611,7 +612,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     if (status == 'EXECUTED') return AppStatusTone.positive;
     return AppStatusTone.warning;
   }
-  int get _partialCount => _pendingOrders.where((o) => o['status'] == 'PARTIAL').length;
+  
 
   Widget _buildStatsBar() {
     return Container(
@@ -623,7 +624,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           Expanded(child: _statItem(_openOrdersCount.toString(), 'Total Orders', AppColors.primary)),
           Expanded(child: _statItem('\u20b9${_openOrdersValue.toStringAsFixed(0)}', 'Total Value', AppColors.success)),
           Expanded(child: _statItem(_pendingCount.toString(), 'Pending', AppColors.warning)),
-          Expanded(child: _statItem(_partialCount.toString(), 'Partial', const Color(0xFF7C3AED))),
+          Expanded(child: _statItem(_transactions.length.toString(), 'Executed', const Color(0xFF7C3AED))),
         ],
       ),
       ),

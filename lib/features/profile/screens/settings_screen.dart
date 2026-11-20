@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_app/core/services/privacy_mode_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
@@ -18,7 +19,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _privacyMode = false;
+  bool _privacyMode = PrivacyModeService.enabled.value;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           _card([
             _switchItem(Icons.visibility_outlined, 'Privacy Mode', _privacyMode,
-                onChanged: (v) => setState(() => _privacyMode = v)),
+                onChanged: (v) { PrivacyModeService.enabled.value = v; setState(() => _privacyMode = v); }),
             _navItem(Icons.shield_outlined, 'Security', null,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityScreen())), showDivider: false),
           ]),

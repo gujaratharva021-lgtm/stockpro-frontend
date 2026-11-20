@@ -12,7 +12,7 @@ import 'package:stock_app/shared/widgets/empty_state.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/shared/widgets/status_badge.dart';
 import 'package:stock_app/features/stock_detail/screens/stock_quote_sheet.dart';
-import 'package:stock_app/features/portfolio/screens/family_screen.dart';
+import 'package:stock_app/features/profile/screens/family_screen.dart';
 
 class PortfolioScreen extends StatefulWidget {
   final int navIndex;
@@ -44,7 +44,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   bool _loading = true;
   String? _error;
 
-  bool _firstLoad = true;
 
   bool _searching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -60,13 +59,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_firstLoad) _loadAll();
-    _firstLoad = false;
   }
 
   Future<void> _loadAll() async {
@@ -169,7 +161,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     return sum + qty * avg;
   });
 
-  double get _totalCurrentValue => _stocksCurrent + _mfInvested + _etfInvested + _balance;
+  double get _unsettledValue => _unsettledPositions.fold(0.0, (sum, p) {
+    final qty = (p['quantity'] as num?)?.toDouble() ?? 0;
+    final avg = (p['avg_price'] as num?)?.toDouble() ?? 0;
+    return sum + qty * avg;
+  });
+  double get _totalCurrentValue => _stocksCurrent + _mfInvested + _etfInvested + _unsettledValue + _balance;
   double get _totalInvested => _stocksInvested + _mfInvested + _etfInvested;
   double get _totalReturns => _stocksCurrent - _stocksInvested; // MF/ETF current==invested (no live NAV yet)
   // ignore: unused_element
@@ -185,7 +182,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   // ignore: unused_element
   double get _todayReturnsPct => _stocksCurrent > 0 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
 
-  int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.length + _options.length;
+  int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.where((p) => p['status'] == 'OPEN').length + _options.where((p) => p['status'] == 'OPEN').length;
 
   String _sortBy = 'default';
 
@@ -835,8 +832,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     final allPositions = [
       ..._unsettledPositions.map((p) => {'type': 'Regular', 'data': p}),
       ..._mtfPositions.where((p) => p['status'] == 'open').map((p) => {'type': 'MTF', 'data': p}),
-      ..._futures.map((p) => {'type': 'Futures', 'data': p}),
-      ..._options.map((p) => {'type': 'Options', 'data': p}),
+      ..._futures.where((p) => p['status'] == 'OPEN').map((p) => {'type': 'Futures', 'data': p}),
+      ..._options.where((p) => p['status'] == 'OPEN').map((p) => {'type': 'Options', 'data': p}),
     ];
 
     if (allPositions.isEmpty) {
