@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -137,6 +138,18 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     _stoplossController = TextEditingController();
     _gttTargetController = TextEditingController();
     _loadBalance();
+    _applyPresets();
+  }
+
+  Future<void> _applyPresets() async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      setState(() {
+        _orderType = (sp.getString('preset_order_type') ?? 'Market').toUpperCase() == 'LIMIT' ? 'LIMIT' : 'MARKET';
+        _qtyController.text = (sp.getInt('preset_quantity') ?? 1).toString();
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadBalance() async {

@@ -381,19 +381,26 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final amount = amountController.text.trim();
-                  if (amount.isEmpty) {
+                  final amt = double.tryParse(amountController.text.trim());
+                  final minAmt = double.tryParse(sc['minInvest'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+                  if (amt == null || amt <= 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an amount'), backgroundColor: AppColors.danger),
+                      const SnackBar(content: Text('Please enter a valid amount'), backgroundColor: AppColors.danger),
+                    );
+                    return;
+                  }
+                  if (amt < minAmt) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Minimum investment is ${sc['minInvest']}'), backgroundColor: AppColors.danger),
                     );
                     return;
                   }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('✅ ₹$amount invested in ${sc['name']}!'),
-                      backgroundColor: AppColors.success,
-                      duration: const Duration(seconds: 3),
+                    const SnackBar(
+                      content: Text('Smallcase investing is coming soon. No money was deducted.'),
+                      backgroundColor: AppColors.warning,
+                      duration: Duration(seconds: 3),
                     ),
                   );
                 },

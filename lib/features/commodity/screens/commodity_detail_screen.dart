@@ -119,7 +119,7 @@ class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(context, true),
                   ),
                   Expanded(
                     child: Text(

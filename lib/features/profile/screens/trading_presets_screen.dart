@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
 /// Trading Presets -- lets the trader set defaults that other order
@@ -18,10 +19,31 @@ class _TradingPresetsScreenState extends State<TradingPresetsScreen> {
   int _defaultQuantity = 1;
   bool _confirmBeforeOrder = true;
 
-  void _saved() {
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final sp = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _defaultOrderType = sp.getString('preset_order_type') ?? 'Market';
+      _defaultQuantity = sp.getInt('preset_quantity') ?? 1;
+      _confirmBeforeOrder = sp.getBool('preset_confirm') ?? true;
+    });
+  }
+
+  Future<void> _saved() async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString('preset_order_type', _defaultOrderType);
+    await sp.setInt('preset_quantity', _defaultQuantity);
+    await sp.setBool('preset_confirm', _confirmBeforeOrder);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Trading presets updated for this session')),
+      const SnackBar(content: Text('Trading presets saved')),
     );
   }
 
@@ -111,7 +133,7 @@ class _TradingPresetsScreenState extends State<TradingPresetsScreen> {
           ),
           const SizedBox(height: 8),
           const Center(
-            child: Text('Applies for this session only', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+            child: Text('Saved on this device', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
           ),
         ],
       ),

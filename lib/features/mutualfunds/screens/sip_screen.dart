@@ -58,7 +58,11 @@ class _SipScreenState extends State<SipScreen> {
   Widget build(BuildContext context) {
     final activeSips = _sips.where((s) => s['status'] == 'active').toList();
     final cancelledSips = _sips.where((s) => s['status'] == 'cancelled').toList();
-    final totalMonthly = activeSips.fold(0.0, (sum, s) => sum + ((s['amount'] as num?)?.toDouble() ?? 0));
+    final totalMonthly = activeSips.fold(0.0, (sum, s) {
+      final a = (s['amount'] as num?)?.toDouble() ?? 0;
+      final f = (s['frequency'] ?? 'monthly').toString();
+      return sum + (f == 'daily' ? a * 30 : f == 'weekly' ? a * 52 / 12 : a);
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -124,7 +128,7 @@ class _SipScreenState extends State<SipScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Total Monthly SIP', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                    const Text('Total Monthly SIP (est.)', style: TextStyle(color: Colors.white70, fontSize: 12)),
                                     const SizedBox(height: 6),
                                     Text('₹${totalMonthly.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                                     const SizedBox(height: 4),

@@ -254,7 +254,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
                         return GestureDetector(
                           onTap: () async {
                             final ok = await Navigator.push(context, MaterialPageRoute(builder: (_) => CommodityDetailScreen(commodityId: c['id'])));
-                            if (ok == true) _load();
+                            _load();
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -285,7 +285,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
                                 Expanded(
                                   flex: 2,
                                   child: price != null
-                                      ? Text('₹${price.toStringAsFixed(2)}', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13))
+                                      ? Text('$${price.toStringAsFixed(2)}', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13))
                                       : const Align(alignment: Alignment.centerRight, child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))),
                                 ),
                                 Expanded(
