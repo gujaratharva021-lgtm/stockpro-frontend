@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -149,13 +149,18 @@ class _PriceChartState extends State<PriceChart> {
     );
   }
 
+  double get _interval {
+    final d = (_maxY - _minY) / 4;
+    return d > 0 ? d : 1.0;
+  }
+
   Widget _buildLineChart(List<FlSpot> spots) {
     return LineChart(
       LineChartData(
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: (_maxY - _minY) / 4,
+          horizontalInterval: _interval,
           getDrawingHorizontalLine: (_) => FlLine(color: AppColors.border.withValues(alpha: 0.5), strokeWidth: 0.5),
         ),
         titlesData: FlTitlesData(
@@ -166,7 +171,7 @@ class _PriceChartState extends State<PriceChart> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 52,
-              interval: (_maxY - _minY) / 4,
+              interval: _interval,
               getTitlesWidget: (val, _) => Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: Text('₹${_formatPrice(val)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 9)),
@@ -175,8 +180,8 @@ class _PriceChartState extends State<PriceChart> {
           ),
         ),
         borderData: FlBorderData(show: false),
-        minY: _minY,
-        maxY: _maxY,
+        minY: _maxY > _minY ? _minY : _minY - 1,
+        maxY: _maxY > _minY ? _maxY : _maxY + 1,
         lineTouchData: LineTouchData(
           touchCallback: (event, response) {
             setState(() {

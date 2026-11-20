@@ -394,8 +394,8 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         titlesData: const FlTitlesData(show: false),
                         borderData: FlBorderData(show: false),
                         lineTouchData: const LineTouchData(enabled: false),
-                        minY: spark.reduce((a, b) => a < b ? a : b),
-                        maxY: spark.reduce((a, b) => a > b ? a : b),
+                        minY: (spark.reduce((a, b) => a < b ? a : b) == spark.reduce((a, b) => a > b ? a : b)) ? spark.first - 1 : spark.reduce((a, b) => a < b ? a : b),
+                        maxY: (spark.reduce((a, b) => a < b ? a : b) == spark.reduce((a, b) => a > b ? a : b)) ? spark.first + 1 : spark.reduce((a, b) => a > b ? a : b),
                         lineBarsData: [
                           LineChartBarData(
                             spots: [for (var i = 0; i < spark.length; i++) FlSpot(i.toDouble(), spark[i])],

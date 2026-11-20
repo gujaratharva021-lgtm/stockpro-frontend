@@ -117,7 +117,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                                 : null,
                           ),
                           child: _user?['avatar_url'] == null
-                              ? Center(child: Text((_user?['name'] ?? 'T')[0].toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 32)))
+                              ? Center(child: Text(((_user?['name']?.toString() ?? '').isEmpty ? 'T' : _user!['name'].toString()[0]).toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 32)))
                               : null,
                         ),
                       ),
@@ -177,7 +177,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('Account ID', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                Text(_user?['id']?.toString().substring(0, 8).toUpperCase() ?? '-', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                                Text((_user?['id']?.toString() ?? '').length >= 8 ? _user!['id'].toString().substring(0, 8).toUpperCase() : (_user?['id']?.toString().toUpperCase() ?? '-'), style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                               ],
                             ),
                           ],

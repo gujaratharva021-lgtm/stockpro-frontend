@@ -97,7 +97,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         actions: [
           if (widget.navIndex != null)
             TextButton(
-              onPressed: () => context.push('/portfolio/holdings'),
+              onPressed: () => context.push('/portfolio'),
               child: const Text('Holdings', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
             ),
           IconButton(icon: const Icon(Icons.menu, color: AppColors.textMuted), onPressed: () {}),
