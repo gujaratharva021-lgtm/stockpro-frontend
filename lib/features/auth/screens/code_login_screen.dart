@@ -70,7 +70,9 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
           const storage = FlutterSecureStorage();
           await storage.write(key: 'auth_token', value: res.data['token']);
           WebSocketService.connect();
-          if (mounted) context.go('/watchlist');
+          bool kyc = true;
+          try { final me = await ApiService.getMe(); kyc = me['user']?['kyc_completed'] == true; } catch (_) {}
+          if (mounted) context.go(kyc ? '/watchlist' : '/onboarding');
         } else if (status == 'expired') {
           _pollTimer?.cancel();
           if (mounted) setState(() => _status = 'expired');

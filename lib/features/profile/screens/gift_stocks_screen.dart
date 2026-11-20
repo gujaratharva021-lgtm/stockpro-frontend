@@ -211,9 +211,8 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _saving
-                          ? null
-                          : () {
+                      onPressed: () {
+                        if (_saving) return;
                         final email = emailCtrl.text.trim();
                         final symbol = symbolCtrl.text.trim();
                         final qty = qtyCtrl.text.trim();

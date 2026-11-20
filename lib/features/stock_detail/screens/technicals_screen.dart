@@ -52,6 +52,7 @@ class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerPr
   List<dynamic> _marketStocks = [];
   final Map<String, Map<String, dynamic>> _marketQuotes = {};
   final Map<String, List<dynamic>> _marketHistory = {};
+  bool _marketsRequested = false;
   int _moversTab = 0; // 0 = Gainers, 1 = Losers
   int _breakoutTab = 0; // 0 = Volume Breakout, 1 = Opening Range Breakdown
 
@@ -61,7 +62,12 @@ class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerPr
     _mainTab = TabController(length: 2, vsync: this);
     _loadQuote();
     _load();
-    _loadMarkets();
+    _mainTab.addListener(() {
+      if (_mainTab.index == 1 && !_marketsRequested) {
+        _marketsRequested = true;
+        _loadMarkets();
+      }
+    });
   }
 
   @override

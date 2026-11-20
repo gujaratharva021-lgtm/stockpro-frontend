@@ -146,9 +146,8 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _saving
-                        ? null
-                        : () {
+                    onPressed: () {
+                      if (_saving) return;
                       if (bankNameCtrl.text.trim().isEmpty ||
                           accNumberCtrl.text.trim().isEmpty ||
                           ifscCtrl.text.trim().isEmpty ||

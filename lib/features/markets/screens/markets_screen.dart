@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_app/core/constants/nifty_symbols.dart';
 import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -129,7 +130,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
       final sector = (s['sector'] ?? '').toString().toLowerCase();
       switch (_category) {
         case 'Nifty 50':
-          return true; // no separate index-membership flag in backend; Explore tab already shows full list
+          return kNiftyWatchSymbols.contains(s['symbol']);
         case 'Banking':
           return sector.contains('bank') || sector.contains('financial');
         case 'IT':
@@ -145,7 +146,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   }
 
   List<dynamic> get _gainers {
-    final list = List<dynamic>.from(_categoryFiltered);
+    final list = List<dynamic>.from(_categoryFiltered).where((s) => ((_quotes[s['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0) > 0).toList();
     list.sort((a, b) {
       final ap =
           (_quotes[a['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
@@ -157,7 +158,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   }
 
   List<dynamic> get _losers {
-    final list = List<dynamic>.from(_categoryFiltered);
+    final list = List<dynamic>.from(_categoryFiltered).where((s) => ((_quotes[s['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0) < 0).toList();
     list.sort((a, b) {
       final ap =
           (_quotes[a['symbol']]?['change_percent'] as num?)?.toDouble() ?? 0;
