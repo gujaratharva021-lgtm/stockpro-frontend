@@ -1,18 +1,26 @@
+import 'package:stock_app/shared/widgets/mobile_only_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
-class FundDetailScreen extends StatefulWidget {
+class FundDetailScreen extends StatelessWidget {
   final String fundId;
   const FundDetailScreen({super.key, required this.fundId});
-
   @override
-  State<FundDetailScreen> createState() => _FundDetailScreenState();
+  Widget build(BuildContext context) => MobileOnlyGate(feature: 'Mutual fund investing', builder: (_) => FundDetailScreenInner(fundId: fundId));
 }
 
-class _FundDetailScreenState extends State<FundDetailScreen> {
+class FundDetailScreenInner extends StatefulWidget {
+  final String fundId;
+  const FundDetailScreenInner({super.key, required this.fundId});
+
+  @override
+  State<FundDetailScreenInner> createState() => _FundDetailScreenState();
+}
+
+class _FundDetailScreenState extends State<FundDetailScreenInner> {
   Map<String, dynamic>? _fund;
   bool _loading = true;
   String? _error;

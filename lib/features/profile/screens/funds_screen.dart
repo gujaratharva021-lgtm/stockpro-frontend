@@ -1,3 +1,4 @@
+import 'package:stock_app/shared/widgets/mobile_only_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:dio/dio.dart' show Dio, DioException, Options;
@@ -5,14 +6,20 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/wallet/screens/wallet_history_screen.dart';
 
-class FundsScreen extends StatefulWidget {
+class FundsScreen extends StatelessWidget {
   const FundsScreen({super.key});
-
   @override
-  State<FundsScreen> createState() => _FundsScreenState();
+  Widget build(BuildContext context) => MobileOnlyGate(feature: 'Add funds', builder: (_) => const FundsScreenInner());
 }
 
-class _FundsScreenState extends State<FundsScreen> {
+class FundsScreenInner extends StatefulWidget {
+  const FundsScreenInner({super.key});
+
+  @override
+  State<FundsScreenInner> createState() => _FundsScreenState();
+}
+
+class _FundsScreenState extends State<FundsScreenInner> {
   Map<String, dynamic>? _user;
   bool _loading = true;
   late Razorpay _razorpay;

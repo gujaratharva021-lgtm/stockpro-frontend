@@ -1,3 +1,4 @@
+import 'package:stock_app/shared/widgets/mobile_only_gate.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,13 +8,19 @@ import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
 import 'package:stock_app/core/services/api_service.dart';
 
-class OnboardingFlow extends StatefulWidget {
+class OnboardingFlow extends StatelessWidget {
   const OnboardingFlow({super.key});
   @override
-  State<OnboardingFlow> createState() => _OnboardingFlowState();
+  Widget build(BuildContext context) => MobileOnlyGate(feature: 'Account opening', builder: (_) => const OnboardingFlowInner());
 }
 
-class _OnboardingFlowState extends State<OnboardingFlow> {
+class OnboardingFlowInner extends StatefulWidget {
+  const OnboardingFlowInner({super.key});
+  @override
+  State<OnboardingFlowInner> createState() => _OnboardingFlowState();
+}
+
+class _OnboardingFlowState extends State<OnboardingFlowInner> {
   @override
   void dispose() {
     _nameController.dispose();

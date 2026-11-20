@@ -1,3 +1,4 @@
+import 'package:stock_app/shared/widgets/mobile_only_gate.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -9,13 +10,13 @@ import 'package:stock_app/core/theme/app_colors.dart';
 /// TradingView.widget()` approach silently falls back to a demo symbol
 /// (e.g. Apple) when it fails to resolve - this uses the documented,
 /// currently-supported embed method instead.
-class AdvancedChartScreen extends StatefulWidget {
+class AdvancedChartScreen extends StatelessWidget {
   final String symbol;
   final String companyName;
-  final List<dynamic> history; // kept for API compatibility, unused now
+  final List<dynamic> history;
   final double? currentPrice;
   final double? changePercent;
-  final String exchange; // 'NSE' or 'BSE', defaults to NSE
+  final String exchange;
 
   const AdvancedChartScreen({
     super.key,
@@ -28,10 +29,41 @@ class AdvancedChartScreen extends StatefulWidget {
   });
 
   @override
-  State<AdvancedChartScreen> createState() => _AdvancedChartScreenState();
+  Widget build(BuildContext context) => MobileOnlyGate(
+        feature: 'Advanced charts',
+        builder: (_) => AdvancedChartScreenInner(
+          symbol: symbol,
+          companyName: companyName,
+          history: history,
+          currentPrice: currentPrice,
+          changePercent: changePercent,
+          exchange: exchange,
+        ),
+      );
 }
 
-class _AdvancedChartScreenState extends State<AdvancedChartScreen> {
+class AdvancedChartScreenInner extends StatefulWidget {  final String symbol;
+  final String companyName;
+  final List<dynamic> history; // kept for API compatibility, unused now
+  final double? currentPrice;
+  final double? changePercent;
+  final String exchange; // 'NSE' or 'BSE', defaults to NSE
+
+  const AdvancedChartScreenInner({
+    super.key,
+    required this.symbol,
+    required this.companyName,
+    required this.history,
+    this.currentPrice,
+    this.changePercent,
+    this.exchange = 'NSE',
+  });
+
+  @override
+  State<AdvancedChartScreenInner> createState() => _AdvancedChartScreenState();
+}
+
+class _AdvancedChartScreenState extends State<AdvancedChartScreenInner> {
   late final WebViewController _controller;
   bool _loading = true;
 
