@@ -213,7 +213,7 @@ class ApiService {
   /// to [placeEngineOrder] -- new code should not call this. It gives no
   /// order id, no state machine, and no way to know whether an order that
   /// looked like it succeeded was actually FILLED, REJECTED, or still OPEN.
-  static Future<Map<String, dynamic>> placeOrder(String stockId, String buySell, int quantity, double price, {String productType = 'REGULAR'}) async {
+  static Future<Map<String, dynamic>> placeOrder(String stockId, String buySell, int quantity, double price, {String productType = 'REGULAR', String? idempotencyKey}) async {
     final dio = await _authDio();
     final legacyOrderKey = '${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
     final res = await dio.post('/portfolio/orders', data: {
@@ -222,7 +222,7 @@ class ApiService {
       'quantity': quantity,
       'price': price,
       'product_type': productType,
-    }, options: Options(headers: {'Idempotency-Key': legacyOrderKey}));
+    }, options: Options(headers: {'Idempotency-Key': idempotencyKey ?? legacyOrderKey}));
     return res.data;
   }
   // ---------------------------------------------------------------------

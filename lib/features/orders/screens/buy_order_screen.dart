@@ -30,8 +30,10 @@ class _ChargeBreakdown {
   final double stampDuty;
   final double stt;
   final double gst;
+  final double dp;
 
   _ChargeBreakdown({
+    this.dp = 0,
     required this.brokerage,
     required this.sebiFee,
     required this.exchangeFee,
@@ -40,7 +42,7 @@ class _ChargeBreakdown {
     required this.gst,
   });
 
-  double get total => brokerage + sebiFee + exchangeFee + stampDuty + stt + gst;
+  double get total => brokerage + sebiFee + exchangeFee + stampDuty + stt + gst + dp;
 }
 
 // Dark-theme palette for this screen, matching the rest of the app
@@ -65,8 +67,8 @@ class OrderTicketScreen extends StatefulWidget {
   final double changePercent;
   final double holdingQty;
   final double avgBuyPrice;
-  final double Function(double value, String product) calcBrokerage;
-  final double Function(double value, String buySell) calcTaxes;
+  final double Function(double value, String product)? calcBrokerage;
+  final double Function(double value, String buySell)? calcTaxes;
   final Future<OrderSubmitResult> Function({
     required String orderType,
     required double qty,
@@ -84,8 +86,8 @@ class OrderTicketScreen extends StatefulWidget {
     required this.changePercent,
     required this.holdingQty,
     required this.avgBuyPrice,
-    required this.calcBrokerage,
-    required this.calcTaxes,
+    this.calcBrokerage,
+    this.calcTaxes,
     required this.onSubmit,
   });
 
@@ -193,7 +195,8 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     final stt = isIntraday
         ? (isBuy ? 0.0 : turnover * 0.00025) // intraday STT: sell-side only
         : turnover * 0.001; // delivery STT: both sides
-    final gst = (brokerage + exchangeFee) * 0.18;
+    final gst = (brokerage + exchangeFee + sebiFee) * 0.18;
+    final dp = (!isBuy && !isIntraday && turnover > 0) ? 15.0 : 0.0; // DP charge, delivery sell
     return _ChargeBreakdown(
       brokerage: brokerage,
       sebiFee: sebiFee,
@@ -201,6 +204,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       stampDuty: stampDuty,
       stt: stt,
       gst: gst,
+      dp: dp,
     );
   }
 
@@ -1079,6 +1083,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
               _chargeLine('Stamp duty', c.stampDuty),
               _chargeLine('Transaction tax (STT)', c.stt),
               _chargeLine('GST', c.gst),
+              if (c.dp > 0) _chargeLine('DP charges', c.dp),
               const Divider(height: 20),
               const Text(
                 'Brokerage',

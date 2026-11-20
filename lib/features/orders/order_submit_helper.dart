@@ -1,24 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/services/api_service.dart';
+import 'package:stock_app/core/services/order_service.dart';
 import 'package:stock_app/features/orders/screens/buy_order_screen.dart';
 
-/// TEMPORARY FIX (see stockpro-app notes): the real order engine
-/// (POST /api/v1/orders, internal/orders on the backend) is not deployed
-/// yet -- calling it returns 404. Until that backend module exists, every
-/// screen that opens [OrderTicketScreen] goes through the legacy
-/// synchronous endpoint (POST /api/v1/portfolio/orders) instead.
-///
-/// This endpoint gives no order id and no state machine -- a successful
-/// call means the trade already executed (BUY/SELL happened against the
-/// portfolio immediately), so we report a flat "Executed" status here.
-/// There is no "Pending"/"Open" state and no tracking to wait for: swap
-/// this helper back to OrderService.submit/trackToTerminal once
-/// internal/orders is built and deployed.
-///
-/// The legacy endpoint's `price` field is `required,gt=0` server-side, even
-/// though the server always overwrites it with its own live quote before
-/// executing (see portfolio.Service.PlaceOrder) -- so any positive number
-/// satisfies validation without affecting what the order actually fills at.
+/// MARKET orders go through the legacy synchronous endpoint
+/// (POST /api/v1/portfolio/orders): a successful call means the trade already
+/// executed at the server's live quote (the `price` field only has to be > 0).
+/// One idempotency key is generated per call (= per user tap), so a retried
+/// request resolves to the same order instead of a duplicate trade.
 Future<OrderSubmitResult> submitMarketOrderAndTrack({
   required String stockId,
   required String side, // BUY | SELL
@@ -31,29 +20,27 @@ Future<OrderSubmitResult> submitMarketOrderAndTrack({
     quantity: quantity,
     price: 1, // placeholder -- server ignores this and uses its live quote
     productType: productType,
+    idempotencyKey: OrderService.newIdempotencyKey(),
   );
 }
 
-/// Legacy endpoint always executes at the current live quote (it ignores
-/// whatever price the client sends), so a "LIMIT" order placed through
-/// this fallback executes immediately at market price rather than resting
-/// on the book until the limit price is hit. Kept as a separate function
-/// name so call sites don't change, and so the real LIMIT behaviour is a
-/// one-line swap once internal/orders exists.
+/// LIMIT orders are placed as pending LIMIT orders that rest until the limit
+/// price is hit (never executed immediately at market).
 Future<OrderSubmitResult> submitLimitOrderThroughEngine({
   required String stockId,
   required String side, // BUY | SELL
   required double quantity,
   required double limitPrice,
   String productType = 'REGULAR',
-}) {
-  return _submitLegacy(
-    stockId: stockId,
-    side: side,
-    quantity: quantity,
-    price: limitPrice > 0 ? limitPrice : 1,
-    productType: productType,
-  );
+}) async {
+  if (limitPrice <= 0) throw Exception('Enter a valid limit price');
+  try {
+    await ApiService.createPendingOrder(stockId, side, 'LIMIT', quantity, limitPrice);
+  } on DioException catch (e) {
+    final serverMsg = e.response?.data is Map ? (e.response?.data['error']?.toString()) : null;
+    throw Exception(serverMsg ?? e.message ?? 'Order failed');
+  }
+  return const OrderSubmitResult(status: 'Pending');
 }
 
 Future<OrderSubmitResult> _submitLegacy({
@@ -61,6 +48,7 @@ Future<OrderSubmitResult> _submitLegacy({
   required String side,
   required double quantity,
   required double price,
+  required String idempotencyKey,
   String productType = 'REGULAR',
 }) async {
   late Map<String, dynamic> res;
@@ -71,6 +59,7 @@ Future<OrderSubmitResult> _submitLegacy({
       quantity.round(),
       price,
       productType: productType,
+      idempotencyKey: idempotencyKey,
     );
   } on DioException catch (e) {
     final serverMsg = e.response?.data is Map

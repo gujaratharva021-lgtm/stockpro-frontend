@@ -36,8 +36,8 @@ class ExportHelper {
   static Future<void> exportTransactionsPdf(List<dynamic> transactions, {String? userName, String? userEmail}) async {
     final doc = pw.Document();
 
-    const brokeragePct = 0.0005;
-    const exchangeChargePct = 0.0000345;
+    const brokeragePct = 0.0; // delivery: zero brokerage, same as backend
+    const exchangeChargePct = 0.0000297;
     const clearingChargePct = 0.0;
     const cgstPct = 0.09;
     const sgstPct = 0.09;
@@ -70,12 +70,13 @@ class ExportHelper {
       final brokerage = grossValue * brokeragePct;
       final exchangeCharge = grossValue * exchangeChargePct;
       final clearing = grossValue * clearingChargePct;
-      final cgst = (brokerage + exchangeCharge) * cgstPct;
-      final sgst = (brokerage + exchangeCharge) * sgstPct;
-      final stt = isBuy ? 0.0 : grossValue * sttPct;
+      final cgst = (brokerage + exchangeCharge + grossValue * sebiTurnoverPct) * cgstPct;
+      final sgst = (brokerage + exchangeCharge + grossValue * sebiTurnoverPct) * sgstPct;
+      final stt = grossValue * sttPct; // delivery STT on both sides
       final sebiFee = grossValue * sebiTurnoverPct;
       final stampDuty = isBuy ? grossValue * stampDutyPct : 0.0;
-      final charges = brokerage + exchangeCharge + clearing + cgst + sgst + stt + sebiFee + stampDuty;
+      final dp = (!isBuy && grossValue > 0) ? 15.0 : 0.0; // DP charge on sell
+      final charges = brokerage + exchangeCharge + clearing + cgst + sgst + stt + sebiFee + stampDuty + dp;
       final netTotal = isBuy ? grossValue + charges : grossValue - charges;
 
       totalGross += grossValue;

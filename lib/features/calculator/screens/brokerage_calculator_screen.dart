@@ -56,7 +56,7 @@ class _BrokerageCalculatorScreenState extends State<BrokerageCalculatorScreen> {
     }
 
     // Exchange transaction charges (NSE): ~0.00345% on total turnover
-    final exchangeCharges = (buyTurnover + sellTurnover) * 0.0000345;
+    final exchangeCharges = (buyTurnover + sellTurnover) * 0.0000297;
 
     // SEBI charges: ₹10 per crore = 0.0001%
     final sebiCharges = (buyTurnover + sellTurnover) * 0.000001;
@@ -67,7 +67,8 @@ class _BrokerageCalculatorScreenState extends State<BrokerageCalculatorScreen> {
     // Stamp duty: 0.015% on buy side for delivery, 0.003% for intraday
     final stampDuty = isDelivery ? buyTurnover * 0.00015 : buyTurnover * 0.00003;
 
-    final totalCharges = brokerage + stt + exchangeCharges + sebiCharges + gst + stampDuty;
+    final dpCharge = isDelivery ? 15.0 : 0.0; // DP charge on delivery sell
+    final totalCharges = brokerage + stt + exchangeCharges + sebiCharges + gst + stampDuty + dpCharge;
     final grossPnl = sellTurnover - buyTurnover;
     final netPnl = grossPnl - totalCharges;
 
