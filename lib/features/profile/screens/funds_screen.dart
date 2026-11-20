@@ -27,6 +27,7 @@ class _FundsScreenState extends State<FundsScreenInner> {
   String _pendingOrderId = '';
   double _totalPayin = 0;
   double _totalPayout = 0;
+  double _usedMargin = 0;
 
   @override
   void initState() {
@@ -52,13 +53,26 @@ class _FundsScreenState extends State<FundsScreenInner> {
       double payin = 0, payout = 0;
       for (final t in history) {
         final amt = (t['amount'] as num?)?.toDouble() ?? 0;
-        if (t['type'] == 'credit') {
+        final desc = (t['description'] ?? '').toString();
+        if (t['type'] == 'credit' && desc == 'Added funds') {
           payin += amt;
-        } else {
+        } else if (t['type'] == 'debit' && desc == 'Withdrawal') {
           payout += amt;
         }
       }
+      double margin = 0;
+      try {
+        for (final p in await ApiService.getMTFPositions()) {
+          if (p['status'] == 'open') margin += (p['margin_paid'] as num?)?.toDouble() ?? 0;
+        }
+      } catch (_) {}
+      try {
+        for (final p in await ApiService.getFutures()) {
+          if (p['status'] == 'OPEN') margin += (p['margin_used'] as num?)?.toDouble() ?? 0;
+        }
+      } catch (_) {}
       setState(() {
+        _usedMargin = margin;
         _user = res['user'];
         _totalPayin = payin;
         _totalPayout = payout;
@@ -408,14 +422,14 @@ class _FundsScreenState extends State<FundsScreenInner> {
                             children: [
                               const Text('Used margin', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                               const SizedBox(height: 4),
-                              const Text('0.00', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text(_usedMargin.toStringAsFixed(2), style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
                             ],
                           ),
                         ),
                       ],
                     ),
                     const Divider(height: 32, color: AppColors.border),
-                    _statRow('Opening balance', _balance.toStringAsFixed(2)),
+                    _statRow('Wallet balance', _balance.toStringAsFixed(2)),
                     _statRow('Payin', _totalPayin.toStringAsFixed(2)),
                     _statRow('Payout', _totalPayout.toStringAsFixed(2)),
                   ],

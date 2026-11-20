@@ -67,7 +67,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
 
   List<dynamic> get _ongoingIpos => _ipos.where((i) => i['status'] == 'open' || i['status'] == 'closed').toList();
   List<dynamic> get _upcomingIpos => _ipos.where((i) => i['status'] == 'upcoming').toList();
-  int get _totalApplications => _ongoingIpos.length + _upcomingIpos.length + _applications.length;
+  int get _totalApplications => _applications.length;
 
   String _formatDate(dynamic dateStr) {
     if (dateStr == null) return '-';

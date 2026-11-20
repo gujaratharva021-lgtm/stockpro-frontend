@@ -269,7 +269,7 @@ class _IpoCard extends StatelessWidget {
                   if (ipo['close_date'] != null) ...[
                     const SizedBox(height: 10),
                     Text(
-                      isOpen ? 'Apply By ${formatDate(ipo['close_date'])}' : 'Closed on ${formatDate(ipo['close_date'])}',
+                      isOpen ? 'Apply By ${formatDate(ipo['close_date'])}' : (status == 'upcoming' ? 'Opens on ${formatDate(ipo['open_date'])}' : 'Closed on ${formatDate(ipo['close_date'])}'),
                       style: TextStyle(color: isOpen ? AppColors.textSecondary : AppColors.textMuted, fontSize: 11),
                     ),
                   ],

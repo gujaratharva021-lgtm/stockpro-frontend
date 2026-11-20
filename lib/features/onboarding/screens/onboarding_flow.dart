@@ -93,7 +93,7 @@ class _OnboardingFlowState extends State<OnboardingFlowInner> {
   }
 
   void _verifyOTP() {
-    if (_otpController.text == '123456' || _otpController.text.length == 6) {
+    if (_otpController.text.length == 6) {
       setState(() { _otpVerified = true; _otpError = null; });
     } else {
       setState(() => _otpError = 'Invalid OTP. Please try again.');
@@ -179,7 +179,7 @@ class _OnboardingFlowState extends State<OnboardingFlowInner> {
       await ApiService.completeKYC();
       if (mounted) context.go('/kyc-success');
     } catch (_) {
-      if (mounted) context.go('/kyc-success');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not submit KYC. Please check your connection and try again.'), backgroundColor: AppColors.danger));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

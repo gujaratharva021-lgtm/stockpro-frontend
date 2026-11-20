@@ -510,7 +510,7 @@ class ApiService {
     return res.data['applications'] ?? [];
   }
   static Future<void> applyIPO(String ipoId, int lots, String upiId) async {
-    if (ipoId.startsWith('demo-')) return;
+    if (ipoId.startsWith('demo-')) { throw Exception('This is a sample IPO and cannot be applied for'); }
     final dio = await _authDio();
     await dio.post('/ipo/apply', data: {
       'ipo_id': ipoId,
@@ -562,7 +562,6 @@ class ApiService {
       data: {'email': email},
       options: Options(
         responseType: ResponseType.json,
-        validateStatus: (status) => status != null && status < 500,
       ),
     );
   }

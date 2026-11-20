@@ -54,8 +54,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       setS(() => error = 'Passwords do not match');
                       return;
                     }
-                    if (newController.text.length < 6) {
-                      setS(() => error = 'Password must be at least 6 characters');
+                    if (newController.text.length < 12 || !RegExp(r'[A-Z]').hasMatch(newController.text) || !RegExp(r'[a-z]').hasMatch(newController.text) || !RegExp(r'[0-9]').hasMatch(newController.text) || !RegExp(r'[^A-Za-z0-9]').hasMatch(newController.text)) {
+                      setS(() => error = 'Password must be at least 12 characters with uppercase, lowercase, a number and a symbol');
                       return;
                     }
                     setS(() { saving = true; error = null; });
@@ -71,8 +71,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       Navigator.pop(ctx);
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed successfully'), backgroundColor: AppColors.success));
+                    } on DioException catch (e) {
+                      final d = e.response?.data;
+                      final msg = d is Map ? d['error']?.toString() : null;
+                      setS(() { saving = false; error = msg ?? 'Could not change password. Please try again.'; });
                     } catch (_) {
-                      setS(() { saving = false; error = 'Incorrect current password'; });
+                      setS(() { saving = false; error = 'Could not change password. Please try again.'; });
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),

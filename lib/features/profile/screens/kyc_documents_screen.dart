@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
@@ -103,7 +104,7 @@ class _KycDocumentsScreenState extends State<KycDocumentsScreen> {
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => context.push('/onboarding'),
                             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                             child: const Text('Complete KYC', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                           ),

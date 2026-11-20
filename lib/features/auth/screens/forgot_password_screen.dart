@@ -107,8 +107,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => _error = 'Passwords do not match');
       return;
     }
-    if (newPass.length < 8) {
-      setState(() => _error = 'Password must be at least 8 characters');
+    if (newPass.length < 12 || !RegExp(r'[A-Z]').hasMatch(newPass) || !RegExp(r'[a-z]').hasMatch(newPass) || !RegExp(r'[0-9]').hasMatch(newPass) || !RegExp(r'[^A-Za-z0-9]').hasMatch(newPass)) {
+      setState(() => _error = 'Password must be at least 12 characters with uppercase, lowercase, a number and a symbol');
       return;
     }
 
