@@ -74,6 +74,17 @@ class ApiService {
     // the websocket down in one place means no call site can forget it and
     // leave a stale authenticated connection open after the user signs out.
     WebSocketService.disconnect();
+    for (final h in List<void Function()>.from(logoutHooks)) { h(); }
+  }
+  /// Screens with static/in-memory per-user caches register a reset callback here; it runs on every logout.
+  static final List<void Function()> logoutHooks = [];
+  /// Revokes the JWT on the server (blocklist), then clears local state. Local logout always happens even if the call fails.
+  static Future<void> logout() async {
+    try {
+      final dio = await _authDio();
+      await dio.post('/auth/logout').timeout(const Duration(seconds: 5));
+    } catch (_) {}
+    await clearToken();
   }
   static bool _interceptorAdded = false;
   static Future<Dio> _authDio() async {

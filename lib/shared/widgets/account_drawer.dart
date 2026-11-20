@@ -87,11 +87,18 @@ class _AccountDrawerState extends State<AccountDrawer> {
         return sum + qty * avg;
       });
 
-  double get _totalValue => _invested + _cash;
+  double get _currentValue => _holdings.fold(0.0, (sum, h) {
+        final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+        final avg = (h['avg_price'] as num?)?.toDouble() ?? 0;
+        final cur = ((h['current_price'] ?? h['price'] ?? h['ltp']) as num?)?.toDouble() ?? avg;
+        return sum + qty * cur;
+      });
+
+  double get _totalValue => _currentValue + _cash;
 
   /// Unrealized return on invested capital, shown as the small badge next
   /// to Total Value (there's no separate "day open" figure available).
-  double get _returnPercent => _invested > 0 ? ((_totalValue - _invested) / _invested) * 100 : 0;
+  double get _returnPercent => _invested > 0 ? ((_currentValue - _invested) / _invested) * 100 : 0;
 
   void _go(Widget screen) {
     Navigator.pop(context);
@@ -356,7 +363,7 @@ class _AccountDrawerState extends State<AccountDrawer> {
                     title: const Text('Log Out', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600, fontSize: 14)),
                     onTap: () async {
                       Navigator.pop(context);
-                      await ApiService.clearToken();
+                      await ApiService.logout();
                       if (context.mounted) context.go('/login');
                     },
                   ),

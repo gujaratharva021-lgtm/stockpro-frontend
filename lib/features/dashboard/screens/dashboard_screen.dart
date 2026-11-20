@@ -46,6 +46,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static Map<String, dynamic> _cachedIdxSensex = {'value': '--', 'percent': '--', 'isUp': true};
   static Map<String, dynamic> _cachedIdxBankNifty = {'value': '--', 'percent': '--', 'isUp': true};
   static List<dynamic> _cachedNews = [];
+  static bool _hookRegistered = false;
+  static void _resetCache() {
+    _hasCachedData = false;
+    _cachedUserName = '';
+    _cachedKycDone = false;
+    _cachedBalance = 0;
+    _cachedQuotes = {};
+    _cachedHoldings = [];
+    _cachedWatchlist = [];
+    _cachedPerfPoints = [];
+    _cachedIdxNifty = {'value': '--', 'percent': '--', 'isUp': true};
+    _cachedIdxSensex = {'value': '--', 'percent': '--', 'isUp': true};
+    _cachedIdxBankNifty = {'value': '--', 'percent': '--', 'isUp': true};
+    _cachedNews = [];
+  }
 
   bool _loading = !_hasCachedData;
   String _userName = _cachedUserName;
@@ -78,6 +93,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    if (!_hookRegistered) {
+      _hookRegistered = true;
+      ApiService.logoutHooks.add(_resetCache);
+    }
     _loadAll();
     _loadIndicesStrip();
     _loadDashboardNews();
@@ -207,15 +226,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (_) {}
     try {
-      final now = DateTime.now();
-      final parsed = <Map<String, dynamic>>[];
-      double baseValue = 0.0;
-      for (int i = 365; i >= 0; i--) {
-        final date = now.subtract(Duration(days: i));
-        baseValue += (i % 7 == 0 ? 850 : -320) + (i % 13) * 45;
-        parsed.add({'date': date, 'value': baseValue});
+      double cur = 0;
+      for (final h in _holdings) {
+        final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
+        final sym = h['symbol'];
+        final qp = sym != null ? (_quotes[sym]?['price'] as num?)?.toDouble() : null;
+        cur += qty * (qp ?? (h['avg_price'] as num?)?.toDouble() ?? 0);
       }
-      if (mounted) setState(() => _perfPoints = parsed);
+      if (mounted) setState(() => _perfPoints = [{'date': DateTime.now(), 'value': cur + _balance}]);
     } catch (_) {}
 
     _hasCachedData = true;

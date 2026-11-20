@@ -146,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
-    await ApiService.clearToken();
+    await ApiService.logout();
     if (mounted) context.go('/login');
   }
 
