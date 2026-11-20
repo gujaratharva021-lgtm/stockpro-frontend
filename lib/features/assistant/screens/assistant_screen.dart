@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
