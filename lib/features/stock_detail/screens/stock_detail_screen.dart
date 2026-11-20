@@ -28,6 +28,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
   List<dynamic> _history = [];
   bool _loadingHistory = true;
   bool _inWatchlist = false;
+  List<String> _wlLists = [];
   bool _watchlistLoading = false;
   double _holdingQty = 0;
   double _avgBuyPrice = 0;
@@ -164,8 +165,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
   Future<void> _checkWatchlist() async {
     try {
       final list = await ApiService.getWatchlist();
-      final found = list.any((item) => item['stock_id'] == widget.stock['id'] || item['symbol'] == widget.stock['symbol']);
-      if (mounted) setState(() => _inWatchlist = found);
+      final mine = list.where((item) => item['stock_id'] == widget.stock['id'] || item['symbol'] == widget.stock['symbol']).toList();
+      final found = mine.isNotEmpty;
+      if (mounted) setState(() { _inWatchlist = found; _wlLists = mine.map((i) => (i['list_name'] ?? 'My Watchlist').toString()).toSet().toList(); });
     } catch (_) {}
   }
 
@@ -173,9 +175,11 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     setState(() => _watchlistLoading = true);
     try {
       if (_inWatchlist) {
-        await ApiService.removeFromWatchlist(widget.stock['id']);
+        for (final l in _wlLists) { await ApiService.removeFromWatchlist(widget.stock['id'], listName: l); }
+        _wlLists = [];
       } else {
         await ApiService.addToWatchlist(widget.stock['id']);
+        _wlLists = ['My Watchlist'];
       }
       setState(() => _inWatchlist = !_inWatchlist);
     } catch (e) {
