@@ -174,7 +174,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
           ),
         );
       },
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { bankNameCtrl.dispose(); accNumberCtrl.dispose(); ifscCtrl.dispose(); holderCtrl.dispose(); }); });
   }
 
   Widget _input(String label, TextEditingController controller, {TextInputType? keyboardType, TextCapitalization textCapitalization = TextCapitalization.none}) {

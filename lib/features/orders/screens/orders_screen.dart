@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -157,7 +157,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           ),
         );
       },
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { priceController.dispose(); qtyController.dispose(); }); });
   }
   void _showOrderDetail(Map<String, dynamic> order) {
     final isBuy = order['buy_sell'] == 'BUY';

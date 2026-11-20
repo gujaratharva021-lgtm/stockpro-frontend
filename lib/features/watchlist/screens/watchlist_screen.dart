@@ -118,7 +118,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { controller.dispose(); }); });
   }
 
   // Bottom sheet list-switcher, opened by tapping the "My Watchlist v" title.

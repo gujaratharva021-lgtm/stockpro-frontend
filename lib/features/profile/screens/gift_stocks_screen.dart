@@ -243,7 +243,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
           ),
         );
       },
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { emailCtrl.dispose(); symbolCtrl.dispose(); qtyCtrl.dispose(); messageCtrl.dispose(); }); });
   }
 
   Color _statusColor(String status) {

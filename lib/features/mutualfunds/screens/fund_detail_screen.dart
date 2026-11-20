@@ -299,7 +299,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
           ),
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { amountController.dispose(); }); });
   }
 
   Widget _freqChip(String value, String label, IconData icon, String selected, Function(String) onTap) {

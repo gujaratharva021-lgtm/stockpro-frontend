@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -127,7 +127,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { controller.dispose(); }); });
   }
 
   // ignore: unused_element
@@ -189,7 +189,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { controller.dispose(); }); });
   }
 
   // ignore: unused_element
@@ -241,7 +241,7 @@ class _StockQuoteSheetState extends State<_StockQuoteSheet> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { priceController.dispose(); qtyController.dispose(); }); });
   }
 
   void _showOrderTicket(String buySell) async {

@@ -85,7 +85,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           ),
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { currentController.dispose(); newController.dispose(); confirmController.dispose(); }); });
   }
 
   Widget _passField(String label, TextEditingController controller, bool show, VoidCallback toggle) {

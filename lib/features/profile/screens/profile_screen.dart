@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -235,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         );
       },
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { passwordController.dispose(); }); });
   }
 
   @override

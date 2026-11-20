@@ -295,7 +295,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
               ),
             ],
           ),
-        );
+        ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { controller.dispose(); }); });
       },
       icon: const Icon(Icons.add, size: 16),
       label: const Text('New Basket'),

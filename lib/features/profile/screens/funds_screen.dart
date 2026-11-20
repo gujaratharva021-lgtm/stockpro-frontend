@@ -195,7 +195,7 @@ class _FundsScreenState extends State<FundsScreen> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { amountController.dispose(); }); });
   }
 
   void _showWithdrawDialog() {
@@ -259,7 +259,7 @@ class _FundsScreenState extends State<FundsScreen> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { amountController.dispose(); }); });
   }
 
   Future<String?> _pickBankAccount() async {

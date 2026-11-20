@@ -200,7 +200,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ),
         );
       },
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { nameCtrl.dispose(); emailCtrl.dispose(); }); });
   }
 
   String _formatDate(dynamic dateStr) {

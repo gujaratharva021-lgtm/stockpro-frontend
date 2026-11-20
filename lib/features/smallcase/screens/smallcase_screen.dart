@@ -409,7 +409,7 @@ class _SmallcaseScreenState extends State<SmallcaseScreen> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { amountController.dispose(); }); });
   }
 
   Widget _quickAmount(TextEditingController controller, String label, String value) {

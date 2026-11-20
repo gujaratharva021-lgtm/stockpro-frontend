@@ -40,7 +40,7 @@ class _BasketScreenState extends State<BasketScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { controller.dispose(); }); });
   }
 
   Future<void> _executeBasket(Basket basket) async {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/models/order.dart';
 import 'package:stock_app/core/services/order_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -39,7 +39,7 @@ class _BasketScreenState extends State<BasketScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() { Future.delayed(const Duration(milliseconds: 500), () { controller.dispose(); }); });
   }
 
   Future<void> _executeBasket(Basket basket) async {
