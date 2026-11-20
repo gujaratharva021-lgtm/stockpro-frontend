@@ -122,7 +122,7 @@ class _CompareScreenState extends State<CompareScreen> {
                   Container(
                     width: 32,
                     height: 32,
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.textPrimary),
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary),
                     child: const Center(
                       child: Text('VS', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
@@ -299,7 +299,7 @@ class _CompareScreenState extends State<CompareScreen> {
                 borderData: FlBorderData(show: false),
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => AppColors.textPrimary.withValues(alpha: 0.9),
+                    getTooltipColor: (_) => AppColors.cardBackground.withValues(alpha: 0.95),
                     getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
                       '${s.y.toStringAsFixed(2)}%',
                       const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),

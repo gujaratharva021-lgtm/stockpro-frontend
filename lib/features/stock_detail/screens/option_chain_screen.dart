@@ -17,8 +17,26 @@ class _OptionChainScreenState extends State<OptionChainScreen> {
   List<dynamic> _optionChain = [];
   bool _loading = false;
   String? _error;
-  String _selectedExpiry = '2026-07-28';
-  final List<String> _expiryOptions = ['2026-07-28', '2026-08-25', '2026-09-29'];
+  late final List<String> _expiryOptions = _upcomingExpiries();
+  late String _selectedExpiry = _expiryOptions.first;
+
+  static List<String> _upcomingExpiries() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final out = <String>[];
+    var m = DateTime(now.year, now.month, 1);
+    while (out.length < 3) {
+      var d = DateTime(m.year, m.month + 1, 0);
+      while (d.weekday != DateTime.thursday) {
+        d = d.subtract(const Duration(days: 1));
+      }
+      if (!d.isBefore(today)) {
+        out.add('${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
+      }
+      m = DateTime(m.year, m.month + 1, 1);
+    }
+    return out;
+  }
   Map<String, dynamic>? _quote;
   List<dynamic> _history = [];
   String _view = 'OI';
@@ -440,7 +458,7 @@ class _OptionChainScreenState extends State<OptionChainScreen> {
                               alignment: Alignment.center,
                               padding: const EdgeInsets.symmetric(vertical: 6),
                               decoration: BoxDecoration(
-                                color: atm ? AppColors.textPrimary : AppColors.primary.withValues(alpha: 0.08),
+                                color: atm ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(strike.toString(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: atm ? Colors.white : AppColors.textPrimary)),

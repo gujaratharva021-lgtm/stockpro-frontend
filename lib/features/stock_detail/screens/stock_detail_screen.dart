@@ -49,7 +49,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     _loadHolding();
     _loadAbout();
     _loadPeers();
-    _loadStockNews();
   }
 
   Map<String, double>? get _ohlc {
@@ -108,7 +107,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
       final holdings = await ApiService.getHoldings();
       final found = holdings.firstWhere(
               (h) => h['symbol'] == widget.stock['symbol'], orElse: () => null);
-      if (found != null && mounted) {
+      if (mounted && found == null) {
+        setState(() { _holdingQty = 0; _avgBuyPrice = 0; });
+      } else if (found != null && mounted) {
         setState(() {
           _holdingQty = (found['quantity'] as num).toDouble();
           _avgBuyPrice = (found['avg_price'] as num?)?.toDouble() ?? 0;
@@ -134,6 +135,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     } catch (_) {}
   }
 
+  // ignore: unused_element
   Future<void> _loadStockNews() async {
     setState(() => _loadingNews = true);
     try {
@@ -400,7 +402,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    Navigator.pop(context);
                   },
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                   child: const Text('Done', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),

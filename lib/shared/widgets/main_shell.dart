@@ -67,13 +67,13 @@ class _MainShellState extends State<MainShell> {
 
   Widget _webLayout() {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
+      backgroundColor: AppColors.background,
       body: Row(
         children: [
           // Sidebar
           Container(
             width: 220,
-            color: Colors.white,
+            color: AppColors.navBackground,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

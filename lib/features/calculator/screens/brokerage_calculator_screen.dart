@@ -144,7 +144,7 @@ class _BrokerageCalculatorScreenState extends State<BrokerageCalculatorScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.textPrimary,
+                        color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Column(

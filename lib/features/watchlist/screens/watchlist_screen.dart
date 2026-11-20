@@ -25,15 +25,12 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   String? _error;
   List<String> _listNames = ['My Watchlist'];
   String _selectedList = 'My Watchlist';
-  bool _seedAttempted = false;
-
-  static const List<String> _demoSymbols = ['HDFCBANK', 'INFY', 'TCS', 'ONGC', 'HINDUNILVR'];
 
   @override
   void initState() {
     super.initState();
     _loadListNames();
-    _load().then((_) => _seedDemoStocksIfMissing());
+    _load();
     _loadExchanges();
   }
 
@@ -62,31 +59,6 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         if (n > 50) break;
       }
       if (mounted) setState(() => _listNames = combined);
-    } catch (_) {}
-  }
-
-  Future<void> _seedDemoStocksIfMissing() async {
-    if (_seedAttempted) return;
-    _seedAttempted = true;
-    try {
-      final existingSymbols = _watchlist.map((e) => (e['symbol'] ?? '').toString()).toSet();
-      final missing = _demoSymbols.where((s) => !existingSymbols.contains(s)).toList();
-      if (missing.isEmpty) return;
-
-      final allStocks = await ApiService.getStocks();
-      var addedAny = false;
-      for (final symbol in missing) {
-        final match = allStocks.firstWhere(
-          (s) => (s['symbol'] ?? '').toString() == symbol,
-          orElse: () => null,
-        );
-        if (match == null) continue;
-        try {
-          await ApiService.addToWatchlist(match['id'], listName: _selectedList);
-          addedAny = true;
-        } catch (_) {}
-      }
-      if (addedAny) await _load();
     } catch (_) {}
   }
 
