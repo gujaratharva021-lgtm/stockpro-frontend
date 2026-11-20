@@ -1,9 +1,8 @@
-import 'dart:io';
+import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -51,11 +50,31 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     }
   }
 
+  bool _hasUnicodeFont = true;
+
+  Future<pw.ThemeData?> _pdfTheme() async {
+    try {
+      return pw.ThemeData.withFont(
+        base: await PdfGoogleFonts.notoSansRegular(),
+        bold: await PdfGoogleFonts.notoSansBold(),
+        italic: await PdfGoogleFonts.notoSansItalic(),
+        boldItalic: await PdfGoogleFonts.notoSansBoldItalic(),
+      );
+    } catch (_) {
+      _hasUnicodeFont = false;
+      return null;
+    }
+  }
+
+  String _rs(String s) => _hasUnicodeFont ? s : s.replaceAll('\u20b9', 'Rs.');
+
   Future<void> _saveAndShare(pw.Document doc, String filename) async {
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/$filename');
-    await file.writeAsBytes(await doc.save());
-    await Share.shareXFiles([XFile(file.path)], text: filename);
+    final bytes = await doc.save();
+    await Share.shareXFiles(
+      [XFile.fromData(bytes, mimeType: 'application/pdf', name: filename)],
+      fileNameOverrides: [filename],
+      text: filename,
+    );
   }
 
   // ---------- Shared page chrome: letterhead + footer ----------
@@ -224,7 +243,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         totalInvested += qty * avg;
       }
 
-      final doc = pw.Document();
+      final doc = pw.Document(theme: await _pdfTheme());
       doc.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
@@ -237,8 +256,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             _buildAccountInfoBlock(userRes['user']),
             pw.Row(
               children: [
-                _summaryTile('TOTAL HOLDINGS', '${holdings.length}'),
-                _summaryTile('TOTAL INVESTED', '\u20b9${totalInvested.toStringAsFixed(2)}'),
+                _summaryTile('TOTAL HOLDINGS', _rs('${holdings.length}')),
+                _summaryTile('TOTAL INVESTED', _rs('\u20b9${totalInvested.toStringAsFixed(2)}')),
               ],
             ),
             pw.SizedBox(height: 22),
@@ -253,7 +272,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               },
               border: pw.TableBorder.symmetric(inside: const pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
               children: [
-                _tableHeaderRow(['Symbol', 'Quantity', 'Avg Price (\u20b9)', 'Invested Value (\u20b9)']),
+                _tableHeaderRow(['Symbol', 'Quantity', _rs('Avg Price (\u20b9)'), _rs('Invested Value (\u20b9)')]),
                 ...List.generate(holdings.length, (i) {
                   final h = holdings[i];
                   final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
@@ -313,7 +332,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         }
       }
 
-      final doc = pw.Document();
+      final doc = pw.Document(theme: await _pdfTheme());
       doc.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
@@ -333,8 +352,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             pw.SizedBox(height: 10),
             pw.Row(
               children: [
-                _summaryTile('TOTAL BUY VALUE', '\u20b9${buyValue.toStringAsFixed(2)}'),
-                _summaryTile('TOTAL SELL VALUE', '\u20b9${sellValue.toStringAsFixed(2)}'),
+                _summaryTile('TOTAL BUY VALUE', _rs('\u20b9${buyValue.toStringAsFixed(2)}')),
+                _summaryTile('TOTAL SELL VALUE', _rs('\u20b9${sellValue.toStringAsFixed(2)}')),
               ],
             ),
             pw.SizedBox(height: 22),
@@ -351,7 +370,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               },
               border: pw.TableBorder.symmetric(inside: const pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
               children: [
-                _tableHeaderRow(['Date & Time', 'Symbol', 'Type', 'Qty', 'Price (\u20b9)', 'Total (\u20b9)']),
+                _tableHeaderRow(['Date & Time', 'Symbol', 'Type', 'Qty', _rs('Price (\u20b9)'), _rs('Total (\u20b9)')]),
                 ...List.generate(txns.length, (i) {
                   final t = txns[i];
                   final qty = (t['quantity'] as num?)?.toDouble() ?? 0;
@@ -401,7 +420,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       final estLtcgTax = (data['estimated_ltcg_tax'] as num? ?? 0).toDouble();
       final totalTax = (data['total_estimated_tax'] as num? ?? 0).toDouble();
 
-      final doc = pw.Document();
+      final doc = pw.Document(theme: await _pdfTheme());
       doc.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
@@ -414,15 +433,15 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             _buildAccountInfoBlock(userRes['user']),
             pw.Row(
               children: [
-                _summaryTile('SHORT-TERM GAINS (STCG)', '\u20b9${totalStcg.toStringAsFixed(2)}'),
-                _summaryTile('LONG-TERM GAINS (LTCG)', '\u20b9${totalLtcg.toStringAsFixed(2)}'),
+                _summaryTile('SHORT-TERM GAINS (STCG)', _rs('\u20b9${totalStcg.toStringAsFixed(2)}')),
+                _summaryTile('LONG-TERM GAINS (LTCG)', _rs('\u20b9${totalLtcg.toStringAsFixed(2)}')),
               ],
             ),
             pw.SizedBox(height: 10),
             pw.Row(
               children: [
-                _summaryTile('EST. STCG TAX (20%)', '\u20b9${estStcgTax.toStringAsFixed(2)}'),
-                _summaryTile('EST. LTCG TAX (12.5%)', '\u20b9${estLtcgTax.toStringAsFixed(2)}'),
+                _summaryTile('EST. STCG TAX (20%)', _rs('\u20b9${estStcgTax.toStringAsFixed(2)}')),
+                _summaryTile('EST. LTCG TAX (12.5%)', _rs('\u20b9${estLtcgTax.toStringAsFixed(2)}')),
               ],
             ),
             pw.SizedBox(height: 10),
@@ -434,7 +453,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text('TOTAL ESTIMATED TAX LIABILITY', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
-                  pw.Text('\u20b9${totalTax.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                  pw.Text(_rs('\u20b9${totalTax.toStringAsFixed(2)}'), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
                 ],
               ),
             ),
@@ -452,7 +471,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               },
               border: pw.TableBorder.symmetric(inside: const pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
               children: [
-                _tableHeaderRow(['Symbol', 'Qty', 'Buy Price', 'Sell Price', 'Days Held', 'Gain (\u20b9)']),
+                _tableHeaderRow(['Symbol', 'Qty', 'Buy Price', 'Sell Price', 'Days Held', _rs('Gain (\u20b9)')]),
                 ...List.generate(gains.length, (i) {
                   final g = gains[i];
                   final gain = (g['gain'] as num? ?? 0).toDouble();

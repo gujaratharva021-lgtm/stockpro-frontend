@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
@@ -135,7 +137,7 @@ class ApiService {
   static Future<String> uploadAvatar(String filePath) async {
     final dio = await _authDio();
     final formData = FormData.fromMap({
-      'avatar': await MultipartFile.fromFile(filePath, filename: filePath.split('/').last),
+      'avatar': kIsWeb ? MultipartFile.fromBytes(await XFile(filePath).readAsBytes(), filename: 'avatar.jpg') : await MultipartFile.fromFile(filePath, filename: filePath.split('/').last),
     });
     final res = await dio.post('/auth/avatar', data: formData);
     return res.data['avatar_url'];
