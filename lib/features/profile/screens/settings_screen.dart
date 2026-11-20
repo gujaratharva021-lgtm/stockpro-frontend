@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/notifications/screens/notifications_screen.dart';
@@ -118,7 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Icon(icon, color: AppColors.textSecondary, size: 20),
           const SizedBox(width: 14),
           Expanded(child: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500))),
-          Switch(value: value, onChanged: onChanged, activeColor: AppColors.primary),
+          Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary),
         ],
       ),
     );

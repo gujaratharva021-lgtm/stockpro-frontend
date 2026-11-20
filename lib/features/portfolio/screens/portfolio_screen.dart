@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -520,28 +520,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         child: Text(label, style: TextStyle(color: active ? AppColors.primaryDark : AppColors.textSecondary, fontSize: 14, fontWeight: active ? FontWeight.bold : FontWeight.w500)),
       ),
     );
-  }
-
-  // Placeholder content for News / Orders / AI Instructions / Trades tabs --
-  // no backend for these yet, so this just gives them a real empty state
-  // instead of a blank screen.
-  List<Widget> _buildEmptyTab() {
-    return [
-      SliverFillRemaining(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.inbox_outlined, color: AppColors.textMuted, size: 40),
-              const SizedBox(height: 14),
-              const Text('No content available', style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              const Text('Please check back later', style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
-            ],
-          ),
-        ),
-      ),
-    ];
   }
 
   Widget _summaryStatRow(String label, double value, double pct, {String? trailingLabel}) {

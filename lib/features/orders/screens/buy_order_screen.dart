@@ -586,13 +586,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         Expanded(
           child: Row(
             children: [
-              Radio<bool>(
-                value: true,
-                groupValue: true,
-                onChanged: (_) {},
-                activeColor: _accentColor,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
+              RadioGroup<bool>(groupValue: true, onChanged: (_) {}, child: Radio<bool>(value: true, activeColor: _accentColor, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,)),
               const SizedBox(width: 4),
               const Text(
                 'NSE',
@@ -615,12 +609,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
             opacity: 0.45,
             child: Row(
               children: [
-                const Radio<bool>(
-                  value: false,
-                  groupValue: true,
-                  onChanged: null,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
+                IgnorePointer(child: RadioGroup<bool>(groupValue: true, onChanged: (_) {}, child: Radio<bool>(value: false, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,))),
                 const SizedBox(width: 4),
                 const Text(
                   'BSE',

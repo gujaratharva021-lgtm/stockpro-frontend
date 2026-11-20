@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/services/explore_preferences_service.dart';
 
@@ -214,9 +214,8 @@ class _CustomizeExploreScreenState extends State<CustomizeExploreScreen> {
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
       itemCount: _sectionOrder.length,
-      onReorder: (oldIndex, newIndex) {
+      onReorderItem: (oldIndex, newIndex) {
         setState(() {
-          if (newIndex > oldIndex) newIndex -= 1;
           final key = _sectionOrder.removeAt(oldIndex);
           _sectionOrder.insert(newIndex, key);
         });

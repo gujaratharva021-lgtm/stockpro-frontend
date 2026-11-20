@@ -3,7 +3,6 @@ import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/price_chart.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
-import 'package:intl/intl.dart';
 import 'package:stock_app/features/stock_detail/screens/advanced_chart_screen.dart';
 import 'package:stock_app/features/stock_detail/screens/technicals_screen.dart';
 import 'package:stock_app/shared/widgets/stock_logo.dart';
@@ -23,11 +22,6 @@ class StockDetailScreen extends StatefulWidget {
 }
 
 class _StockDetailScreenState extends State<StockDetailScreen> with SingleTickerProviderStateMixin {
-  List<dynamic> _optionChain = [];
-  bool _loadingOptionChain = false;
-  String? _optionChainError;
-  String _selectedExpiry = '2026-07-28';
-  final List<String> _expiryOptions = ['2026-07-28', '2026-08-25', '2026-09-29'];
   Map<String, dynamic>? _quote;
   bool _loadingQuote = true;
   String? _quoteError;
@@ -55,12 +49,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     _loadAbout();
     _loadPeers();
     _loadStockNews();
-    _loadOptionChain();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   Map<String, double>? get _ohlc {
@@ -88,30 +76,11 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     return {'high': high, 'low': low};
   }
 
-  double? get _avgVolume {
-    if (_history.isEmpty) return null;
-    final volumes = _history.map((h) => (h['volume'] as num?)?.toDouble()).whereType<double>().toList();
-    if (volumes.isEmpty) return null;
-    return volumes.reduce((a, b) => a + b) / volumes.length;
-  }
-
   double? get _maxVolume {
     if (_history.isEmpty) return null;
     final volumes = _history.map((h) => (h['volume'] as num?)?.toDouble()).whereType<double>().toList();
     if (volumes.isEmpty) return null;
     return volumes.reduce((a, b) => a > b ? a : b);
-  }
-
-  Future<void> _loadOptionChain() async {
-    setState(() { _loadingOptionChain = true; _optionChainError = null; });
-    try {
-      final chain = await ApiService.getOptionChain(widget.stock['symbol'], _selectedExpiry);
-      setState(() => _optionChain = chain);
-    } catch (e) {
-      setState(() => _optionChainError = 'Option chain unavailable right now');
-    } finally {
-      if (mounted) setState(() => _loadingOptionChain = false);
-    }
   }
 
   Future<void> _loadHistory() async {
@@ -486,24 +455,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     );
   }
 
-  Widget _ohlcStat(String label, double value) {
-    return Column(children: [
-      Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-      const SizedBox(height: 4),
-      Text('₹${value.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-    ]);
-  }
-
-  Widget _infoRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-        Text(value, style: TextStyle(color: valueColor ?? AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-
   // Market-data range slider: a track from low to high with a marker dot
   // at the current price's position. Used for both the intraday (Today)
   // range and the 52-week range, so both share one implementation.
@@ -576,231 +527,6 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
     ];
     final idx = symbol.isEmpty ? 0 : symbol.codeUnitAt(0) % colors.length;
     return colors[idx];
-  }
-
-  String _expiryLabel(String expiry) {
-    try {
-      final date = DateTime.parse(expiry);
-      final now = DateTime.now();
-      final days = date.difference(now).inDays;
-      final dd = DateFormat('d MMM').format(date);
-      if (days <= 0) return dd;
-      if (days < 45) {
-        final weeks = (days / 7).round();
-        return '$dd (${weeks <= 1 ? '1 Week' : '$weeks Weeks'})';
-      }
-      final months = (days / 30).round();
-      return '$dd (${months <= 1 ? '1 Month' : '$months Months'})';
-    } catch (_) {
-      return expiry;
-    }
-  }
-
-  double? get _pcr {
-    if (_optionChain.isEmpty) return null;
-    double callOi = 0;
-    double putOi = 0;
-    for (final row in _optionChain) {
-      final call = row['call_option'];
-      final put = row['put_option'];
-      callOi += ((call?['oi'] as num?) ?? 0).toDouble();
-      putOi += ((put?['oi'] as num?) ?? 0).toDouble();
-    }
-    if (callOi == 0) return null;
-    return putOi / callOi;
-  }
-
-  double? get _maxPain {
-    if (_optionChain.isEmpty) return null;
-    double? best;
-    double bestLoss = double.infinity;
-    for (final row in _optionChain) {
-      final strike = (row['strike_price'] as num?)?.toDouble();
-      if (strike == null) continue;
-      double loss = 0;
-      for (final r in _optionChain) {
-        final s = (r['strike_price'] as num?)?.toDouble();
-        if (s == null) continue;
-        final callOi = ((r['call_option']?['oi'] as num?) ?? 0).toDouble();
-        final putOi = ((r['put_option']?['oi'] as num?) ?? 0).toDouble();
-        if (strike > s) loss += (strike - s) * callOi;
-        if (strike < s) loss += (s - strike) * putOi;
-      }
-      if (loss < bestLoss) {
-        bestLoss = loss;
-        best = strike;
-      }
-    }
-    return best;
-  }
-
-  Widget _statBox(String label, String value) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOptionChainTab() {
-    final price = _quote != null ? (_quote!['price'] as num?)?.toDouble() : null;
-    final changePercent = _quote != null ? (_quote!['change_percent'] as num?)?.toDouble() : null;
-    final isUp = (changePercent ?? 0) >= 0;
-
-    return Column(
-      children: [
-        // Search-style price header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.search, color: AppColors.textMuted, size: 20),
-                const SizedBox(width: 10),
-                Text(widget.stock['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
-                const Spacer(),
-                if (price != null) ...[
-                  Text(price.toStringAsFixed(2), style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(width: 6),
-                  Text('${isUp ? '+' : ''}${changePercent?.toStringAsFixed(2) ?? '0.00'}%', style: TextStyle(color: isUp ? AppColors.success : AppColors.danger, fontSize: 12, fontWeight: FontWeight.w600)),
-                ],
-              ],
-            ),
-          ),
-        ),
-        // Expiry chips
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _expiryOptions.map((exp) {
-                final selected = exp == _selectedExpiry;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(_expiryLabel(exp)),
-                    selected: selected,
-                    onSelected: (_) {
-                      setState(() => _selectedExpiry = exp);
-                      _loadOptionChain();
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-        // Column headers
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              Expanded(child: Text('Call LTP', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-              SizedBox(width: 70, child: Text('Strike', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-              Expanded(child: Text('Put LTP', textAlign: TextAlign.right, style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-            ],
-          ),
-        ),
-        const Divider(color: AppColors.border, height: 12),
-        if (_loadingOptionChain)
-          const Expanded(child: Center(child: CircularProgressIndicator()))
-        else if (_optionChainError != null)
-          Expanded(child: Center(child: Text(_optionChainError!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))))
-        else if (_optionChain.isEmpty)
-          const Expanded(child: Center(child: Text('No option chain data available', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))))
-        else
-          Expanded(
-            child: ListView.separated(
-              itemCount: _optionChain.length,
-              separatorBuilder: (_, _) => const Divider(color: AppColors.border, height: 1),
-              itemBuilder: (context, index) {
-                final row = _optionChain[index];
-                final call = row['call_option'];
-                final put = row['put_option'];
-                final strike = row['strike_price'];
-                final atm = price != null && strike != null && ((strike as num).toDouble() - price).abs() < 2.5;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('${call?['ltp'] ?? '-'}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                            Text('OI: ${call?['oi'] ?? '-'}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 70,
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          decoration: BoxDecoration(
-                            color: atm ? AppColors.textPrimary : AppColors.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text('$strike', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: atm ? Colors.white : AppColors.textPrimary)),
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text('${put?['ltp'] ?? '-'}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                            Text('OI: ${put?['oi'] ?? '-'}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        // PCR / Max Pain footer
-        if (_optionChain.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.border)),
-            ),
-            child: Row(
-              children: [
-                _statBox('PCR', _pcr != null ? _pcr!.toStringAsFixed(2) : '-'),
-                _statBox('Max Pain', _maxPain != null ? _maxPain!.toStringAsFixed(0) : '-'),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-  Widget _buildComingSoon(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.construction_outlined, color: AppColors.textMuted, size: 40),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          ],
-        ),
-      ),
-    );
   }
 
   @override

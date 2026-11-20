@@ -90,7 +90,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                           itemCount: _tickets.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          separatorBuilder: (_, _) => const SizedBox(height: 10),
                           itemBuilder: (context, i) {
                             final t = _tickets[i] as Map;
                             final open = t['status'] == 'OPEN';
