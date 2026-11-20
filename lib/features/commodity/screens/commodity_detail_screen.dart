@@ -12,6 +12,12 @@ class CommodityDetailScreen extends StatefulWidget {
 }
 
 class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
   Map<String, dynamic>? _commodity;
   bool _loading = true;
   String? _error;

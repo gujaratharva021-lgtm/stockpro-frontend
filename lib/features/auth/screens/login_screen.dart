@@ -35,6 +35,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
     _lottieController?.dispose();
     super.dispose();
   }

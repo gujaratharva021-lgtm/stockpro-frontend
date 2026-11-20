@@ -277,7 +277,7 @@ class ApiService {
   /// the backend). Tickets expire in ~30s and can only be used once.
   static Future<String> getWsTicket() async {
     final dio = await _authDio();
-    final res = await dio.post('/ws-ticket');
+    final res = await dio.post('/auth/ws-ticket');
     return res.data['ticket'] as String;
   }
   static Future<List<dynamic>> getPendingOrders() async {

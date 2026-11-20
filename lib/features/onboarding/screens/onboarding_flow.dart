@@ -14,6 +14,20 @@ class OnboardingFlow extends StatefulWidget {
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _occupationController.dispose();
+    _panController.dispose();
+    _accountController.dispose();
+    _ifscController.dispose();
+    _phoneController.dispose();
+    _otpController.dispose();
+    _aadhaarController.dispose();
+    _aadhaarOtpController.dispose();
+    super.dispose();
+  }
+
   int _step = 0;
   bool _submitting = false;
   File? _selfieFile;

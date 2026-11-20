@@ -273,7 +273,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
             Expanded(
               child: rows.isEmpty
-                  ? const Center(child: Text('Loading quotesâ€¦', style: TextStyle(color: AppColors.textMuted)))
+                  ? const Center(child: Text('Loading quotes\u2026', style: TextStyle(color: AppColors.textMuted)))
                   : ListView.builder(
                       controller: scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16),

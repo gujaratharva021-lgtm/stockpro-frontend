@@ -14,6 +14,12 @@ class MtfOpenScreen extends StatefulWidget {
 }
 
 class _MtfOpenScreenState extends State<MtfOpenScreen> {
+  @override
+  void dispose() {
+    _qtyController.dispose();
+    super.dispose();
+  }
+
   final _qtyController = TextEditingController();
   bool _loading = false;
   String? _message;

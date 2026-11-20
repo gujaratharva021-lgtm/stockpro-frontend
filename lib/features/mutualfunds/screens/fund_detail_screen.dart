@@ -36,6 +36,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
 
   @override
   void dispose() {
+    _amountController.dispose();
     _razorpay.clear();
     super.dispose();
   }

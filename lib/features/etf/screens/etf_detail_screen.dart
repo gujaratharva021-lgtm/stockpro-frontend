@@ -12,6 +12,12 @@ class EtfDetailScreen extends StatefulWidget {
 }
 
 class _EtfDetailScreenState extends State<EtfDetailScreen> {
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
   Map<String, dynamic>? _etf;
   bool _loading = true;
   String? _error;

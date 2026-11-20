@@ -13,6 +13,13 @@ class GttScreen extends StatefulWidget {
 }
 
 class _GttScreenState extends State<GttScreen> {
+  @override
+  void dispose() {
+    _triggerController.dispose();
+    _qtyController.dispose();
+    super.dispose();
+  }
+
   String _buySell = 'BUY';
   late TextEditingController _triggerController;
   late TextEditingController _qtyController;

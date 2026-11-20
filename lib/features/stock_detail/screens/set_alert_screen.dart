@@ -12,6 +12,12 @@ class SetAlertScreen extends StatefulWidget {
 }
 
 class _SetAlertScreenState extends State<SetAlertScreen> {
+  @override
+  void dispose() {
+    _priceController.dispose();
+    super.dispose();
+  }
+
   late TextEditingController _priceController;
   String _direction = 'ABOVE';
   bool _submitting = false;

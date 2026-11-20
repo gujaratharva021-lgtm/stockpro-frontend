@@ -13,6 +13,12 @@ class FdInvestScreen extends StatefulWidget {
 }
 
 class _FdInvestScreenState extends State<FdInvestScreen> {
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
   final _amountController = TextEditingController();
   bool _loading = false;
   String? _message;

@@ -8,6 +8,14 @@ class BrokerageCalculatorScreen extends StatefulWidget {
 }
 
 class _BrokerageCalculatorScreenState extends State<BrokerageCalculatorScreen> {
+  @override
+  void dispose() {
+    _buyPriceController.dispose();
+    _sellPriceController.dispose();
+    _qtyController.dispose();
+    super.dispose();
+  }
+
   final _buyPriceController = TextEditingController();
   final _sellPriceController = TextEditingController();
   final _qtyController = TextEditingController(text: '1');

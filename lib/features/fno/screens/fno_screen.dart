@@ -350,6 +350,13 @@ class _NewPositionSheet extends StatefulWidget {
 }
 
 class _NewPositionSheetState extends State<_NewPositionSheet> {
+  @override
+  void dispose() {
+    _lotSizeCtrl.dispose();
+    _strikeCtrl.dispose();
+    super.dispose();
+  }
+
   Map<String, dynamic>? _selectedStock;
   String _positionType = 'LONG';
   String _optionType = 'CALL';

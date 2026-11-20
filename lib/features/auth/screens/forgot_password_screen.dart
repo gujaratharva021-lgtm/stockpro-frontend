@@ -24,6 +24,15 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _otpController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
