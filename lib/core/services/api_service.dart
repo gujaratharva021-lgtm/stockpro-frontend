@@ -125,6 +125,10 @@ class ApiService {
     });
     return res.data;
   }
+  static Future<Map<String, dynamic>> verifyEmail(String email, String otp) async {
+    final res = await _dio.post('/auth/verify-email', data: {'email': email, 'otp': otp});
+    return res.data;
+  }
   static Future<Map<String, dynamic>> getMe() async {
     final dio = await _authDio();
     final res = await dio.get('/auth/me');

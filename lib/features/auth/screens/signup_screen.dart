@@ -42,6 +42,30 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _showPassword = false;
   String? _error;
 
+  Future<String?> _askOtp(String email) async {
+    final ctrl = TextEditingController();
+    final otp = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Verify your email'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Enter the 6-digit code sent to $email'),
+            const SizedBox(height: 12),
+            TextField(controller: ctrl, keyboardType: TextInputType.number, maxLength: 6, autofocus: true),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Verify')),
+        ],
+      ),
+    );
+    Future.delayed(const Duration(milliseconds: 500), ctrl.dispose);
+    return (otp == null || otp.isEmpty) ? null : otp;
+  }
   Future<void> _signup() async {
     setState(() { _loading = true; _error = null; });
     try {
@@ -56,7 +80,12 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
       await ApiService.signup(email, password, _nameController.text.trim());
-      final res = await ApiService.login(email, password);
+      final otp = await _askOtp(email);
+      if (otp == null) {
+        setState(() => _error = 'Email verification cancelled. Sign up again to get a new code.');
+        return;
+      }
+      final res = await ApiService.verifyEmail(email, otp);
       const storage = FlutterSecureStorage();
       await storage.write(key: 'auth_token', value: res['token']);
       WebSocketService.connect();
