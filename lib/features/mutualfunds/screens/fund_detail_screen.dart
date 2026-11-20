@@ -51,7 +51,17 @@ class _FundDetailScreenState extends State<FundDetailScreenInner> {
 
   Future<void> _onSIPPaymentSuccess(PaymentSuccessResponse response) async {
     try {
-      await ApiService.createSIP(widget.fundId, _pendingSIPAmount, _pendingSIPFrequency, _pendingSIPDate);
+      await ApiService.confirmPayment(response.orderId ?? '', response.paymentId ?? '', response.signature ?? '', _pendingSIPAmount);
+      await ApiService.placeFundOrder(widget.fundId, 'BUY', _pendingSIPAmount);
+      final d = DateTime.parse(_pendingSIPDate);
+      final nd = _pendingSIPFrequency == 'daily'
+          ? d.add(const Duration(days: 1))
+          : _pendingSIPFrequency == 'weekly'
+              ? d.add(const Duration(days: 7))
+              : DateTime(d.year, d.month + 1, d.day);
+      final nextStr = '${nd.year}-${nd.month.toString().padLeft(2, '0')}-${nd.day.toString().padLeft(2, '0')}';
+      await ApiService.createSIP(widget.fundId, _pendingSIPAmount, _pendingSIPFrequency, nextStr);
+      _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

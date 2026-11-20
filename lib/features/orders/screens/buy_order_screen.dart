@@ -546,7 +546,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
     return Row(
       children: [
         GestureDetector(
-          onTap: () => setState(() => isBuy = !isBuy),
+          onTap: null, // side is fixed by the caller; flipping it locally would submit the opposite order
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
