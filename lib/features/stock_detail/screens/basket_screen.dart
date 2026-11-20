@@ -1,6 +1,5 @@
+import 'package:stock_app/features/orders/order_submit_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:stock_app/core/models/order.dart';
-import 'package:stock_app/core/services/order_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/features/stock_detail/screens/basket_service.dart';
 
@@ -89,24 +88,8 @@ class _BasketScreenState extends State<BasketScreen> {
 
     for (final item in basket.items) {
       try {
-        final placed = await OrderService.submit(
-          stockId: item.stockId,
-          side: 'BUY',
-          quantity: item.quantity.toDouble(),
-        );
-        Order finalOrder = placed;
-        try {
-          finalOrder = await OrderService.trackToTerminal(placed).last;
-        } on OrderTrackingTimeout catch (e) {
-          finalOrder = e.lastKnown;
-        } catch (_) {
-          finalOrder = await OrderService.getOrder(placed.id);
-        }
-        if (finalOrder.isRejectedOrFailed || finalOrder.isCancelled) {
-          failed++;
-        } else {
-          success++;
-        }
+        await submitMarketOrderAndTrack(stockId: item.stockId, side: 'BUY', quantity: item.quantity.toDouble());
+        success++;
       } catch (_) {
         failed++;
       }

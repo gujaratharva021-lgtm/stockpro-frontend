@@ -181,7 +181,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
                                 final h = _holdings[index];
                                 final name = (h['name'] ?? h['commodity_name'] ?? '-').toString();
                                 final units = (h['units'] ?? h['quantity'] ?? 0).toString();
-                                final invested = (h['invested_amount'] as num?)?.toDouble() ?? 0.0;
+                                final invested = ((h['quantity'] as num?)?.toDouble() ?? 0.0) * ((h['avg_price'] as num?)?.toDouble() ?? 0.0);
                                 final currentValue = (h['current_value'] as num?)?.toDouble() ?? invested;
                                 final pnl = currentValue - invested;
                                 final isUp = pnl >= 0;

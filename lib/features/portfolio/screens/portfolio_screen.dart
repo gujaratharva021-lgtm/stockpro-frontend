@@ -158,8 +158,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   });
 
   double get _mfInvested => _myFunds.fold(0.0, (sum, f) {
-    final qty = (f['quantity'] as num?)?.toDouble() ?? 0;
-    final avg = (f['avg_price'] as num?)?.toDouble() ?? 0;
+    final qty = (f['units'] as num?)?.toDouble() ?? 0;
+    final avg = (f['avg_nav'] as num?)?.toDouble() ?? 0;
     return sum + qty * avg;
   });
 
@@ -882,7 +882,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                     const SizedBox(height: 6),
                     Text(
                       type == 'Regular'
-                          ? 'Qty: ${data['quantity']} ? Avg ₹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
+                          ? 'Qty: ${data['quantity']} \u2022 Avg ₹${(data['avg_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'MTF'
                           ? 'Qty: ${data['quantity']} • Entry ₹${(data['entry_price'] as num?)?.toStringAsFixed(2)}'
                           : type == 'Futures'
@@ -1289,8 +1289,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           delegate: SliverChildBuilderDelegate(
                 (context, index) {
               final f = _myFunds[index];
-              final qty = (f['quantity'] as num?)?.toDouble() ?? 0;
-              final avg = (f['avg_price'] as num?)?.toDouble() ?? 0;
+              final qty = (f['units'] as num?)?.toDouble() ?? 0;
+              final avg = (f['avg_nav'] as num?)?.toDouble() ?? 0;
               final invested = qty * avg;
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -1308,7 +1308,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         ],
                       ),
                     ),
-                    Text('₹${invested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text('\u20B9${invested.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                   ],
                 ),
               );

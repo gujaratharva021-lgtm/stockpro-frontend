@@ -112,8 +112,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   });
 
   double get _mfInvested => _myFunds.fold(0.0, (sum, f) {
-    final qty = (f['quantity'] as num?)?.toDouble() ?? 0;
-    final avg = (f['avg_price'] as num?)?.toDouble() ?? 0;
+    final qty = (f['units'] as num?)?.toDouble() ?? 0;
+    final avg = (f['avg_nav'] as num?)?.toDouble() ?? 0;
     return sum + qty * avg;
   });
 
