@@ -48,7 +48,7 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
 
   void _startPolling() {
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+    _pollTimer = Timer.periodic(const Duration(seconds: 7), (_) async {
       if (_code == null) return;
       try {
         final dio = Dio();
@@ -63,6 +63,13 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
         } else if (status == 'expired') {
           _pollTimer?.cancel();
           if (mounted) setState(() => _status = 'expired');
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 429) {
+          _pollTimer?.cancel();
+          Future.delayed(const Duration(seconds: 20), () {
+            if (mounted && _status == 'pending') _startPolling();
+          });
         }
       } catch (_) {}
     });
