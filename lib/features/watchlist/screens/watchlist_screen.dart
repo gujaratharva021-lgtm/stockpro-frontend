@@ -166,13 +166,17 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 
+  int _loadSeq = 0;
+
   Future<void> _load() async {
+    final seq = ++_loadSeq;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final data = await ApiService.getWatchlist(listName: _selectedList);
+      if (seq != _loadSeq) return;
       if (mounted) setState(() => _watchlist = data);
 
       for (final item in data) {

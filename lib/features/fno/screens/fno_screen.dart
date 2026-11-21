@@ -44,21 +44,31 @@ class _FnOScreenState extends State<FnOScreen> {
     }
   }
 
+  bool _closingPosition = false;
+
   Future<void> _closeFutures(Map<String, dynamic> position) async {
+    if (_closingPosition) return;
+    _closingPosition = true;
     try {
       await ApiService.closeFutures(position['id'], position['symbol']);
+      _closingPosition = false;
       _load();
     } catch (_) {
+      _closingPosition = false;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not close position')));
     }
   }
 
   Future<void> _closeOption(Map<String, dynamic> position) async {
+    if (_closingPosition) return;
+    _closingPosition = true;
     try {
       await ApiService.closeOption(position['id'], position['symbol']);
+      _closingPosition = false;
       _load();
     } catch (_) {
+      _closingPosition = false;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not close position')));
     }
