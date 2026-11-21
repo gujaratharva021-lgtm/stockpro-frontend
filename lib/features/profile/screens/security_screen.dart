@@ -54,25 +54,31 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       setS(() => error = 'Passwords do not match');
                       return;
                     }
-                    if (newController.text.length < 6) {
-                      setS(() => error = 'Password must be at least 6 characters');
+                    if (newController.text.length < 12) {
+                      setS(() => error = 'Password must be at least 12 characters');
                       return;
                     }
                     setS(() { saving = true; error = null; });
                     try {
                       final token = await ApiService.getToken();
                       final dio = Dio();
-                      await dio.patch(
+                      final res = await dio.patch(
                         '${ApiService.baseUrl}/auth/change-password',
                         data: {'current_password': currentController.text, 'new_password': newController.text},
                         options: Options(headers: {'Authorization': 'Bearer $token'}),
                       );
+                      final newToken = res.data is Map ? res.data['token'] : null;
+                      if (newToken is String && newToken.isNotEmpty) await ApiService.saveToken(newToken);
                       if (!ctx.mounted) return;
                       Navigator.pop(ctx);
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed successfully'), backgroundColor: AppColors.success));
+                    } on DioException catch (e) {
+                      final d = e.response?.data;
+                      final msg = (d is Map && d['error'] != null) ? d['error'].toString() : 'Could not change password';
+                      setS(() { saving = false; error = msg; });
                     } catch (_) {
-                      setS(() { saving = false; error = 'Incorrect current password'; });
+                      setS(() { saving = false; error = 'Could not change password'; });
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
