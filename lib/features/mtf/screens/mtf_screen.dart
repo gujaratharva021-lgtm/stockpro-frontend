@@ -143,10 +143,10 @@ class _MtfScreenState extends State<MtfScreen> {
                                 itemCount: _filtered.length,
                                 itemBuilder: (context, index) {
                                   final p = _filtered[index];
-                                  final qty = (p['quantity'] as num).toDouble();
-                                  final entryPrice = (p['entry_price'] as num).toDouble();
-                                  final margin = (p['margin_paid'] as num).toDouble();
-                                  final borrowed = (p['borrowed_amount'] as num).toDouble();
+                                  final qty = ((p['quantity'] as num?) ?? 0).toDouble();
+                                  final entryPrice = ((p['entry_price'] as num?) ?? 0).toDouble();
+                                  final margin = ((p['margin_paid'] as num?) ?? 0).toDouble();
+                                  final borrowed = ((p['borrowed_amount'] as num?) ?? 0).toDouble();
                                   return GestureDetector(
                                     onTap: _showOpen
                                         ? () async {

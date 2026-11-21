@@ -96,8 +96,8 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
     }
     setState(() => _upiError = null);
 
-    final lotSize = _ipo!['lot_size'] as int;
-    final priceHigh = (_ipo!['price_band_high'] as num).toDouble();
+    final lotSize = ((_ipo!['lot_size'] as num?) ?? 1).toInt();
+    final priceHigh = ((_ipo!['price_band_high'] as num?) ?? 0).toDouble();
     final amount = _lots * lotSize * priceHigh;
 
     final confirmed = await showDialog<bool>(
@@ -179,7 +179,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
     final color = _statusColor(status);
     final priceLow = (ipo['price_band_low'] as num?)?.toDouble() ?? 0.0;
     final priceHigh = (ipo['price_band_high'] as num?)?.toDouble() ?? 0.0;
-    final lotSize = ipo['lot_size'] ?? 1;
+    final lotSize = ((ipo['lot_size'] as num?) ?? 1).toInt();
     final isOpen = status == 'open';
     final aboutText = ipo['about_text'] as String?;
     final strengths = (ipo['strengths'] as List<dynamic>?)?.cast<String>();
@@ -353,7 +353,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
                           child: Column(
                             children: [
                               Text('$_lots', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 20)),
-                              Text('${_lots * (lotSize as int)} shares', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                              Text('${_lots * lotSize} shares', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                             ],
                           ),
                         ),

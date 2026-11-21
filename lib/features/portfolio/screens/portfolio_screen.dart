@@ -166,7 +166,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   });
 
   // ignore: unused_element
-  double get _todayReturnsPct => _stocksCurrent > 0 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
+  double get _todayReturnsPct => (_stocksCurrent - _todayReturns).abs() > 0.0001 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
 
   int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.length + _options.length;
 

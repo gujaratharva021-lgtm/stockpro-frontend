@@ -24,8 +24,8 @@ class _FdInvestScreenState extends State<FdInvestScreen> {
       : (widget.product!['interest_rate'] as num).toDouble();
 
   int get _tenure => _isWithdraw
-      ? widget.investment!['tenure_months'] as int
-      : widget.product!['tenure_months'] as int;
+      ? (widget.investment!['tenure_months'] as num).toInt()
+      : (widget.product!['tenure_months'] as num).toInt();
 
   double get _previewMaturity {
     final amount = double.tryParse(_amountController.text) ?? 0;

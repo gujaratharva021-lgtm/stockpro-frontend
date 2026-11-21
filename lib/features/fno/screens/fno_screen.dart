@@ -216,7 +216,7 @@ class _FnOScreenState extends State<FnOScreen> {
   Widget _futuresCard(Map<String, dynamic> p) {
     final isOpen = p['status'] == 'OPEN';
     final isLong = p['position_type'] == 'LONG';
-    final pnl = p['pnl'] != null ? (p['pnl'] as num).toDouble() : null;
+    final pnl = p['pnl'] != null ? ((p['pnl'] as num?) ?? 0).toDouble() : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -253,7 +253,7 @@ class _FnOScreenState extends State<FnOScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Lot: ${p['lot_size']} · Entry: ₹${(p['entry_price'] as num).toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              Text('Lot: ${p['lot_size']} · Entry: ₹${((p['entry_price'] as num?) ?? 0).toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               if (pnl != null)
                 Text(
                   '₹${pnl.toStringAsFixed(2)}',
@@ -281,7 +281,7 @@ class _FnOScreenState extends State<FnOScreen> {
   Widget _optionCard(Map<String, dynamic> p) {
     final isOpen = p['status'] == 'OPEN';
     final isCall = p['option_type'] == 'CALL';
-    final pnl = p['pnl'] != null ? (p['pnl'] as num).toDouble() : null;
+    final pnl = p['pnl'] != null ? ((p['pnl'] as num?) ?? 0).toDouble() : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -315,7 +315,7 @@ class _FnOScreenState extends State<FnOScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Text('Strike: ₹${(p['strike_price'] as num).toStringAsFixed(2)} · Premium: ₹${(p['premium'] as num).toStringAsFixed(2)} · Lot: ${p['lot_size']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          Text('Strike: ₹${((p['strike_price'] as num?) ?? 0).toStringAsFixed(2)} · Premium: ₹${((p['premium'] as num?) ?? 0).toStringAsFixed(2)} · Lot: ${p['lot_size']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           Text('Expiry: ${(p['expiry_date'] ?? '').toString().split('T').first}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
           if (pnl != null) ...[
             const SizedBox(height: 6),

@@ -30,16 +30,16 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   Future<void> _load() async {
     try {
       final data = await ApiService.getPerformance();
-      final points = (data['performance'] as List);
+      final points = ((data['performance'] as List?) ?? []);
       points.sort((a, b) => a['date'].compareTo(b['date']));
       if (mounted) setState(() {
         _rawDates = points.map((p) => DateTime.parse(p['date'].toString())).toList();
-        _rawValues = points.map((p) => (p['value'] as num).toDouble()).toList();
+        _rawValues = points.map((p) => ((p['value'] as num?) ?? 0).toDouble()).toList();
         _loading = false;
       });
     } catch (e) {
       debugPrint('Performance load error: $e');
-      setState(() { _error = 'Failed to load performance'; _loading = false; });
+      if (mounted) setState(() { _error = 'Failed to load performance'; _loading = false; });
     }
   }
 

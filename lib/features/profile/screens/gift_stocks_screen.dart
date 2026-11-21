@@ -305,7 +305,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: _statusColor(status).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-                child: Text(status[0].toUpperCase() + status.substring(1),
+                child: Text(status.isEmpty ? '' : status[0].toUpperCase() + status.substring(1),
                     style: TextStyle(color: _statusColor(status), fontSize: 11, fontWeight: FontWeight.bold)),
               ),
             ],

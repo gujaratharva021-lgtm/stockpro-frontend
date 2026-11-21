@@ -113,9 +113,9 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
         itemCount: _products.length,
         itemBuilder: (context, index) {
           final p = _products[index];
-          final rate = (p['interest_rate'] as num).toDouble();
-          final tenure = p['tenure_months'] as int;
-          final insured = (p['insured_upto'] as num).toDouble();
+          final rate = ((p['interest_rate'] as num?) ?? 0).toDouble();
+          final tenure = ((p['tenure_months'] as num?) ?? 0).toInt();
+          final insured = ((p['insured_upto'] as num?) ?? 0).toDouble();
           final isTaxSaving = p['is_tax_saving'] as bool? ?? false;
           Color bankColor;
           try {
@@ -151,7 +151,7 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
                         decoration: BoxDecoration(color: bankColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
                         child: Center(
                           child: Text(
-                            (p['bank_name'] as String).isNotEmpty ? (p['bank_name'] as String).substring(0, 1) : '?',
+                            (p['bank_name'] ?? '').toString().isNotEmpty ? p['bank_name'].toString().substring(0, 1) : '?',
                             style: TextStyle(color: bankColor, fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                         ),
@@ -240,10 +240,10 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
         itemCount: _investments.length,
         itemBuilder: (context, index) {
           final inv = _investments[index];
-          final principal = (inv['principal'] as num).toDouble();
-          final maturityAmount = (inv['maturity_amount'] as num).toDouble();
-          final rate = (inv['interest_rate'] as num).toDouble();
-          final status = inv['status'] as String;
+          final principal = ((inv['principal'] as num?) ?? 0).toDouble();
+          final maturityAmount = ((inv['maturity_amount'] as num?) ?? 0).toDouble();
+          final rate = ((inv['interest_rate'] as num?) ?? 0).toDouble();
+          final status = (inv['status'] ?? '').toString();
           final isActive = status == 'active';
 
           return GestureDetector(

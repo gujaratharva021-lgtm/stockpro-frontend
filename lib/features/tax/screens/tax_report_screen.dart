@@ -179,7 +179,7 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
 
   Widget _gainCard(Map<String, dynamic> g) {
     final isLtcg = g['type'] == 'LTCG';
-    final gain = (g['gain'] as num).toDouble();
+    final gain = ((g['gain'] as num?) ?? 0).toDouble();
     final isProfit = gain >= 0;
 
     return Container(
