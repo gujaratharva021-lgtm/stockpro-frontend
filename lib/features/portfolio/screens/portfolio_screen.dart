@@ -113,9 +113,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         _symbolByStockId = symbolMap;
       });
 
-      for (final h in holdings) {
+      final seenSymbols = <String>{};
+      for (final h in [...holdings, ...unsettledPositions]) {
         final symbol = h['symbol'];
-        if (symbol == null) continue;
+        if (symbol == null || !seenSymbols.add(symbol.toString())) continue;
         try {
           final quote = await ApiService.getQuote(symbol);
           if (mounted) setState(() => _quotes[symbol] = quote);
@@ -164,12 +165,14 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   double get _unsettledValue => _unsettledPositions.fold(0.0, (sum, p) {
     final qty = (p['quantity'] as num?)?.toDouble() ?? 0;
     final avg = (p['avg_price'] as num?)?.toDouble() ?? 0;
-    return sum + qty * avg;
+    final quote = _quotes[p['symbol']];
+    final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+    return sum + qty * price;
   });
   double get _totalCurrentValue => _stocksCurrent + _mfInvested + _etfInvested + _unsettledValue + _balance;
   double get _unsettledInvested => _unsettledPositions.fold(0.0, (sum, p) => sum + ((p['quantity'] as num?)?.toDouble() ?? 0) * ((p['avg_price'] as num?)?.toDouble() ?? 0));
   double get _totalInvested => _stocksInvested + _unsettledInvested + _mfInvested + _etfInvested;
-  double get _totalReturns => _stocksCurrent - _stocksInvested; // MF/ETF current==invested (no live NAV yet)
+  double get _totalReturns => (_stocksCurrent + _unsettledValue) - (_stocksInvested + _unsettledInvested); // MF/ETF current==invested (no live NAV yet)
   // ignore: unused_element
   double get _totalReturnsPct => _totalInvested > 0 ? (_totalReturns / _totalInvested) * 100 : 0;
 
@@ -656,7 +659,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       return [PieChartSectionData(value: 1, color: AppColors.border, showTitle: false, radius: 18)];
     }
     final parts = [
-      {'value': _stocksCurrent, 'color': AppColors.success},
+      {'value': _stocksCurrent + _unsettledValue, 'color': AppColors.success},
       {'value': _mfInvested, 'color': const Color(0xFF1E88E5)},
       {'value': _etfInvested, 'color': const Color(0xFF8E24AA)},
       {'value': _balance, 'color': AppColors.primary},
