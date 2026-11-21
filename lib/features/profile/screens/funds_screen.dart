@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -36,6 +36,9 @@ class _FundsScreenState extends State<FundsScreen> {
     super.dispose();
   }
 
+  bool _withdrawing = false;
+  bool _startingPayment = false;
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
@@ -44,12 +47,18 @@ class _FundsScreenState extends State<FundsScreen> {
       double payin = 0, payout = 0;
       for (final t in history) {
         final amt = (t['amount'] as num?)?.toDouble() ?? 0;
+        final desc = (t['description'] ?? '').toString();
         if (t['type'] == 'credit') {
-          payin += amt;
+          if (desc == 'Withdrawal refund') {
+            payout -= amt;
+          } else {
+            payin += amt;
+          }
         } else {
           payout += amt;
         }
       }
+      if (!mounted) return;
       setState(() {
         _user = res['user'];
         _totalPayin = payin;
@@ -103,6 +112,8 @@ class _FundsScreenState extends State<FundsScreen> {
   }
 
   Future<void> _startAddFunds(double amount) async {
+    if (_startingPayment) return;
+    _startingPayment = true;
     try {
       final order = await ApiService.createPaymentOrder(amount);
       _pendingAmount = amount;
@@ -123,7 +134,9 @@ class _FundsScreenState extends State<FundsScreen> {
       };
 
       _razorpay.open(options);
+      _startingPayment = false;
     } catch (e) {
+      _startingPayment = false;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not start payment. Please try again.'), backgroundColor: AppColors.danger),
@@ -232,9 +245,12 @@ class _FundsScreenState extends State<FundsScreen> {
                     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Insufficient balance')));
                     return;
                   }
+                  if (_withdrawing) return;
+                  _withdrawing = true;
                   Navigator.pop(ctx);
                   try {
                     await ApiService.withdrawFunds(amt);
+                    _withdrawing = false;
                     await _load();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -242,6 +258,7 @@ class _FundsScreenState extends State<FundsScreen> {
                       );
                     }
                   } catch (e) {
+                    _withdrawing = false;
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Withdrawal failed'), backgroundColor: AppColors.danger),
