@@ -126,7 +126,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ApiService.getMe(),
         ApiService.getBalance(),
         ApiService.getStocks(),
-        ApiService.getIPOs(),
       ]);
 
       final me = results[0] as Map<String, dynamic>;

@@ -63,9 +63,14 @@ class _LoginScreenState extends State<LoginScreen> {
       const storage = FlutterSecureStorage();
       await storage.write(key: 'auth_token', value: res['token']);
       WebSocketService.connect();
-      if (mounted) context.go('/dashboard');
+      var kycDone = true;
+      try {
+        final me = await ApiService.getMe();
+        kycDone = (me['user'] ?? {})['kyc_completed'] == true;
+      } catch (_) {}
+      if (mounted) context.go(kycDone ? '/dashboard' : '/onboarding');
     } on DioException catch (e) {
-      setState(() => _error = e.response?.data?['error']?.toString() ?? 'Login failed');
+      if (mounted) setState(() => _error = e.response?.data?['error']?.toString() ?? 'Login failed');
     } catch (e) {
       if (mounted) setState(() => _error = 'Something went wrong');
     } finally {
