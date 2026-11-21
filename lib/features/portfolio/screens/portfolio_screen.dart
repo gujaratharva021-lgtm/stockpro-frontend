@@ -105,9 +105,10 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         _options = options;
       });
 
-      for (final h in holdings) {
+      final seenSymbols = <String>{};
+      for (final h in [...holdings, ...unsettledPositions]) {
         final symbol = h['symbol'];
-        if (symbol == null) continue;
+        if (symbol == null || !seenSymbols.add(symbol.toString())) continue;
         try {
           final quote = await ApiService.getQuote(symbol);
           if (mounted) setState(() => _quotes[symbol] = quote);
@@ -125,6 +126,20 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  double get _unsettledInvested => _unsettledPositions.fold(0.0, (sum, p) {
+    final qty = (p['quantity'] as num?)?.toDouble() ?? 0;
+    final avg = (p['avg_price'] as num?)?.toDouble() ?? 0;
+    return sum + qty * avg;
+  });
+
+  double get _unsettledCurrent => _unsettledPositions.fold(0.0, (sum, p) {
+    final qty = (p['quantity'] as num?)?.toDouble() ?? 0;
+    final avg = (p['avg_price'] as num?)?.toDouble() ?? 0;
+    final quote = _quotes[p['symbol']];
+    final price = quote != null ? (quote['price'] as num?)?.toDouble() ?? avg : avg;
+    return sum + qty * price;
+  });
 
   double get _stocksInvested => _holdings.fold(0.0, (sum, h) {
     final qty = (h['quantity'] as num?)?.toDouble() ?? 0;
@@ -152,9 +167,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     return sum + qty * avg;
   });
 
-  double get _totalCurrentValue => _stocksCurrent + _mfInvested + _etfInvested + _balance;
-  double get _totalInvested => _stocksInvested + _mfInvested + _etfInvested;
-  double get _totalReturns => _stocksCurrent - _stocksInvested; // MF/ETF current==invested (no live NAV yet)
+  double get _totalCurrentValue => _stocksCurrent + _unsettledCurrent + _mfInvested + _etfInvested + _balance;
+  double get _totalInvested => _stocksInvested + _unsettledInvested + _mfInvested + _etfInvested;
+  double get _totalReturns => (_stocksCurrent + _unsettledCurrent) - (_stocksInvested + _unsettledInvested); // MF/ETF current==invested (no live NAV yet)
   // ignore: unused_element
   double get _totalReturnsPct => _totalInvested > 0 ? (_totalReturns / _totalInvested) * 100 : 0;
 
@@ -168,7 +183,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   // ignore: unused_element
   double get _todayReturnsPct => (_stocksCurrent - _todayReturns).abs() > 0.0001 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
 
-  int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.length + _options.length;
+  int get _positionsCount => _unsettledPositions.length + _mtfPositions.where((p) => p['status'] == 'open').length + _futures.length + _options.length;
 
   String _sortBy = 'default';
 
@@ -617,7 +632,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       return [PieChartSectionData(value: 1, color: AppColors.border, showTitle: false, radius: 18)];
     }
     final parts = [
-      {'value': _stocksCurrent, 'color': AppColors.success},
+      {'value': _stocksCurrent + _unsettledCurrent, 'color': AppColors.success},
       {'value': _mfInvested, 'color': const Color(0xFF1E88E5)},
       {'value': _etfInvested, 'color': const Color(0xFF8E24AA)},
       {'value': _balance, 'color': AppColors.primary},
