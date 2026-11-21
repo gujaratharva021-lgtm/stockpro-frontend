@@ -904,6 +904,33 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
           ],
         ),
       ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(child: SizedBox(height: 46, child: ElevatedButton(
+                  onPressed: price == null ? null : () => _showOrderTicket('buy'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)), padding: EdgeInsets.zero),
+                  child: const Text('Buy', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                ))),
+                const SizedBox(width: 8),
+                Expanded(child: SizedBox(height: 46, child: ElevatedButton(
+                  onPressed: price == null ? null : () => _showOrderTicket('sell'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)), padding: EdgeInsets.zero),
+                  child: const Text('Sell', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                ))),
+                const SizedBox(width: 8),
+                SizedBox(height: 46, width: 84, child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)), side: const BorderSide(color: AppColors.border), padding: EdgeInsets.zero),
+                  child: const Text('Options', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
+                )),
+              ],
+            ),
+          ),
+        ),
     );
   }
 
@@ -1200,20 +1227,32 @@ class _StockDetailScreenState extends State<StockDetailScreen> with SingleTicker
           ],
           const SizedBox(height: 24),
 
-          // BUY / SELL buttons
-          Row(children: [
-            Expanded(child: SizedBox(height: 52, child: ElevatedButton(
-              onPressed: price == null ? null : () => _showOrderTicket('buy'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('BUY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            ))),
-            const SizedBox(width: 12),
-            Expanded(child: SizedBox(height: 52, child: ElevatedButton(
-              onPressed: price == null ? null : () => _showOrderTicket('sell'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('SELL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            ))),
-          ]),
+          // Calendar Events
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Calendar Events', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text('No upcoming events', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 90),
         ],
       ),
     );
