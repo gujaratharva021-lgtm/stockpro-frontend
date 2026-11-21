@@ -56,8 +56,9 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
     }
   }
 
-  Future<void> _sendGift(String email, String symbol, String qty, String message) async {
+  Future<void> _sendGift(String email, String symbol, String qty, String message, [void Function(VoidCallback)? setSheetState]) async {
     setState(() => _saving = true);
+    setSheetState?.call(() {});
     try {
       final dio = Dio();
       final token = await ApiService.getToken();
@@ -86,6 +87,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
       }
     } finally {
       if (mounted) setState(() => _saving = false);
+      try { setSheetState?.call(() {}); } catch (_) {}
     }
   }
 
@@ -229,7 +231,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
                           );
                           return;
                         }
-                        _sendGift(email, symbol.toUpperCase(), qty, messageCtrl.text.trim());
+                        _sendGift(email, symbol.toUpperCase(), qty, messageCtrl.text.trim(), setSheetState);
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                       child: _saving
