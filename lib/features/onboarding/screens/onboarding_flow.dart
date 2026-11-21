@@ -115,7 +115,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       await ApiService.completeKYC();
       if (mounted) context.go('/kyc-success');
     } catch (_) {
-      if (mounted) context.go('/kyc-success');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not submit KYC. Please try again.')));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
