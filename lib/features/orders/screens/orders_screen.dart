@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -44,35 +44,43 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   }
 
   Future<void> _loadAll() async {
-    setState(() => _loading = true);
-    try {
-      final results = await Future.wait([
-        ApiService.getPendingOrders(),
-        ApiService.getSIPs(),
-        ApiService.getAlerts(),
-        ApiService.getStocks(),
-        ApiService.getTransactions(),
-      ]);
-      final stocks = results[3];
-      final map = <String, String>{};
-      for (final s in stocks) {
-        if (s['id'] != null && s['symbol'] != null) map[s['id']] = s['symbol'];
+    if (mounted) setState(() => _loading = true);
+    var failed = 0;
+    Future<List<dynamic>> safe(Future<List<dynamic>> f) async {
+      try {
+        return await f;
+      } catch (_) {
+        failed++;
+        return <dynamic>[];
       }
-      if (mounted) {
-        setState(() {
-          _pendingOrders = results[0];
-          _transactions = results[4];
-          _sips = results[1];
-          _alerts = results[2];
-          _symbolByStockId = map;
-        });
-      }
-    } catch (_) {
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    }
+
+    final results = await Future.wait([
+      safe(ApiService.getPendingOrders()),
+      safe(ApiService.getSIPs()),
+      safe(ApiService.getAlerts()),
+      safe(ApiService.getStocks()),
+      safe(ApiService.getTransactions()),
+    ]);
+    final map = <String, String>{};
+    for (final s in results[3]) {
+      if (s['id'] != null && s['symbol'] != null) map[s['id']] = s['symbol'];
+    }
+    if (!mounted) return;
+    setState(() {
+      _pendingOrders = results[0];
+      _transactions = results[4];
+      _sips = results[1];
+      _alerts = results[2];
+      _symbolByStockId = map;
+      _loading = false;
+    });
+    if (failed > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(failed == 5 ? 'Could not load orders' : 'Some data could not be loaded. Pull to refresh.')),
+      );
     }
   }
-
   Future<void> _cancelOrder(String orderId) async {
     try {
       await ApiService.cancelPendingOrder(orderId);
