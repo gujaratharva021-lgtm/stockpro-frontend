@@ -636,15 +636,11 @@ class ApiService {
     final res = await dio.get('/stocks/$symbol/about');
     return res.data['about'] as String? ?? '';
   }
-	static Future<String> askAssistant(String message, {List<Map<String, String>> history = const []}) async {
-		try {
-			final dio = await _authDio();
-			final res = await dio.post('/assistant/chat', data: {'message': message, 'history': history});
-			return res.data['reply'] as String? ?? 'No response';
-		} catch (e) {
-			return 'Error: $e';
-		}
-	}
+  static Future<String> askAssistant(String message, {List<Map<String, String>> history = const []}) async {
+    final dio = await _authDio();
+    final res = await dio.post('/assistant/chat', data: {'message': message, 'history': history});
+    return res.data['reply'] as String? ?? 'No response';
+  }
   static Future<List<dynamic>> getOptionChain(String symbol, String expiry) async {
     final dio = await _authDio();
     final res = await dio.get('/stocks/$symbol/options', queryParameters: {'expiry': expiry});

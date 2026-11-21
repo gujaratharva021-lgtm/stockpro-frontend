@@ -25,8 +25,8 @@ class _MainShellState extends State<MainShell> {
       case 5: context.go('/dashboard'); break;
       case 2: context.go('/portfolio'); break;
       case 0: context.go('/watchlist'); break;
-      case 1: context.push('/predictions'); break;
-      case 3: context.push('/explore'); break;
+      case 1: context.go('/predictions'); break;
+      case 3: context.go('/explore'); break;
     }
   }
 
