@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
+import 'package:stock_app/core/services/family_service.dart';
+import 'package:stock_app/core/services/notes_service.dart';
 
 class ApiService {
   static const String host = 'adjimrxt3y.ap-south-1.awsapprunner.com';
@@ -30,6 +32,8 @@ class ApiService {
     // the websocket down in one place means no call site can forget it and
     // leave a stale authenticated connection open after the user signs out.
     WebSocketService.disconnect();
+    FamilyService().clear();
+    NotesService().clear();
   }
 
   static bool _interceptorAdded = false;
