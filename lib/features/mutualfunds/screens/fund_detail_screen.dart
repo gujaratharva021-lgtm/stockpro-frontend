@@ -111,6 +111,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
     String frequency = 'monthly';
     DateTime nextDate = DateTime.now().add(const Duration(days: 30));
     final quickAmounts = [500, 1000, 2000, 5000];
+    var starting = false;
 
     showModalBottomSheet(
       context: context,
@@ -250,6 +251,8 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
                       return;
                     }
+                    if (starting) return;
+                    starting = true;
                     try {
                       _pendingSIPAmount = amount;
                       _pendingSIPFrequency = frequency;
@@ -271,6 +274,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
                       };
                       _razorpay.open(options);
                     } catch (_) {
+                      starting = false;
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start SIP. Please try again.')));
                     }
