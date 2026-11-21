@@ -1,6 +1,6 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:csv/csv.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
@@ -25,11 +25,7 @@ class ExportHelper {
     }
 
     final csvData = const ListToCsvConverter().convert(rows);
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/transactions.csv');
-    await file.writeAsString(csvData);
-
-    await Share.shareXFiles([XFile(file.path)], text: 'My transaction history');
+    await Share.shareXFiles([XFile.fromData(Uint8List.fromList(utf8.encode(csvData)), mimeType: 'text/csv', name: 'transactions.csv')], fileNameOverrides: ['transactions.csv'], text: 'My transaction history');
   }
 
   /// Exports a buy/sell transaction statement as a full contract-note-style PDF.
@@ -293,11 +289,8 @@ class ExportHelper {
       ),
     );
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/share_statement.pdf');
-    await file.writeAsBytes(await doc.save());
-
-    await Share.shareXFiles([XFile(file.path)], text: 'My purchase/sale of shares statement');
+    final bytes = await doc.save();
+    await Share.shareXFiles([XFile.fromData(bytes, mimeType: 'application/pdf', name: 'share_statement.pdf')], fileNameOverrides: ['share_statement.pdf'], text: 'My purchase/sale of shares statement');
   }
 
   static pw.Widget _cell(String text, {bool bold = false}) {
@@ -380,10 +373,7 @@ class ExportHelper {
       ),
     );
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/tax_report.pdf');
-    await file.writeAsBytes(await doc.save());
-
-    await Share.shareXFiles([XFile(file.path)], text: 'My tax P&L report');
+    final bytes = await doc.save();
+    await Share.shareXFiles([XFile.fromData(bytes, mimeType: 'application/pdf', name: 'tax_report.pdf')], fileNameOverrides: ['tax_report.pdf'], text: 'My tax P&L report');
   }
 }
