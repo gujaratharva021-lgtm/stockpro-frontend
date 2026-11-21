@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:stock_app/core/models/order.dart';
-import 'package:stock_app/core/services/api_service.dart';
+import 'package:stock_app/core/services/engine_adapter.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
 
 /// Thrown when an order was accepted by the engine but did not reach a
@@ -48,7 +48,7 @@ class OrderService {
     required double quantity,
     double? limitPrice,
   }) async {
-    final data = await ApiService.placeEngineOrder(
+    final data = await EngineAdapter.placeEngineOrder(
       stockId: stockId,
       side: side,
       orderType: orderType,
@@ -115,7 +115,7 @@ class OrderService {
         pollTimer = Timer.periodic(pollInterval, (_) async {
           if (closed) return;
           try {
-            final data = await ApiService.getEngineOrder(order.id);
+            final data = await EngineAdapter.getEngineOrder(order.id);
             final fetched = Order.fromJson(data['order'] as Map<String, dynamic>);
             emit(fetched);
           } catch (_) {
@@ -163,17 +163,17 @@ class OrderService {
   }
 
   static Future<Order> cancel(String orderId) async {
-    final data = await ApiService.cancelEngineOrder(orderId);
+    final data = await EngineAdapter.cancelEngineOrder(orderId);
     return Order.fromJson(data['order'] as Map<String, dynamic>);
   }
 
   static Future<Order> getOrder(String orderId) async {
-    final data = await ApiService.getEngineOrder(orderId);
+    final data = await EngineAdapter.getEngineOrder(orderId);
     return Order.fromJson(data['order'] as Map<String, dynamic>);
   }
 
   static Future<List<Order>> listOrders({int? limit}) async {
-    final list = await ApiService.listEngineOrders(limit: limit);
+    final list = await EngineAdapter.listEngineOrders(limit: limit);
     return list.map((e) => Order.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
