@@ -29,6 +29,8 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
   String? _code;
   String _status = 'loading';
   Timer? _pollTimer;
+  bool _polling = false;
+  int _pollDelaySec = 7;
 
   @override
   void initState() {
@@ -59,8 +61,15 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
 
   void _startPolling() {
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      if (_code == null) return;
+    _pollDelaySec = 7;
+    _scheduleNextPoll();
+  }
+
+  void _scheduleNextPoll() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer(Duration(seconds: _pollDelaySec), () async {
+      if (_code == null || _polling) { if (mounted) _scheduleNextPoll(); return; }
+      _polling = true;
       try {
         final dio = Dio();
         final res = await dio.get('${ApiService.baseUrl}/auth/web-session/status/$_code');
@@ -76,8 +85,18 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
         } else if (status == 'expired') {
           _pollTimer?.cancel();
           if (mounted) setState(() => _status = 'expired');
+        } else {
+          _pollDelaySec = 7;
+          if (mounted) _scheduleNextPoll();
         }
-      } catch (_) {}
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 429) { _pollDelaySec = (_pollDelaySec * 2).clamp(7, 60); } else { _pollDelaySec = 7; }
+        if (mounted) _scheduleNextPoll();
+      } catch (_) {
+        if (mounted) _scheduleNextPoll();
+      } finally {
+        _polling = false;
+      }
     });
   }
 
