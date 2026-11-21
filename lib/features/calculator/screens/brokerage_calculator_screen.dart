@@ -202,7 +202,7 @@ class _BrokerageCalculatorScreenState extends State<BrokerageCalculatorScreen> {
   Widget _typeChip(String type, String label) {
     final isActive = _tradeType == type;
     return GestureDetector(
-      onTap: () => setState(() => _tradeType = type),
+      onTap: () { setState(() { _tradeType = type; _result = null; }); },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
