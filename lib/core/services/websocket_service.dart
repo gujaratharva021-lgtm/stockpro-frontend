@@ -16,9 +16,15 @@ class WebSocketService {
   static bool _connecting = false;
   static bool _wantConnected = false;
   static int _reconnectAttempt = 0;
+  static Timer? _reconnectTimer;
+  static int _connGen = 0;
 
   static final _priceController = StreamController<Map<String, dynamic>>.broadcast();
   static final _orderController = StreamController<Map<String, dynamic>>.broadcast();
+  static final _alertController = StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Raw alert payloads (user_id, symbol, message) pushed when a price alert triggers.
+  static Stream<Map<String, dynamic>> get alertStream => _alertController.stream;
 
   /// Raw price_update payloads (unchanged from before).
   static Stream<Map<String, dynamic>> get priceStream => _priceController.stream;
@@ -37,6 +43,8 @@ class WebSocketService {
   static Future<void> connect() async {
     _wantConnected = true;
     if (_channel != null || _connecting) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     _connecting = true;
     try {
       final ticket = await ApiService.getWsTicket();
@@ -44,11 +52,15 @@ class WebSocketService {
       final uri = Uri.parse(ApiService.wsUrl).replace(queryParameters: {'ticket': ticket});
       final channel = WebSocketChannel.connect(uri);
       _channel = channel;
-      _reconnectAttempt = 0;
+      final gen = ++_connGen;
       channel.stream.listen(
-        _handleMessage,
-        onError: (_) => _handleDisconnect(),
-        onDone: () => _handleDisconnect(),
+        (data) {
+          if (gen != _connGen) return;
+          _reconnectAttempt = 0;
+          _handleMessage(data);
+        },
+        onError: (_) { if (gen == _connGen) _handleDisconnect(); },
+        onDone: () { if (gen == _connGen) _handleDisconnect(); },
         cancelOnError: true,
       );
     } catch (_) {
@@ -69,6 +81,8 @@ class WebSocketService {
         _priceController.add(Map<String, dynamic>.from(payload));
       } else if (type == 'order_update') {
         _orderController.add(Map<String, dynamic>.from(payload));
+      } else if (type == 'alert') {
+        _alertController.add(Map<String, dynamic>.from(payload));
       }
     } catch (_) {
       // ignore malformed messages
@@ -86,13 +100,19 @@ class WebSocketService {
     _reconnectAttempt++;
     final backoffSteps = _reconnectAttempt.clamp(1, 4); // caps the shift below at 2^3
     final delaySeconds = 5 * (1 << (backoffSteps - 1));
-    Future.delayed(Duration(seconds: delaySeconds), () {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(Duration(seconds: delaySeconds), () {
+      _reconnectTimer = null;
       if (_wantConnected && _channel == null) connect();
     });
   }
 
   static void disconnect() {
     _wantConnected = false;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _reconnectAttempt = 0;
+    _connGen++;
     _channel?.sink.close();
     _channel = null;
   }
