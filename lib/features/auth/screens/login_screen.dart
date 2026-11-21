@@ -66,7 +66,9 @@ class _LoginScreenState extends State<LoginScreen> {
       var kycDone = true;
       try {
         final me = await ApiService.getMe();
-        kycDone = (me['user'] ?? {})['kyc_completed'] == true;
+        final u = (me['user'] ?? {}) as Map;
+        final st = (u['kyc_status'] ?? 'none').toString();
+        kycDone = u['kyc_completed'] == true || st == 'pending' || st == 'approved';
       } catch (_) {}
       if (mounted) context.go(kycDone ? '/dashboard' : '/onboarding');
     } on DioException catch (e) {
