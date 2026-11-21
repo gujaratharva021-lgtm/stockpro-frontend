@@ -45,7 +45,7 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
   String _formatDate(dynamic dateStr) {
     if (dateStr == null) return '-';
     try {
-      final d = DateTime.parse(dateStr.toString());
+      final d = DateTime.parse(dateStr.toString()).toLocal();
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       final hh = d.hour.toString().padLeft(2, '0');
       final mm = d.minute.toString().padLeft(2, '0');
