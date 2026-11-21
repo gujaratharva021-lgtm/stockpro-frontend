@@ -87,6 +87,8 @@ class ApiService {
     await clearToken();
   }
   static bool _interceptorAdded = false;
+  /// Set by main.dart; called after a 401 clears the token so the app can send the user back to login.
+  static void Function()? onUnauthorized;
   static Future<Dio> _authDio() async {
     if (!_interceptorAdded) {
       _interceptorAdded = true;
@@ -113,6 +115,7 @@ class ApiService {
             final isPasswordCheck = message.contains('password');
             if (!isPasswordCheck) {
               await clearToken();
+              onUnauthorized?.call();
             }
           }
           handler.next(error);

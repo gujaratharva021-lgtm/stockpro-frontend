@@ -36,6 +36,7 @@ import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
 import 'package:stock_app/features/predictions/screens/predictions_screen.dart';
 import 'package:stock_app/features/explore/screens/explore_screen.dart';
 import 'package:stock_app/features/commodity/screens/commodity_screen.dart';
+import 'package:stock_app/core/services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,12 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init failed: $e');
   }
+  ApiService.onUnauthorized = () {
+    final loc = _router.routerDelegate.currentConfiguration.uri.path;
+    if (loc != '/login' && loc != '/signup' && loc != '/splash' && loc != '/forgot-password' && loc != '/code-login') {
+      _router.go('/login');
+    }
+  };
   runApp(const MyApp());
 }
 
