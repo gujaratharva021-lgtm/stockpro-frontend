@@ -63,8 +63,9 @@ class _FdInvestScreenState extends State<FdInvestScreen> {
     try {
       await ApiService.investFD(widget.product!['id'], amount);
       if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Invested ₹${amount.toStringAsFixed(2)} successfully')),
         );
       }
@@ -83,7 +84,8 @@ class _FdInvestScreenState extends State<FdInvestScreen> {
     try {
       final payout = await ApiService.withdrawFD(widget.investment!['id']);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(
           SnackBar(content: Text('Withdrawn successfully: ₹${payout.toStringAsFixed(2)} credited')),
         );
         Navigator.pop(context, true);

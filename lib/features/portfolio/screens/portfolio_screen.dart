@@ -167,7 +167,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     return sum + qty * avg;
   });
   double get _totalCurrentValue => _stocksCurrent + _mfInvested + _etfInvested + _unsettledValue + _balance;
-  double get _totalInvested => _stocksInvested + _mfInvested + _etfInvested;
+  double get _unsettledInvested => _unsettledPositions.fold(0.0, (sum, p) => sum + ((p['quantity'] as num?)?.toDouble() ?? 0) * ((p['avg_price'] as num?)?.toDouble() ?? 0));
+  double get _totalInvested => _stocksInvested + _unsettledInvested + _mfInvested + _etfInvested;
   double get _totalReturns => _stocksCurrent - _stocksInvested; // MF/ETF current==invested (no live NAV yet)
   // ignore: unused_element
   double get _totalReturnsPct => _totalInvested > 0 ? (_totalReturns / _totalInvested) * 100 : 0;
@@ -180,9 +181,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   });
 
   // ignore: unused_element
-  double get _todayReturnsPct => _stocksCurrent > 0 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
+  double get _todayReturnsPct => (_stocksCurrent - _todayReturns).abs() > 0.0001 ? (_todayReturns / (_stocksCurrent - _todayReturns)) * 100 : 0;
 
-  int get _positionsCount => _mtfPositions.where((p) => p['status'] == 'open').length + _futures.where((p) => p['status'] == 'OPEN').length + _options.where((p) => p['status'] == 'OPEN').length;
+  int get _positionsCount => _unsettledPositions.length + _mtfPositions.where((p) => p['status'] == 'open').length + _futures.where((p) => p['status'] == 'OPEN').length + _options.where((p) => p['status'] == 'OPEN').length;
 
   String _sortBy = 'default';
 
