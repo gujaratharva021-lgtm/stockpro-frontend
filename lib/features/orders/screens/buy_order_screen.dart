@@ -232,6 +232,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       setState(() => _errorMsg = 'Enter a valid quantity');
       return;
     }
+    if (_qty != _qty.truncateToDouble()) {
+      setState(() => _errorMsg = 'Quantity must be a whole number');
+      return;
+    }
     if (_orderType == 'LIMIT' && _price <= 0) {
       setState(() => _errorMsg = 'Enter a valid limit price');
       return;
@@ -265,10 +269,11 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           try {
             await ApiService.createPendingOrder(
               widget.stock['id'],
-              'SELL',
+              isBuy ? 'SELL' : 'BUY',
               'STOP_LOSS',
               _qty,
               slPrice,
+              productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR',
             );
           } catch (_) {
             if (mounted) {
@@ -289,11 +294,12 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
           try {
             await ApiService.createPendingOrder(
               widget.stock['id'],
-              widget.buySell.toUpperCase(),
+              isBuy ? 'SELL' : 'BUY',
               'LIMIT',
               _qty,
               gttPrice,
               isGtt: true,
+              productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR',
             );
           } catch (_) {
             if (mounted) {

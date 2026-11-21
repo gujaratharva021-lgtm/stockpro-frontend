@@ -296,7 +296,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               }
               return await submitMarketOrderAndTrack(stockId: stock['id'], side: buySell.toUpperCase(), quantity: qty, productType: productType);
             } else {
-              await ApiService.createPendingOrder(stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
+              await ApiService.createPendingOrder(stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price, productType: productType);
               return const OrderSubmitResult(status: 'Pending');
             }
           },
@@ -606,7 +606,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
   }
 
-  int get _openOrdersCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
   double get _openOrdersValue => _pendingOrders.where((o) => o['status'] == 'PENDING')
       .fold(0.0, (sum, o) => sum + ((o['quantity'] as num?)?.toDouble() ?? 0) * ((o['trigger_price'] as num?)?.toDouble() ?? 0));
   int get _pendingCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
@@ -629,7 +628,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          Expanded(child: _statItem(_openOrdersCount.toString(), 'Total Orders', AppColors.primary)),
+          Expanded(child: _statItem((_pendingOrders.length + _transactions.length).toString(), 'Total Orders', AppColors.primary)),
           Expanded(child: _statItem('\u20b9${_openOrdersValue.toStringAsFixed(0)}', 'Total Value', AppColors.success)),
           Expanded(child: _statItem(_pendingCount.toString(), 'Pending', AppColors.warning)),
           Expanded(child: _statItem(_transactions.length.toString(), 'Executed', const Color(0xFF7C3AED))),

@@ -305,7 +305,7 @@ class ApiService {
     final res = await dio.get('/pending-orders');
     return res.data['orders'] ?? [];
   }
-  static Future<void> createPendingOrder(String stockId, String buySell, String orderType, double quantity, double triggerPrice, {bool isGtt = false}) async {
+  static Future<void> createPendingOrder(String stockId, String buySell, String orderType, double quantity, double triggerPrice, {bool isGtt = false, String productType = 'REGULAR'}) async {
     final dio = await _authDio();
     await dio.post('/pending-orders', data: {
       'stock_id': stockId,
@@ -314,6 +314,7 @@ class ApiService {
       'quantity': quantity,
       'trigger_price': triggerPrice,
       'is_gtt': isGtt,
+      'product_type': productType,
     });
   }
   static Future<void> cancelPendingOrder(String orderId) async {
