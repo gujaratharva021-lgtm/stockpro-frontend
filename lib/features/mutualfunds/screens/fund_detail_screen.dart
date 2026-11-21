@@ -174,7 +174,7 @@ class _FundDetailScreenState extends State<FundDetailScreenInner> {
               Row(
                 children: quickAmounts.map((amt) => Expanded(
                   child: GestureDetector(
-                    onTap: () { setS(() {}); amountController.text = amt.toString(); },
+                    onTap: () { amountController.text = amt.toString(); setS(() {}); },
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(vertical: 10),
