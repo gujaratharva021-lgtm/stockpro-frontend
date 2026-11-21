@@ -252,8 +252,14 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               title: const Text('Remove from watchlist', style: TextStyle(color: AppColors.danger)),
               onTap: () async {
                 Navigator.pop(ctx);
-                await ApiService.removeFromWatchlist(item['stock_id'] ?? item['id'], listName: _selectedList);
-                _load();
+                try {
+                  await ApiService.removeFromWatchlist(item['stock_id'] ?? item['id'], listName: _selectedList);
+                  if (mounted) _load();
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not remove stock from watchlist')));
+                  }
+                }
               },
             ),
             const SizedBox(height: 8),
