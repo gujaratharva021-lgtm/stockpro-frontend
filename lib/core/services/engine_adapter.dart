@@ -68,7 +68,7 @@ class EngineAdapter {
         }
       };
     }
-    await ApiService.createPendingOrder(stockId, side, orderType, quantity, limitPrice ?? 0);
+    await ApiService.createPendingOrder(stockId, side, orderType, quantity, limitPrice ?? 0, productType: productType);
     final list = await ApiService.getPendingOrders();
     for (final e in list) {
       final m = Map<String, dynamic>.from(e as Map);

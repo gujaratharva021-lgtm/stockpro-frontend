@@ -296,7 +296,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               }
               return await submitMarketOrderAndTrack(stockId: stock['id'], side: buySell.toUpperCase(), quantity: qty, productType: productType);
             } else {
-              await ApiService.createPendingOrder(stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price);
+              await ApiService.createPendingOrder(stock['id'], buySell.toUpperCase(), 'LIMIT', qty, price, productType: productType);
               return const OrderSubmitResult(status: 'Pending');
             }
           },
