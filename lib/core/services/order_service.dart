@@ -128,6 +128,7 @@ class OrderService {
         timeoutTimer = Timer(timeout, () => finish(OrderTrackingTimeout(latest)));
       },
       onCancel: () {
+        closed = true; // stop emit()/finish() from touching the controller after cancel
         wsSub?.cancel();
         pollTimer?.cancel();
         timeoutTimer?.cancel();
