@@ -18,9 +18,9 @@ class _CommodityScreenState extends State<CommodityScreen> {
   bool _loading = true;
   bool _loadingHoldings = false;
   String? _error;
-  int _tab = 0; // 0=Overview, 1=Metals, 2=Energy, 3=Agri, 4=Currency, 5=Holdings
+  int _tab = 0; // 0=Overview, 1=Metals, 2=Energy, 3=Agri, 4=Holdings
 
-  static const List<String> _tabs = ['Overview', 'Metals', 'Energy', 'Agri', 'Currency', 'Holdings'];
+  static const List<String> _tabs = ['Overview', 'Metals', 'Energy', 'Agri', 'Holdings'];
 
   static const Map<String, String> _categoryMap = {
     'GOLD': 'Metals',
@@ -97,7 +97,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
 
   List<dynamic> get _filteredCommodities {
     if (_tab == 0) return _commodities;
-    if (_tab == 5) return []; // Holdings tab uses its own list
+    if (_tab == 4) return []; // Holdings tab uses its own list
     final tabName = _tabs[_tab];
     return _commodities.where((c) {
       final symbol = (c['symbol'] ?? '').toString().toUpperCase();
@@ -164,7 +164,7 @@ class _CommodityScreenState extends State<CommodityScreen> {
 
             const SizedBox(height: 12),
 
-            if (_tab == 5) ...[
+            if (_tab == 4) ...[
               Expanded(
                 child: _loadingHoldings
                     ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
