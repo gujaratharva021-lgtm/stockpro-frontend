@@ -33,6 +33,7 @@ import 'package:stock_app/features/notifications/screens/notifications_screen.da
 import 'package:stock_app/features/smallcase/screens/smallcase_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stock_app/features/mutualfunds/screens/sip_screen.dart';
+import 'package:stock_app/core/services/api_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -49,6 +50,12 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init failed: $e');
   }
+  ApiService.onUnauthorized = () {
+    final loc = _router.routerDelegate.currentConfiguration.uri.path;
+    if (loc != '/login' && loc != '/signup' && loc != '/splash' && loc != '/forgot-password' && loc != '/code-login') {
+      _router.go('/login');
+    }
+  };
   runApp(const MyApp());
 }
 final _router = GoRouter(

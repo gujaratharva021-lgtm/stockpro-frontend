@@ -1,4 +1,4 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
 
@@ -34,6 +34,10 @@ class ApiService {
 
   static bool _interceptorAdded = false;
 
+  /// Set by main.dart; called after a 401 clears the token so the app can
+  /// send the user back to the login screen.
+  static void Function()? onUnauthorized;
+
   static Future<Dio> _authDio() async {
     if (!_interceptorAdded) {
       _interceptorAdded = true;
@@ -60,6 +64,7 @@ class ApiService {
             final isPasswordCheck = message.contains('password');
             if (!isPasswordCheck) {
               await clearToken();
+              onUnauthorized?.call();
             }
           }
           handler.next(error);
