@@ -21,7 +21,19 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _showPassword = false;
   String? _error;
 
+  bool _isStrongPassword(String pw) {
+    return pw.length >= 12 &&
+        RegExp(r'[A-Z]').hasMatch(pw) &&
+        RegExp(r'[a-z]').hasMatch(pw) &&
+        RegExp(r'[0-9]').hasMatch(pw) &&
+        RegExp(r'[^A-Za-z0-9\s]').hasMatch(pw);
+  }
+
   Future<void> _signup() async {
+    if (!_isStrongPassword(_passwordController.text)) {
+      setState(() => _error = 'Password must be at least 12 characters and include uppercase, lowercase, a number, and a special character');
+      return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
       final res = await ApiService.signup(_emailController.text.trim(), _passwordController.text, _nameController.text.trim());
@@ -30,7 +42,7 @@ class _SignupScreenState extends State<SignupScreen> {
       WebSocketService.connect();
       if (mounted) context.go('/onboarding');
     } on DioException catch (e) {
-      setState(() => _error = e.response?.data?['error']?.toString() ?? 'Signup failed');
+      if (mounted) setState(() => _error = e.response?.data?['error']?.toString() ?? 'Signup failed');
     } catch (e) {
       if (mounted) setState(() => _error = 'Something went wrong');
     } finally {
@@ -77,7 +89,7 @@ class _SignupScreenState extends State<SignupScreen> {
           const SizedBox(height: 8),
           _buildField(
             controller: _passwordController,
-            hint: 'Min 6 characters',
+            hint: 'Min 12 chars: Aa, 1, symbol',
             icon: Icons.lock_outline,
             obscure: !_showPassword,
             suffix: IconButton(
