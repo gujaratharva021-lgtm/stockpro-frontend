@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -207,6 +207,10 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
       setState(() => _errorMsg = 'Enter a valid quantity');
       return;
     }
+    if (_qty != _qty.truncateToDouble()) {
+      setState(() => _errorMsg = 'Quantity must be a whole number');
+      return;
+    }
     if (_orderType == 'LIMIT' && _price <= 0) {
       setState(() => _errorMsg = 'Enter a valid limit price');
       return;
@@ -228,7 +232,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         final slPrice = double.tryParse(_stoplossController.text);
         if (slPrice != null && slPrice > 0) {
           try {
-            await ApiService.createPendingOrder(widget.stock['id'], 'SELL', 'STOP_LOSS', _qty, slPrice);
+            await ApiService.createPendingOrder(widget.stock['id'], isBuy ? 'SELL' : 'BUY', 'STOP_LOSS', _qty, slPrice, productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR');
           } catch (_) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -242,7 +246,7 @@ class _OrderTicketScreenState extends State<OrderTicketScreen> {
         final gttPrice = double.tryParse(_gttTargetController.text);
         if (gttPrice != null && gttPrice > 0) {
           try {
-            await ApiService.createPendingOrder(widget.stock['id'], widget.buySell.toUpperCase(), 'LIMIT', _qty, gttPrice, isGtt: true);
+            await ApiService.createPendingOrder(widget.stock['id'], isBuy ? 'SELL' : 'BUY', 'LIMIT', _qty, gttPrice, isGtt: true, productType: _product == 'INTRADAY' ? 'INTRADAY' : 'REGULAR');
           } catch (_) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

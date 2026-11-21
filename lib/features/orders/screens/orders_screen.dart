@@ -341,7 +341,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     if (filterStatus == 'GTT') {
       filtered = _pendingOrders.where((o) => o['is_gtt'] == true).toList();
     } else if (filterStatus == 'EXECUTED') {
-      final executedPending = _pendingOrders.where((o) => o['status'] == 'EXECUTED' && o['is_gtt'] != true).toList();
+      final executedPending = _pendingOrders.where((o) => (o['status'] == 'EXECUTED' || o['status'] == 'CANCELLED' || o['status'] == 'REJECTED') && o['is_gtt'] != true).toList();
       final marketExecuted = _transactions.map((t) => {
         'id': t['id'],
         'stock_id': t['stock_id'],
@@ -605,7 +605,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
   }
 
-  int get _openOrdersCount => _pendingOrders.length;
   double get _openOrdersValue => _pendingOrders
       .fold(0.0, (sum, o) => sum + ((o['quantity'] as num?)?.toDouble() ?? 0) * ((o['trigger_price'] as num?)?.toDouble() ?? 0));
   int get _pendingCount => _pendingOrders.where((o) => o['status'] == 'PENDING').length;
@@ -628,7 +627,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          Expanded(child: _statItem(_openOrdersCount.toString(), 'Total Orders', AppColors.primary)),
+          Expanded(child: _statItem((_pendingOrders.length + _transactions.length).toString(), 'Total Orders', AppColors.primary)),
           Expanded(child: _statItem('\u20b9${_openOrdersValue.toStringAsFixed(0)}', 'Total Value', AppColors.success)),
           Expanded(child: _statItem(_pendingCount.toString(), 'Pending', AppColors.warning)),
           Expanded(child: _statItem(_partialCount.toString(), 'Partial', const Color(0xFF7C3AED))),
