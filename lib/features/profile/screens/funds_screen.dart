@@ -58,6 +58,8 @@ class _FundsScreenState extends State<FundsScreenInner> {
           payin += amt;
         } else if (t['type'] == 'debit' && desc == 'Withdrawal') {
           payout += amt;
+        } else if (t['type'] == 'credit' && desc == 'Withdrawal refund') {
+          payout -= amt;
         }
       }
       double margin = 0;
@@ -71,6 +73,7 @@ class _FundsScreenState extends State<FundsScreenInner> {
           if (p['status'] == 'OPEN') margin += (p['margin_used'] as num?)?.toDouble() ?? 0;
         }
       } catch (_) {}
+      if (!mounted) return;
       setState(() {
         _usedMargin = margin;
         _user = res['user'];
@@ -124,7 +127,12 @@ class _FundsScreenState extends State<FundsScreenInner> {
     }
   }
 
+  bool _withdrawing = false;
+  bool _startingPayment = false;
+
   Future<void> _startAddFunds(double amount) async {
+    if (_startingPayment) return;
+    _startingPayment = true;
     try {
       final order = await ApiService.createPaymentOrder(amount);
       _pendingAmount = amount;
@@ -145,7 +153,9 @@ class _FundsScreenState extends State<FundsScreenInner> {
       };
 
       _razorpay.open(options);
+      _startingPayment = false;
     } catch (e) {
+      _startingPayment = false;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not start payment. Please try again.'), backgroundColor: AppColors.danger),
@@ -254,11 +264,14 @@ class _FundsScreenState extends State<FundsScreenInner> {
                     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Insufficient balance')));
                     return;
                   }
+                  if (_withdrawing) return;
+                  _withdrawing = true;
                   Navigator.pop(ctx);
                   try {
                     final bankId = await _pickBankAccount();
-                    if (bankId == null) return;
+                    if (bankId == null) { _withdrawing = false; return; }
                     await ApiService.withdrawFunds(amt, bankId);
+                    _withdrawing = false;
                     await _load();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -266,6 +279,7 @@ class _FundsScreenState extends State<FundsScreenInner> {
                       );
                     }
                   } catch (e) {
+                    _withdrawing = false;
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(_withdrawError(e)), backgroundColor: AppColors.danger),

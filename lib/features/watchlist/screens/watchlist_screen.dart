@@ -138,13 +138,17 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 
+  int _loadSeq = 0;
+
   Future<void> _load() async {
+    final seq = ++_loadSeq;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final data = await ApiService.getWatchlist(listName: _selectedList);
+      if (seq != _loadSeq || !mounted) return;
       setState(() => _watchlist = data);
 
       for (final item in data) {
@@ -164,7 +168,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         } catch (_) {}
       }
     } catch (e) {
-      debugPrint('Watchlist load error: $e'); debugPrint('Watchlist load error: $e'); debugPrint('Watchlist load error: $e'); setState(() => _error = 'Could not load watchlist');
+      if (mounted && seq == _loadSeq) setState(() => _error = 'Could not load watchlist');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
