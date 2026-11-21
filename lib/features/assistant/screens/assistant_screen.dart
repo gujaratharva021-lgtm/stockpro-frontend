@@ -25,7 +25,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   ];
 
   Future<void> _send(String text) async {
-    if (text.trim().isEmpty) return;
+    if (_loading || text.trim().isEmpty) return;
     _ctrl.clear();
     setState(() {
       _messages.add({'role': 'user', 'text': text.trim()});
@@ -42,10 +42,12 @@ class _AssistantScreenState extends State<AssistantScreen> {
 			final reply = await ApiService.askAssistant(text.trim(), history: historyBeforeThisTurn);
       if (mounted) setState(() => _messages.add({'role': 'ai', 'text': reply}));
     } catch (_) {
-      setState(() => _messages.add({
-        'role': 'ai',
+      if (mounted) {
+        setState(() => _messages.add({
+          'role': 'err',
         'text': 'Sorry, I could not connect to the AI service. Please try again.',
       }));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
       _scrollToBottom();
