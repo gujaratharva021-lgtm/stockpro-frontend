@@ -413,6 +413,8 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
       final revenue = (f['revenue'] as num?)?.toDouble() ?? 0;
       if (assets > maxVal) maxVal = assets;
       if (revenue > maxVal) maxVal = revenue;
+      final patAbs = ((f['profit_after_tax'] as num?)?.toDouble() ?? 0).abs();
+      if (patAbs > maxVal) maxVal = patAbs;
     }
     if (maxVal <= 0) maxVal = 1;
 
@@ -440,7 +442,8 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
   }
 
   Widget _financialBar(double value, double maxVal, Color color) {
-    final fraction = (value / maxVal).clamp(0.03, 1.0);
+    final fraction = (value.abs() / maxVal).clamp(0.03, 1.0);
+    final barColor = value < 0 ? AppColors.danger : color;
     return LayoutBuilder(
       builder: (context, constraints) {
         final barWidth = constraints.maxWidth * 0.75;
@@ -449,7 +452,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
             Container(
               width: barWidth * fraction,
               height: 14,
-              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+              decoration: BoxDecoration(color: barColor, borderRadius: BorderRadius.circular(3)),
             ),
             const SizedBox(width: 8),
             Text(value.toStringAsFixed(2), style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
