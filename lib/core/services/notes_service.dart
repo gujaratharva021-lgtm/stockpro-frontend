@@ -7,6 +7,8 @@ class NotesService {
 
   String? getNote(String symbol) => _notes[symbol];
 
+  void clear() => _notes.clear();
+
   void setNote(String symbol, String note) {
     if (note.trim().isEmpty) {
       _notes.remove(symbol);

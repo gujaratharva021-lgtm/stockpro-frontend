@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stock_app/core/services/websocket_service.dart';
+import 'package:stock_app/core/services/family_service.dart';
+import 'package:stock_app/core/services/notes_service.dart';
 String _demoDate(int days) => DateTime.now().add(Duration(days: days)).toIso8601String();
 
 Map<String, dynamic> _demoIpo(String id, String name, String status, int low, int high, int lot, String size, String exchange, int openDay, int closeDay, String about, List<String> strengths, List<String> risks) => {
@@ -75,6 +77,8 @@ class ApiService {
     // leave a stale authenticated connection open after the user signs out.
     WebSocketService.disconnect();
     for (final h in List<void Function()>.from(logoutHooks)) { h(); }
+    FamilyService().clear();
+    NotesService().clear();
   }
   /// Screens with static/in-memory per-user caches register a reset callback here; it runs on every logout.
   static final List<void Function()> logoutHooks = [];

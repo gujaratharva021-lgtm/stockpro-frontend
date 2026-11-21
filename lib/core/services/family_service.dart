@@ -23,6 +23,8 @@ class FamilyService {
     ));
   }
 
+  void clear() => _members.clear();
+
   void removeMember(String id) {
     _members.removeWhere((m) => m.id == id);
   }
