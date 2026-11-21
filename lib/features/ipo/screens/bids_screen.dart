@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/shared/widgets/overview_sheet.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
@@ -196,6 +196,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
     final priceLow = (ipo['price_band_low'] as num?)?.toStringAsFixed(0) ?? '-';
     final priceHigh = (ipo['price_band_high'] as num?)?.toStringAsFixed(0) ?? '-';
     final isOpen = status == 'open';
+    final isUpcoming = status == 'upcoming';
     final symbolLike = companyName.split(' ').first.toUpperCase();
     final lotSize = ipo['lot_size'];
     final accent = _kAccentColors[index % _kAccentColors.length];
@@ -262,7 +263,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (isOpen)
+                if (isOpen || isUpcoming)
                   ElevatedButton(
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => IpoDetailScreen(ipoId: ipo['id']))),
                     style: ElevatedButton.styleFrom(
@@ -271,12 +272,12 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Pre-apply', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward, color: Colors.white, size: 14),
+                        Text(isOpen ? 'Apply' : 'View', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward, color: Colors.white, size: 14),
                       ],
                     ),
                   )
@@ -350,7 +351,9 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
                 const SizedBox(height: 4),
                 const Text('Get notified about new IPOs and never miss an opportunity.', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                 const SizedBox(height: 10),
-                Container(
+                GestureDetector(
+                  onTap: () => setState(() => _ipoSubTab = 0),
+                  child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
                   child: const Row(
@@ -361,6 +364,7 @@ class _BidsScreenState extends State<BidsScreen> with SingleTickerProviderStateM
                       Icon(Icons.arrow_forward, color: AppColors.primary, size: 14),
                     ],
                   ),
+                ),
                 ),
               ],
             ),
