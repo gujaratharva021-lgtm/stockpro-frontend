@@ -576,12 +576,6 @@ class ApiService {
     );
   }
 
-  static Future<List<dynamic>> getAngelOneHoldings() async {
-    final dio = await _authDio();
-    final res = await dio.get('/portfolio/angelone-holdings');
-    return res.data['holdings'] ?? [];
-  }
-
   static Future<Map<String, dynamic>> createPaymentOrder(double amount) async {
     final dio = await _authDio();
     final res = await dio.post('/payments/create-order', data: {'amount': amount});
