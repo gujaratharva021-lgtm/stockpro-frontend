@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 
@@ -27,10 +27,10 @@ class _MainShellState extends State<MainShell> {
     if (index == widget.currentIndex) return;
     switch (index) {
       case 0: context.go('/watchlist'); break;
-      case 1: context.push('/pending-orders'); break;
+      case 1: context.go('/pending-orders'); break;
       case 2: context.go('/portfolio'); break;
-      case 3: context.push('/ipo'); break;
-      case 4: context.push('/profile'); break;
+      case 3: context.go('/ipo'); break;
+      case 4: context.go('/profile'); break;
       case 5: context.go('/dashboard'); break;
     }
   }
