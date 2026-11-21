@@ -28,7 +28,7 @@ class _NewsScreenState extends State<NewsScreen> {
     });
     try {
       final data = await ApiService.getNews();
-      setState(() => _news = data);
+      if (mounted) setState(() => _news = data);
     } catch (e) {
       setState(() => _error = 'Could not load news');
     } finally {

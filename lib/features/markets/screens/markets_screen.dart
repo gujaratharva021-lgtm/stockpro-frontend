@@ -45,7 +45,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
     });
     try {
       final stocks = await ApiService.getStocks();
-      setState(() => _stocks = stocks);
+      if (mounted) setState(() => _stocks = stocks);
       for (final s in stocks) {
         final symbol = s['symbol'];
         if (symbol == null) continue;
@@ -55,7 +55,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
         } catch (_) {}
       }
     } catch (e) {
-      setState(() => _error = 'Could not load stocks');
+      if (mounted) setState(() => _error = 'Could not load stocks');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

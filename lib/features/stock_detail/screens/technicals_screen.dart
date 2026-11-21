@@ -78,7 +78,7 @@ class _TechnicalsScreenState extends State<TechnicalsScreen> with SingleTickerPr
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    if (mounted) setState(() { _loading = true; _error = null; });
     try {
       List<dynamic> points;
       if (_selectedInterval == 'day') {

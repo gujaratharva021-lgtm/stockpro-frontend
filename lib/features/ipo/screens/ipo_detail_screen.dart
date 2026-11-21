@@ -44,7 +44,7 @@ class _IpoDetailScreenState extends State<IpoDetailScreen> {
     });
     try {
       final ipo = await ApiService.getIPODetail(widget.ipoId);
-      setState(() => _ipo = ipo);
+      if (mounted) setState(() => _ipo = ipo);
     } catch (e) {
       setState(() => _error = 'Could not load IPO details');
     } finally {

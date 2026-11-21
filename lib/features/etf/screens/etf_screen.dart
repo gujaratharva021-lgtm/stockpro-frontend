@@ -30,7 +30,7 @@ class _EtfScreenState extends State<EtfScreen> {
     });
     try {
       final etfs = await ApiService.getETFs();
-      setState(() => _etfs = etfs);
+      if (mounted) setState(() => _etfs = etfs);
     } catch (e) {
       setState(() => _error = 'Could not load ETFs');
     } finally {

@@ -31,7 +31,7 @@ class _MtfScreenState extends State<MtfScreen> {
     });
     try {
       final positions = await ApiService.getMTFPositions();
-      setState(() => _positions = positions);
+      if (mounted) setState(() => _positions = positions);
     } catch (e) {
       setState(() => _error = 'Could not load MTF positions');
     } finally {

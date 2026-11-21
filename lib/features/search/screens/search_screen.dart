@@ -33,7 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _loadAllStocks() async {
     try {
       final stocks = await ApiService.getStocks();
-      setState(() => _allStocks = stocks);
+      if (mounted) setState(() => _allStocks = stocks);
     } catch (_) {}
   }
 

@@ -32,7 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error']?.toString() ?? 'Signup failed');
     } catch (e) {
-      setState(() => _error = 'Something went wrong');
+      if (mounted) setState(() => _error = 'Something went wrong');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

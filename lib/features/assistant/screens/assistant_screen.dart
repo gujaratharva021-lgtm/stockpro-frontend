@@ -40,14 +40,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
 				.toList();
 			final historyBeforeThisTurn = history.isNotEmpty ? history.sublist(0, history.length - 1) : history;
 			final reply = await ApiService.askAssistant(text.trim(), history: historyBeforeThisTurn);
-      setState(() => _messages.add({'role': 'ai', 'text': reply}));
+      if (mounted) setState(() => _messages.add({'role': 'ai', 'text': reply}));
     } catch (_) {
       setState(() => _messages.add({
         'role': 'ai',
         'text': 'Sorry, I could not connect to the AI service. Please try again.',
       }));
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
       _scrollToBottom();
     }
   }

@@ -41,7 +41,7 @@ class _GiftStocksScreenState extends State<GiftStocksScreen> with SingleTickerPr
         dio.get('${ApiService.baseUrl}/auth/gifts/sent', options: headers),
         dio.get('${ApiService.baseUrl}/auth/gifts/received', options: headers),
       ]);
-      setState(() {
+      if (mounted) setState(() {
         _sent = results[0].data['gifts'] ?? [];
         _received = results[1].data['gifts'] ?? [];
       });

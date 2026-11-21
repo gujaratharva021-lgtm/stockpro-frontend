@@ -31,7 +31,7 @@ class _TradebookScreenState extends State<TradebookScreen> {
         '${ApiService.baseUrl}/portfolio/transactions',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() => _transactions = res.data['transactions'] ?? []);
+      if (mounted) setState(() => _transactions = res.data['transactions'] ?? []);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

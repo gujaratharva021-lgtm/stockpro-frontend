@@ -118,7 +118,7 @@ class _OptionChainScreenState extends State<OptionChainScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final chain = await ApiService.getOptionChain(widget.stock['symbol'], _selectedExpiry);
-      setState(() => _optionChain = chain);
+      if (mounted) setState(() => _optionChain = chain);
     } catch (e) {
       setState(() => _error = 'Option chain unavailable right now');
     } finally {

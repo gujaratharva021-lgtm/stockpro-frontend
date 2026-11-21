@@ -70,14 +70,14 @@ class _CommodityScreenState extends State<CommodityScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final commodities = await ApiService.getCommodities();
-      setState(() => _commodities = commodities);
+      if (mounted) setState(() => _commodities = commodities);
       for (final c in commodities) {
         ApiService.getCommodityDetail(c['id']).then((detail) {
           if (mounted) setState(() => _details[c['id']] = detail);
         }).catchError((_) {});
       }
     } catch (e) {
-      setState(() => _error = 'Could not load commodities');
+      if (mounted) setState(() => _error = 'Could not load commodities');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

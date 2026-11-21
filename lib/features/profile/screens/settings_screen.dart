@@ -125,7 +125,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (_biometricAvailable)
                 _menuItemWithToggle(Icons.fingerprint, 'Biometric Login', _biometricEnabled, (val) async {
                   await BiometricService.setEnabled(val);
-                  setState(() => _biometricEnabled = val);
+                  if (mounted) setState(() => _biometricEnabled = val);
                 }),
               _menuItemWithToggle(Icons.remove_red_eye_outlined, 'Privacy Mode', _privacyMode, (val) => PrivacyModeService.enabled.value = val),
               _menuItem(Icons.security_outlined, 'Security', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityScreen()))),

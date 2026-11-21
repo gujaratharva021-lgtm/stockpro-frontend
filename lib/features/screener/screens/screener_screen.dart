@@ -31,7 +31,7 @@ class _ScreenerScreenState extends State<ScreenerScreen> {
     setState(() => _loading = true);
     try {
       final stocks = await ApiService.getStocks();
-      setState(() => _allStocks = stocks);
+      if (mounted) setState(() => _allStocks = stocks);
 
       await Future.wait(stocks.map((s) async {
         try {

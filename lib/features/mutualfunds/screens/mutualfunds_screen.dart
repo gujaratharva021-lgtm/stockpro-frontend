@@ -29,7 +29,7 @@ class _MutualFundsScreenState extends State<MutualFundsScreen> {
     });
     try {
       final funds = await ApiService.getMutualFunds();
-      setState(() => _funds = funds);
+      if (mounted) setState(() => _funds = funds);
     } catch (e) {
       setState(() => _error = 'Could not load mutual funds');
     } finally {

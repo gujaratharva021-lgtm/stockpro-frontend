@@ -33,7 +33,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         '${ApiService.baseUrl}/auth/family',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() => _members = res.data['family_members'] ?? []);
+      if (mounted) setState(() => _members = res.data['family_members'] ?? []);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

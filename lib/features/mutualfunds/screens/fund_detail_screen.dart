@@ -77,7 +77,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
     });
     try {
       final fund = await ApiService.getMutualFundDetail(widget.fundId);
-      setState(() => _fund = fund);
+      if (mounted) setState(() => _fund = fund);
     } catch (e) {
       setState(() => _error = 'Could not load fund details');
     } finally {
@@ -97,7 +97,7 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
     });
     try {
       await ApiService.placeFundOrder(widget.fundId, buySell.toUpperCase(), amount);
-      setState(() => _orderMessage = '${buySell == 'buy' ? 'Invested' : 'Redeemed'} ₹${amount.toStringAsFixed(2)} successfully');
+      if (mounted) setState(() => _orderMessage = '${buySell == 'buy' ? 'Invested' : 'Redeemed'} ₹${amount.toStringAsFixed(2)} successfully');
       _load();
     } catch (e) {
       setState(() => _orderMessage = 'Order failed. ${e.toString().contains('insufficient') ? 'Insufficient balance/units' : 'Please try again'}');

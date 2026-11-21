@@ -35,7 +35,7 @@ class _MarketDepthScreenState extends State<MarketDepthScreen> {
         ApiService.getQuote(symbol),
         ApiService.getHistory(symbol).catchError((_) => []),
       ]);
-      setState(() {
+      if (mounted) setState(() {
         _quote = results[0] as Map<String, dynamic>;
         _history = results[1] as List<dynamic>;
       });

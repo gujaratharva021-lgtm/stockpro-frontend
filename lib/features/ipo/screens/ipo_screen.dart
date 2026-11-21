@@ -27,7 +27,7 @@ class _IpoScreenState extends State<IpoScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final ipos = await ApiService.getIPOs();
-      setState(() => _ipos = ipos);
+      if (mounted) setState(() => _ipos = ipos);
     } catch (e) {
       setState(() => _error = 'Could not load IPOs');
     } finally {

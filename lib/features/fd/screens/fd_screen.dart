@@ -39,12 +39,12 @@ class _FdScreenState extends State<FdScreen> with SingleTickerProviderStateMixin
     try {
       final products = await ApiService.getFDProducts();
       final investments = await ApiService.getFDInvestments();
-      setState(() {
+      if (mounted) setState(() {
         _products = products;
         _investments = investments;
       });
     } catch (e) {
-      setState(() => _error = 'Could not load FD data');
+      if (mounted) setState(() => _error = 'Could not load FD data');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

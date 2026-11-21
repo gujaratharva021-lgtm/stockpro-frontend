@@ -32,13 +32,13 @@ class _FnOScreenState extends State<FnOScreen> {
       final futures = await ApiService.getFutures();
       final options = await ApiService.getOptions();
       final stocks = await ApiService.getStocks();
-      setState(() {
+      if (mounted) setState(() {
         _futures = futures;
         _options = options;
         _stocks = stocks;
       });
     } catch (e) {
-      setState(() => _error = 'Could not load positions');
+      if (mounted) setState(() => _error = 'Could not load positions');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -367,7 +367,7 @@ class _NewPositionSheetState extends State<_NewPositionSheet> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => _StockPicker(stocks: widget.stocks),
     );
-    if (selected != null) setState(() => _selectedStock = selected);
+    if (selected != null && mounted) setState(() => _selectedStock = selected);
   }
 
   Future<void> _pickExpiry() async {
@@ -377,7 +377,7 @@ class _NewPositionSheetState extends State<_NewPositionSheet> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) setState(() => _expiry = picked);
+    if (picked != null && mounted) setState(() => _expiry = picked);
   }
 
   Future<void> _submit() async {

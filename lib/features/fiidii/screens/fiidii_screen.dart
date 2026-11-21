@@ -55,7 +55,7 @@ class _FiiDiiScreenState extends State<FiiDiiScreen> with SingleTickerProviderSt
       );
 
       final data = res.data as List<dynamic>;
-      setState(() {
+      if (mounted) setState(() {
         _fiiData = data.where((e) => e['category']?.toString().toLowerCase().contains('fii') == true || e['category']?.toString().toLowerCase().contains('fpi') == true).toList();
         _diiData = data.where((e) => e['category']?.toString().toLowerCase().contains('dii') == true).toList();
         if (_fiiData.isEmpty && _diiData.isEmpty) {

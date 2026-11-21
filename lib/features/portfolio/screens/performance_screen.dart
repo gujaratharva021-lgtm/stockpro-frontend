@@ -32,7 +32,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       final data = await ApiService.getPerformance();
       final points = (data['performance'] as List);
       points.sort((a, b) => a['date'].compareTo(b['date']));
-      setState(() {
+      if (mounted) setState(() {
         _rawDates = points.map((p) => DateTime.parse(p['date'].toString())).toList();
         _rawValues = points.map((p) => (p['value'] as num).toDouble()).toList();
         _loading = false;

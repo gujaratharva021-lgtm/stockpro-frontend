@@ -53,7 +53,7 @@ class _GttScreenState extends State<GttScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('GTT order created')));
       }
     } catch (e) {
-      setState(() { _submitting = false; _error = 'Could not create GTT order'; });
+      if (mounted) setState(() { _submitting = false; _error = 'Could not create GTT order'; });
     }
   }
 

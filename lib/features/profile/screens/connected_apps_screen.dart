@@ -30,7 +30,7 @@ class _ConnectedAppsScreenState extends State<ConnectedAppsScreen> {
         '${ApiService.baseUrl}/auth/connected-apps',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() => _apps = res.data['connected_apps'] ?? []);
+      if (mounted) setState(() => _apps = res.data['connected_apps'] ?? []);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

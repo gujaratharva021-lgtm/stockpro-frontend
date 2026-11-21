@@ -27,7 +27,7 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
     });
     try {
       final report = await ApiService.getPnLReport();
-      setState(() => _report = report);
+      if (mounted) setState(() => _report = report);
     } catch (_) {
       setState(() => _error = 'Could not load P&L report');
     } finally {

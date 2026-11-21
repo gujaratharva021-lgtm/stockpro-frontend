@@ -28,7 +28,7 @@ class _TaxReportScreenState extends State<TaxReportScreen> {
     });
     try {
       final report = await ApiService.getTaxReport();
-      setState(() => _report = report);
+      if (mounted) setState(() => _report = report);
     } catch (_) {
       setState(() => _error = 'Could not load tax report');
     } finally {

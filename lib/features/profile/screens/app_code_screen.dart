@@ -37,7 +37,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
         '${ApiService.baseUrl}/auth/app-code',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() {
+      if (mounted) setState(() {
         _code = res.data['code'];
         _isActive = res.data['is_active'] ?? true;
         _createdAt = res.data['created_at'] != null ? DateTime.tryParse(res.data['created_at'].toString()) : null;
@@ -63,7 +63,7 @@ class _AppCodeScreenState extends State<AppCodeScreen> {
         '${ApiService.baseUrl}/auth/app-code/regenerate',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() {
+      if (mounted) setState(() {
         _code = res.data['code'];
         _regeneratedAt = DateTime.now();
       });

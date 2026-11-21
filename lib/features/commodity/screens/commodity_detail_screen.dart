@@ -37,7 +37,7 @@ class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
     });
     try {
       final c = await ApiService.getCommodityDetail(widget.commodityId);
-      setState(() => _commodity = c);
+      if (mounted) setState(() => _commodity = c);
     } catch (e) {
       setState(() => _error = 'Could not load commodity details');
     } finally {
@@ -74,7 +74,7 @@ class _CommodityDetailScreenState extends State<CommodityDetailScreen> {
     });
     try {
       await ApiService.placeCommodityOrder(widget.commodityId, buySell.toUpperCase(), amount);
-      setState(() => _orderMessage = '${buySell == 'buy' ? 'Bought' : 'Sold'} ₹${amount.toStringAsFixed(2)} worth successfully');
+      if (mounted) setState(() => _orderMessage = '${buySell == 'buy' ? 'Bought' : 'Sold'} ₹${amount.toStringAsFixed(2)} worth successfully');
       _load();
     } catch (e) {
       String message = 'Order failed. Please try again';

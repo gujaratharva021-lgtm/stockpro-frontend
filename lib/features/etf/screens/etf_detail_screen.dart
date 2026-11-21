@@ -33,7 +33,7 @@ class _EtfDetailScreenState extends State<EtfDetailScreen> {
     });
     try {
       final etf = await ApiService.getETFDetail(widget.etfId);
-      setState(() => _etf = etf);
+      if (mounted) setState(() => _etf = etf);
     } catch (e) {
       setState(() => _error = 'Could not load ETF details');
     } finally {
@@ -53,7 +53,7 @@ class _EtfDetailScreenState extends State<EtfDetailScreen> {
     });
     try {
       await ApiService.placeETFOrder(widget.etfId, buySell.toUpperCase(), amount);
-      setState(() => _orderMessage = '${buySell == 'buy' ? 'Bought' : 'Sold'} ₹${amount.toStringAsFixed(2)} worth successfully');
+      if (mounted) setState(() => _orderMessage = '${buySell == 'buy' ? 'Bought' : 'Sold'} ₹${amount.toStringAsFixed(2)} worth successfully');
       _load();
     } catch (e) {
       String message = 'Order failed. Please try again';

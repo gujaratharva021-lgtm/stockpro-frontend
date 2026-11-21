@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/shared/widgets/main_shell.dart';
@@ -173,7 +173,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     });
     try {
       final data = await ApiService.getWatchlist(listName: _selectedList);
-      setState(() => _watchlist = data);
+      if (mounted) setState(() => _watchlist = data);
 
       for (final item in data) {
         final symbol = item['symbol'];

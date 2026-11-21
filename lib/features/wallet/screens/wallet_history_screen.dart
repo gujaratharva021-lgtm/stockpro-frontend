@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stock_app/core/services/api_service.dart';
 import 'package:stock_app/core/theme/app_colors.dart';
 import 'package:stock_app/core/theme/app_typography.dart';
@@ -24,7 +24,7 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
     setState(() => _loading = true);
     try {
       final txns = await ApiService.getWalletHistory();
-      setState(() => _transactions = txns);
+      if (mounted) setState(() => _transactions = txns);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

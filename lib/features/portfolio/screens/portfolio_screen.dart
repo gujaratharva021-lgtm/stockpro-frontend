@@ -120,7 +120,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         } catch (_) {}
       }
     } catch (e) {
-      setState(() => _error = 'Could not load portfolio');
+      if (mounted) setState(() => _error = 'Could not load portfolio');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

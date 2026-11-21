@@ -56,18 +56,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Future<void> _pickSelfie() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.camera, preferredCameraDevice: CameraDevice.front);
-    if (picked != null) setState(() => _selfieFile = File(picked.path));
+    if (picked != null && mounted) setState(() => _selfieFile = File(picked.path));
   }
 
   Future<void> _pickIncomeProof() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) setState(() => _incomeProofFile = File(picked.path));
+    if (picked != null && mounted) setState(() => _incomeProofFile = File(picked.path));
   }
 
   void _sendOTP() {
     if (_phoneController.text.length != 10) return;
-    setState(() { _otpSent = true; _otpError = null; });
+    if (mounted) setState(() { _otpSent = true; _otpError = null; });
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP sent to your mobile number')));
   }
 

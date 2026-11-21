@@ -41,7 +41,7 @@ class _LinkWebSessionScreenState extends State<LinkWebSessionScreen> {
         data: {'code': code},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() => _success = true);
+      if (mounted) setState(() => _success = true);
     } on DioException catch (e) {
       final msg = e.response?.data?['error']?.toString() ?? 'Could not link session';
       setState(() => _error = msg);

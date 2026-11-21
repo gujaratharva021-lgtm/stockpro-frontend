@@ -36,13 +36,13 @@ class _CodeLoginScreenState extends State<CodeLoginScreen> {
     try {
       final dio = Dio();
       final res = await dio.post('${ApiService.baseUrl}/auth/web-session/create');
-      setState(() {
+      if (mounted) setState(() {
         _code = res.data['code'];
         _status = 'pending';
       });
       _startPolling();
     } catch (_) {
-      setState(() => _status = 'error');
+      if (mounted) setState(() => _status = 'error');
     }
   }
 

@@ -22,7 +22,7 @@ class _KycDocumentsScreenState extends State<KycDocumentsScreen> {
   Future<void> _load() async {
     try {
       final res = await ApiService.getMe();
-      setState(() => _kycDone = res['user']?['kyc_completed'] == true);
+      if (mounted) setState(() => _kycDone = res['user']?['kyc_completed'] == true);
     } catch (_) {}
     finally { if (mounted) setState(() => _loading = false); }
   }

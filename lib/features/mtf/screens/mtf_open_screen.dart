@@ -32,7 +32,7 @@ class _MtfOpenScreenState extends State<MtfOpenScreen> {
     setState(() => _quoteLoading = true);
     try {
       final q = await ApiService.getQuote(widget.stock['symbol']);
-      setState(() => _quote = q);
+      if (mounted) setState(() => _quote = q);
     } catch (e) {
       setState(() => _message = 'Could not load live price');
     } finally {

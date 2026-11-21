@@ -63,7 +63,7 @@ class _FdInvestScreenState extends State<FdInvestScreen> {
         );
       }
     } catch (e) {
-      setState(() => _message = _extractError(e, 'Investment failed'));
+      if (mounted) setState(() => _message = _extractError(e, 'Investment failed'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -83,7 +83,7 @@ class _FdInvestScreenState extends State<FdInvestScreen> {
         Navigator.pop(context, true);
       }
     } catch (e) {
-      setState(() => _message = _extractError(e, 'Withdrawal failed'));
+      if (mounted) setState(() => _message = _extractError(e, 'Withdrawal failed'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

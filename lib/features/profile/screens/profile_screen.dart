@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stock_app/core/services/api_service.dart';
@@ -132,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (picked == null) return;
 
-    setState(() => _uploadingAvatar = true);
+    if (mounted) setState(() => _uploadingAvatar = true);
     try {
       await ApiService.uploadAvatar(picked.path);
       await _load();

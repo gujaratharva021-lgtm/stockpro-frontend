@@ -26,7 +26,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     });
     try {
       final data = await ApiService.getNotifications();
-      setState(() => _notifications = data);
+      if (mounted) setState(() => _notifications = data);
     } catch (e) {
       setState(() => _error = 'Could not load notifications');
     } finally {
@@ -37,7 +37,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _markRead(String id, int index) async {
     try {
       await ApiService.markNotificationRead(id);
-      setState(() {
+      if (mounted) setState(() {
         _notifications[index]['read'] = true;
       });
     } catch (_) {

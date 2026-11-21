@@ -30,7 +30,7 @@ class _CompareScreenState extends State<CompareScreen> {
   Future<void> _loadStocks() async {
     try {
       final stocks = await ApiService.getStocks();
-      setState(() => _allStocks = stocks);
+      if (mounted) setState(() => _allStocks = stocks);
     } catch (_) {}
   }
 
@@ -60,7 +60,7 @@ class _CompareScreenState extends State<CompareScreen> {
     try {
       final quote = await ApiService.getQuote(selected['symbol']);
       final history = await ApiService.getHistory(selected['symbol']);
-      setState(() {
+      if (mounted) setState(() {
         if (isA) {
           _quoteA = quote;
           _historyA = history;

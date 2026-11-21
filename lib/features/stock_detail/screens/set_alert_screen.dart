@@ -43,7 +43,7 @@ class _SetAlertScreenState extends State<SetAlertScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alert created')));
       }
     } catch (e) {
-      setState(() { _submitting = false; _error = 'Could not create alert'; });
+      if (mounted) setState(() { _submitting = false; _error = 'Could not create alert'; });
     }
   }
 

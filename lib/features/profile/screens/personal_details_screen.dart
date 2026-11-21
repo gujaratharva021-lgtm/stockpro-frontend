@@ -41,7 +41,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     try {
       final res = await ApiService.getMe();
       final user = res['user'];
-      setState(() {
+      if (mounted) setState(() {
         _user = user;
         _nameController.text = user['name'] ?? '';
         _emailController.text = user['email'] ?? '';
@@ -60,7 +60,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
         data: {'name': _nameController.text.trim()},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() => _editing = false);
+      if (mounted) setState(() => _editing = false);
       _load();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated successfully'), backgroundColor: AppColors.success));
     } catch (_) {

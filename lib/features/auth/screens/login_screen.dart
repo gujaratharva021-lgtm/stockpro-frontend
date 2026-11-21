@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await BiometricService.authenticate();
     debugPrint('🔐 Biometric result: $success');
     if (!success) return;
-    setState(() { _loading = true; _error = null; });
+    if (mounted) setState(() { _loading = true; _error = null; });
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'auth_token');
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         WebSocketService.connect();
         context.go('/dashboard');
       } else {
-        setState(() => _error = 'No saved session. Please login with password first.');
+        if (mounted) setState(() => _error = 'No saved session. Please login with password first.');
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on DioException catch (e) {
       setState(() => _error = e.response?.data?['error']?.toString() ?? 'Login failed');
     } catch (e) {
-      setState(() => _error = 'Something went wrong');
+      if (mounted) setState(() => _error = 'Something went wrong');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

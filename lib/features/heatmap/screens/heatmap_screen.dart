@@ -25,7 +25,7 @@ class _HeatmapScreenState extends State<HeatmapScreen> {
     setState(() => _loading = true);
     try {
       final stocks = await ApiService.getStocks();
-      setState(() => _stocks = stocks);
+      if (mounted) setState(() => _stocks = stocks);
 
       // Fetch quotes for all stocks in parallel
       await Future.wait(stocks.map((s) async {

@@ -31,7 +31,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
         '${ApiService.baseUrl}/auth/bank-accounts',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      setState(() => _accounts = res.data['bank_accounts'] ?? []);
+      if (mounted) setState(() => _accounts = res.data['bank_accounts'] ?? []);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
