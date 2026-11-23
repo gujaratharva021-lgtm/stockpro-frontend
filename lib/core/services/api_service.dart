@@ -53,7 +53,7 @@ final List<dynamic> kDemoIpos = [
       ['Regulatory pricing controls', 'Dependence on doctors and staff']),
 ];
 class ApiService {
-  static const String host = 'stockpro-backend-jgej.onrender.com';
+  static const String host = 'stock-backend-11rm.onrender.com';
   static const String baseUrl = 'https://$host/api/v1';
   static const String wsUrl = 'wss://$host/ws';
   static final Dio _dio = Dio(BaseOptions(
