@@ -41,6 +41,11 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
     final realizedPnL = (_report?['realized_pnl'] as num?)?.toDouble() ?? 0;
     final unrealizedPnL = (_report?['unrealized_pnl'] as num?)?.toDouble() ?? 0;
     final totalPnL = (_report?['total_pnl'] as num?)?.toDouble() ?? 0;
+    final intradayMtfPnL =
+        (_report?['intraday_mtf_realized_pnl'] as num?)?.toDouble() ?? 0;
+    final mtfInterest =
+        (_report?['mtf_interest_charged'] as num?)?.toDouble() ?? 0;
+    final trades = (_report?['intraday_mtf_trades'] as List<dynamic>?) ?? [];
     final totalInvested = (_report?['total_invested'] as num?)?.toDouble() ?? 0;
     final currentValue = (_report?['current_value'] as num?)?.toDouble() ?? 0;
 
@@ -54,20 +59,31 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: AppColors.textPrimary,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const Text(
-                    'P&L Report',
-                    style: AppTypography.screenTitle,
-                  ),
+                  const Text('P&L Report', style: AppTypography.screenTitle),
                 ],
               ),
             ),
             if (_loading)
-              const Expanded(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
             else if (_error != null)
-              Expanded(child: Center(child: Text(_error!, style: const TextStyle(color: AppColors.textSecondary))))
+              Expanded(
+                child: Center(
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              )
             else
               Expanded(
                 child: RefreshIndicator(
@@ -87,12 +103,20 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Total P&L', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                            const Text(
+                              'Total P&L',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
                             const SizedBox(height: 6),
                             Text(
                               '${totalPnL >= 0 ? '+' : ''}₹${totalPnL.toStringAsFixed(2)}',
                               style: TextStyle(
-                                color: totalPnL >= 0 ? AppColors.success : AppColors.danger,
+                                color: totalPnL >= 0
+                                    ? AppColors.success
+                                    : AppColors.danger,
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -100,9 +124,34 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                Expanded(child: _summaryStat('Realized', realizedPnL)),
+                                Expanded(
+                                  child: _summaryStat('Realized', realizedPnL),
+                                ),
                                 const SizedBox(width: 16),
-                                Expanded(child: _summaryStat('Unrealized', unrealizedPnL)),
+                                Expanded(
+                                  child: _summaryStat(
+                                    'Unrealized',
+                                    unrealizedPnL,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _summaryStat(
+                                    'Intraday/MTF',
+                                    intradayMtfPnL,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _summaryStat(
+                                    'MTF interest (incl.)',
+                                    -mtfInterest,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -127,9 +176,19 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                           child: Center(
                             child: Column(
                               children: [
-                                Icon(Icons.pie_chart_outline, color: AppColors.textMuted, size: 48),
+                                Icon(
+                                  Icons.pie_chart_outline,
+                                  color: AppColors.textMuted,
+                                  size: 48,
+                                ),
                                 SizedBox(height: 12),
-                                Text('No holdings yet', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                                Text(
+                                  'No holdings yet',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -137,10 +196,29 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                       else ...[
                         const Text(
                           'Holdings Breakdown',
-                          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         ...holdings.map((h) => _holdingCard(h)),
+                      ],
+                      if (trades.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Intraday / MTF Trades',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ...trades.map(
+                          (t) => _tradeCard(t as Map<String, dynamic>),
+                        ),
                       ],
                     ],
                   ),
@@ -163,7 +241,13 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             '${value >= 0 ? '+' : ''}₹${value.toStringAsFixed(2)}',
@@ -189,9 +273,67 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+          ),
           const SizedBox(height: 4),
-          Text('₹${value.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(
+            '₹${value.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tradeCard(Map<String, dynamic> t) {
+    final gain = (t['gain'] as num?)?.toDouble() ?? 0;
+    final isProfit = gain >= 0;
+    final qty = (t['quantity'] as num?)?.toDouble() ?? 0;
+    final buy = (t['buy_price'] as num?)?.toDouble() ?? 0;
+    final sell = (t['sell_price'] as num?)?.toDouble() ?? 0;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${t['symbol'] ?? ''}  ${t['type'] ?? ''}',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                '${isProfit ? '+' : ''}\u20B9${gain.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: isProfit ? AppColors.success : AppColors.danger,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${qty.toStringAsFixed(0)} shares | Buy \u20B9${buy.toStringAsFixed(2)} | Sell \u20B9${sell.toStringAsFixed(2)} | ${t['sell_date'] ?? ''}',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+          ),
         ],
       ),
     );
@@ -220,9 +362,22 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(h['symbol'] ?? '', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(
+                      h['symbol'] ?? '',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
                     if ((h['company_name'] ?? '').toString().isNotEmpty)
-                      Text(h['company_name'], style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text(
+                        h['company_name'],
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -231,11 +386,18 @@ class _PnLReportScreenState extends State<PnLReportScreen> {
                 children: [
                   Text(
                     '${isProfit ? '+' : ''}₹${pnl.toStringAsFixed(2)}',
-                    style: TextStyle(color: isProfit ? AppColors.success : AppColors.danger, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                      color: isProfit ? AppColors.success : AppColors.danger,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   Text(
                     '${isProfit ? '+' : ''}${pnlPercent.toStringAsFixed(2)}%',
-                    style: TextStyle(color: isProfit ? AppColors.success : AppColors.danger, fontSize: 11),
+                    style: TextStyle(
+                      color: isProfit ? AppColors.success : AppColors.danger,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
